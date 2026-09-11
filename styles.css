@@ -667,7 +667,7 @@ body{grid-template-columns:1fr;grid-template-rows:64px 1fr}
 .mf-preview-foot-actions{display:flex;align-items:center;gap:8px}
 .mf-step-workspace{display:flex;min-width:0;flex-direction:column;gap:12px}
 .mf-step-surface{min-width:0;overflow:hidden;border:1px solid var(--mvas-line);border-radius:10px;background:var(--mvas-fill);box-shadow:var(--mvas-shadow)}
-.mf-review-step-body{display:flex;width:min(100%,1040px);min-width:0;align-self:center;flex-direction:column;gap:14px}
+.mf-review-step-body{display:flex;width:100%;min-width:0;align-self:stretch;flex-direction:column;gap:14px}
 .mf-review-step-body .mf-review-outcome{margin:0}
 .mf-review-changes-section{min-width:0;overflow:hidden;border:1px solid var(--mvas-line);border-radius:10px;background:#fff;box-shadow:var(--mvas-shadow)}
 .mf-review-changes-section>header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 15px;border-bottom:1px solid var(--mvas-line);background:#fff}
