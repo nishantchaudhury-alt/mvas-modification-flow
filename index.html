@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookings</title>
+<link rel="stylesheet" href="styles.css?v=341">
+</head>
+<body>
+<div class="topbar">
+<div class="tb-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search bookings, farecodes&hellip;</span></div>
+<div class="tb-actions">
+<div class="avatar">JD</div>
+</div>
+</div>
+<nav class="sidebar" aria-label="Primary navigation">
+<div class="nav-logo"><span class="nav-logo-mark" aria-hidden="true">M</span><img src="assets/mvas-logo.png" alt="Margaritaville at Sea"></div>
+<div class="nav-list">
+<div class="nav-item" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span><span class="nav-label">Dashboard</span></div>
+<div class="nav-item active-group" tabindex="0"><span class="active-bar"></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span><span class="nav-label">Bookings</span></div>
+<div class="nav-children">
+<div class="nav-child active" tabindex="0" aria-current="page"><span class="nav-child-text">All bookings</span></div>
+<div class="nav-child" tabindex="0">Create booking</div>
+<div class="nav-child" tabindex="0">Holds &amp; waitlist</div>
+<div class="nav-child" tabindex="0">Guest profiles</div>
+</div>
+<div class="nav-item" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/></svg></span><span class="nav-label">Sailings</span></div>
+<div class="nav-item" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span><span class="nav-label">Inventory</span></div>
+<div class="nav-item" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></span><span class="nav-label">Fares &amp; Pricing</span></div>
+<div class="nav-item" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="nav-label">Reports</span></div>
+<div class="nav-item" tabindex="0"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span><span class="nav-label">Audit Log</span></div>
+</div>
+</nav>
+<div class="main">
+<div class="view-list active" id="viewList">
+<div class="page-header">
+<div><h1>Bookings</h1><p>Manage guest reservations, cabin assignments, and payment statuses.</p></div>
+<div class="page-header-value" id="bookingValueSummary">
+<span class="page-header-value-label" id="bookingValueLabel">Total booking value</span>
+<strong class="page-header-value-amount" id="bookingValueTotal">$152,968.72</strong>
+<span class="page-header-value-meta" id="bookingValueMeta">Across 20 bookings</span>
+</div>
+</div>
+<div class="card bookings-table-card" id="bookingsTableCard" role="region" aria-label="Bookings table workspace">
+<div class="filter-bar">
+<div class="search-wrap">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<input type="text" id="searchInput" aria-label="Search bookings" placeholder="Booking ID, guest, email, phone, cabin, or itinerary">
+</div>
+<button class="af-trigger" id="advancedFilterBtn" type="button" aria-controls="advancedFilterPanel" aria-expanded="false">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+<span id="advancedFilterBtnLabel">Advanced filters</span><span class="af-count" id="advancedFilterCount" hidden>0</span>
+</button>
+</div>
+<div class="active-filters" id="activeFilters" hidden>
+<span class="active-filters-label">Applied filters</span>
+<div class="active-filter-chips" id="activeFilterChips"></div>
+<button class="active-filters-clear" id="clearAppliedFilters" type="button">Clear all</button>
+</div>
+<div class="table-wrap" id="tableWrap"><div class="table-scroll"><table>
+<caption class="sr-only">All bookings</caption>
+<thead>
+<tr>
+<th class="sortable">Booking ID <span class="arrows" aria-hidden="true">&#8597;</span></th>
+<th class="sortable">Customer name <span class="arrows" aria-hidden="true">&#8597;</span></th>
+<th class="sortable">Sailing date <span class="arrows" aria-hidden="true">&#8597;</span></th>
+<th>Ship name</th>
+<th>Itinerary</th>
+<th>Farecode</th>
+<th>Cabin category</th>
+<th class="sortable right">Booking value <span class="arrows" aria-hidden="true">&#8597;</span></th>
+<th class="sortable right">Pending amount <span class="arrows" aria-hidden="true">&#8597;</span></th>
+<th class="sortable">Status <span class="arrows" aria-hidden="true">&#8597;</span></th>
+<th class="sortable">Booking date <span class="arrows" aria-hidden="true">&#8597;</span></th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table></div></div>
+<div class="footer-bar">
+<div id="footerText" aria-live="polite">Showing 1&ndash;10 of 20 bookings</div>
+<div class="pager">
+<button id="prevBtn" type="button" aria-label="Previous page">&lsaquo;</button>
+<button class="pageBtn active" data-page="1" type="button" aria-label="Go to page 1" aria-current="page">1</button>
+<button class="pageBtn" data-page="2" type="button" aria-label="Go to page 2">2</button>
+<button id="nextBtn" type="button" aria-label="Next page">&rsaquo;</button>
+</div>
+</div></div>
+</div>
+<div class="view-detail" id="viewDetail">
+<div class="detail-head">
+<button class="detail-close mvas-interactive-surface" id="detailClose">&larr; Back to bookings</button>
+</div>
+<div class="ov-detail-layout" id="detailLayout">
+<div class="card ov-main-card">
+<div class="ov-main-top">
+<div>
+<div class="ov-idlabel">Booking ID</div>
+<div class="ov-idrow"><h1 class="ov-idvalue" id="sBookingId"></h1><span id="sStatusBadge"></span></div>
+</div>
+<div class="ov-top-actions">
+<button class="ov-btn-icon" id="sendEmailBtn" title="Send booking email" aria-label="Send booking email"><svg class="i16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></button>
+<button class="ov-btn-icon" id="historyBtn" title="Booking history" aria-label="Booking history"><svg class="i16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg></button>
+<div class="ov-modify-menu-wrap">
+<button class="ov-btn-solid ov-modify-trigger" id="modifyBookingBtn" type="button">Modify booking</button>
+</div>
+</div>
+</div>
+<div class="ov-hr"></div>
+<div class="ov-sail-block">
+<h2 class="ov-section-label">Sailing details</h2>
+<div class="ov-sail-overview">
+<div class="ov-sail-head">
+<div class="ov-sail-summary">
+<div class="ov-sail-identity">
+<span class="ov-ship-name" id="sShip"></span>
+<span class="ov-itinerary-line"><span class="ov-ship-subtitle" id="sShipSub"></span><button class="ov-itinerary-btn" id="itineraryBtn" type="button" aria-label="View full itinerary" aria-haspopup="dialog" aria-controls="itineraryModal" title="View full itinerary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3.5 6.5 5.5-3 6 3 5.5-3v14l-5.5 3-6-3-5.5 3z"/><path d="M9 3.5v14M15 6.5v14"/><path d="M5.75 8.2 7 7.55"/><path d="m17.3 16.9 1.45-.8"/></svg></button></span>
+</div>
+<div class="ov-sail-meta"><span class="ov-farecode-tag" id="sFarecodeBadge"></span></div>
+</div>
+</div>
+<div class="ov-date-boxes">
+<div class="ov-date-box">
+<div class="ov-date-top"><svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="ov-date-label">Departure</span></div>
+<div><div class="ov-date-time" id="sDeparts"></div><div class="ov-date-port" id="sDepartsPort"></div></div>
+</div>
+<div class="ov-date-box">
+<div class="ov-date-top"><svg class="i14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="ov-date-label">Return</span></div>
+<div><div class="ov-date-time" id="sReturnDate"></div><div class="ov-date-port" id="sReturnPort"></div></div>
+</div>
+</div>
+<dl class="ov-booking-meta">
+<div class="ov-booking-meta-item"><dt class="ov-booking-meta-label">Booking source</dt><dd id="sBookingSource"></dd></div>
+<div class="ov-booking-meta-item"><dt class="ov-booking-meta-label">Created</dt><dd id="sCreatedDate"></dd></div>
+<div class="ov-booking-meta-item"><dt class="ov-booking-meta-label">Travel advisor</dt><dd id="sTravelAdvisor"></dd></div>
+<div class="ov-booking-meta-item"><dt class="ov-booking-meta-label">Agency</dt><dd id="sAgency"></dd></div>
+<div class="ov-booking-meta-item ov-booking-meta-commission"><dt class="ov-booking-meta-label">Commission</dt><dd id="sCommission"></dd></div>
+</dl>
+</div>
+</div>
+<div class="ov-hr"></div>
+<div class="ov-guest-block">
+<h2 class="ov-section-label">Guest &amp; cabin details</h2>
+<div class="ov-guest-cabin-section">
+<div class="ov-guest-summary" id="sGuestSummary"></div>
+<div class="ov-cabin-inset">
+<div class="ov-cabin-inset-head"><h3 class="ov-cabin-inset-label">Cabin-wise details</h3><span class="ov-cabin-inset-count" id="sCabinCount"></span></div>
+<div class="ov-cabin-stack" id="sCabinCards"></div>
+</div>
+</div>
+</div>
+</div>
+<aside class="ov-side" aria-labelledby="ppTitle">
+<div class="ov-side-card">
+<div class="ov-preview-status-group">
+<span class="ov-due-badge" id="payDueIn"></span>
+<div class="ov-pp-block">
+<h2 class="ov-pp-title" id="ppTitle">Payment summary</h2>
+<div class="ov-balance-amount" id="pBalance" role="status" aria-live="polite" aria-label="Balance due"></div>
+<div class="ov-due-line"><svg class="i12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="pDueDate"></span></div>
+</div>
+<div class="ov-paid-block">
+<div class="ov-paid-row"><span class="ov-paid-label">Paid to date: <span id="pPaidToDate"></span></span><span class="ov-paid-pct" id="pPaidPct"></span></div>
+<div class="ov-progress-bar"><div class="ov-progress-fill" id="progressFill"></div></div>
+</div>
+</div>
+<div class="ov-promo-block">
+<label class="ov-flabel" for="promoInput">Apply promo code</label>
+<div class="ov-promo-row"><input type="text" id="promoInput" placeholder="Enter coupon code&hellip;"><button id="promoApply">Apply</button></div>
+<div class="ov-promo-msg" id="promoMsg" hidden></div>
+</div>
+<div class="ov-ledger">
+<div class="ov-ledger-head"><span>Fare breakdown</span><span>Amount</span></div>
+<div class="ov-ledger-row"><div class="ov-ledger-desc"><span class="ov-ledger-title" id="pCabinTitle">Cabin fare</span><span class="ov-ledger-sub" id="pCabinSub"></span></div><span class="ov-ledger-amt" id="pCabinFare"></span></div>
+<button class="ov-ledger-row ov-ledger-taxrow" id="taxesToggle" aria-expanded="false" aria-controls="taxesBreakdown">
+<div class="ov-ledger-desc">
+<span class="ov-ledger-titlerow"><span class="ov-ledger-title">Taxes &amp; port fees</span><svg class="ov-ledger-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></span>
+<span class="ov-ledger-sub">Government taxes &amp; port charges</span>
+</div>
+<span class="ov-ledger-amt" id="pTaxes"></span>
+</button>
+<div class="ov-ledger-bd" id="taxesBreakdown" hidden>
+<div class="ov-ledger-bd-row"><span class="ov-ledger-bd-label">Government taxes &amp; fees</span><span class="ov-ledger-bd-amt" id="pGovtTax"></span></div>
+<div class="ov-ledger-bd-row"><span class="ov-ledger-bd-label">Required cruise fees and expenses</span><span class="ov-ledger-bd-amt" id="pCruiseFee"></span></div>
+</div>
+<div class="ov-ledger-row"><div class="ov-ledger-desc"><span class="ov-ledger-title">Supplements</span><span class="ov-ledger-sub">Excursions &amp; onboard amenities</span></div><span class="ov-ledger-amt" id="pSupplements"></span></div>
+<div class="ov-ledger-row" id="pPackagesRow" hidden><div class="ov-ledger-desc"><span class="ov-ledger-title">Packages</span><span class="ov-ledger-sub">Selected guest packages</span></div><span class="ov-ledger-amt" id="pPackages"></span></div>
+<div class="ov-ledger-row" id="pInsuranceRow" hidden><div class="ov-ledger-desc"><span class="ov-ledger-title">Travel Protection Plus</span><span class="ov-ledger-sub" id="pInsuranceSub">Required for every guest</span></div><span class="ov-ledger-amt" id="pInsuranceAdj"></span></div>
+<div class="ov-ledger-row credit" id="pPromoRow" hidden><div class="ov-ledger-desc"><span class="ov-ledger-title">Promotion</span><span class="ov-ledger-sub" id="pPromoSub"></span></div><span class="ov-ledger-amt" id="pPromo"></span></div>
+</div>
+<div class="ov-changes-card" id="changeBox" hidden>
+<div class="ov-changes-head"><span class="ov-changes-heading"><span class="ov-changes-dot" aria-hidden="true"></span><h3 class="ov-changes-title">Staged changes</h3></span><span class="ov-changes-count" id="changesCount"></span></div>
+<ul class="ov-changes-items" id="changesItems"></ul>
+<div class="ov-changes-summary">
+<div class="ov-changes-orig"><span>Starting total</span><span id="cOriginal"></span></div>
+<div class="ov-changes-net" id="cNetRow"><span id="cNetLabel"></span><span id="cNet"></span></div>
+</div>
+<button class="ov-changes-review" id="detailReviewChanges" type="button" aria-haspopup="dialog" aria-controls="modPreviewModal" aria-expanded="false">Review changes</button>
+<button class="ov-changes-reset" id="resetChanges">Discard all staged changes</button>
+</div>
+<div class="ov-ledger-row total ov-total-payable"><div class="ov-ledger-desc"><span class="ov-ledger-title">Booking total</span></div><span class="ov-ledger-amt" id="pTotalPayable"></span></div>
+<div class="ov-side-actions">
+<div class="ov-payment-dropdown">
+<button class="ov-btn-pay" id="paymentMenuBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="paymentMenu"><svg class="i16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment</button>
+<div class="ov-payment-menu" id="paymentMenu" role="menu">
+<button class="ov-payment-menu-item" data-payaction="wallet" role="menuitem">Pay by credit/wallet</button>
+<button class="ov-payment-menu-item" data-payaction="cash" role="menuitem">Pay by cash/offline</button>
+<button class="ov-payment-menu-item" data-payaction="link" role="menuitem">Send payment link</button>
+</div>
+</div>
+<div class="ov-cancellation-menu-wrap">
+<button class="ov-btn-cancel ov-cancellation-trigger" id="cancellationBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="cancellationMenu">Cancellation</button>
+<div class="ov-cancellation-menu" id="cancellationMenu" role="menu" aria-labelledby="cancellationBtn" hidden>
+<button class="ov-cancellation-option" type="button" role="menuitem" data-cancellation-flow="full">
+<span class="ov-cancellation-option-icon danger" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg></span>
+<span class="ov-cancellation-option-copy"><strong>Full booking cancellation</strong><span>Cancel every guest and release all cabins</span></span>
+</button>
+<button class="ov-cancellation-option" type="button" role="menuitem" data-cancellation-flow="partial">
+<span class="ov-cancellation-option-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M16 11h6"/></svg></span>
+<span class="ov-cancellation-option-copy"><strong>Partial cancellation</strong><span>Cancel one or more guests while the booking stays active</span></span>
+</button>
+</div>
+</div>
+</div>
+<div class="ov-cancelled-note" id="cancelledNote" hidden></div>
+</div>
+</aside>
+</div>
+</div>
+<div class="view-modify" id="viewModify">
+<div class="mf-rail-sticky">
+<div class="detail-head">
+<button class="detail-close mvas-interactive-surface" id="modifyBack">&larr; Back to booking</button>
+</div>
+<div class="mf-rail">
+<span id="mfFlowLabel" hidden>Modification</span>
+<strong id="mfBookingId" hidden></strong>
+<div class="mf-steps" id="mfSteps"></div>
+</div>
+</div>
+<div class="ov-detail-layout" id="modLayout">
+<div class="card mf-card">
+<section class="mf-booking-overview" aria-labelledby="mfTitle">
+<div class="mf-intro"><h1 id="mfTitle"></h1><p id="mfSub"></p></div>
+<dl class="mf-page-context" id="mfContext" aria-label="Booking context"></dl>
+</section>
+<div class="mf-panel">
+<div id="mfBody"></div>
+<div class="mf-foot">
+<button class="mf-btn-ghost" id="mfPrev">Back</button>
+<div class="mf-foot-actions">
+<button class="mf-preview-trigger" id="mfPreview" type="button" aria-haspopup="dialog" aria-controls="modPreviewModal" disabled><span>Review changes</span></button>
+<button class="ov-btn-solid" id="mfNext">Continue</button>
+</div>
+</div>
+</div>
+</div>
+<aside class="mf-supp-impact" id="mfSuppImpact" aria-labelledby="mfImpactLiveTitle" hidden>
+<div class="mf-supp-impact-card">
+<header class="mf-impact-live-head" id="mfImpactLiveTitle">
+<span class="mf-impact-live-copy"><i aria-hidden="true"></i><span><strong>Live booking impact</strong><small>Updates as you edit</small></span></span>
+<em>Live</em>
+</header>
+<section class="mf-impact-tabpanel mf-impact-changes-panel" id="mfImpactChangesPanel" role="region" aria-labelledby="mfImpactLiveTitle">
+<section class="mf-supp-impact-changes" aria-labelledby="mfSuppImpactChangesTitle">
+<header><span id="mfSuppImpactChangesTitle">Staged updates</span><strong id="mfSuppImpactCount" role="status" aria-live="polite" aria-atomic="true">No staged changes</strong></header>
+<div class="mf-supp-impact-empty" id="mfSuppImpactEmpty"><strong>No staged changes yet</strong><span>Cabin, guest, and extras updates will appear here as you make them.</span></div>
+<ul class="mf-supp-impact-change-list" id="mfSuppImpactItems" aria-label="Changes grouped by affected booking area" hidden></ul>
+</section>
+<section class="mf-impact-outcome" id="mfImpactOutcome" aria-labelledby="mfImpactOverviewTitle" hidden>
+<div class="mf-impact-outcome-main">
+<h3 id="mfImpactOverviewTitle">Booking total after changes</h3>
+<strong id="mfSuppImpactAfterTotal">$0.00</strong>
+</div>
+<dl class="mf-impact-outcome-details">
+<div><dt>Previous booking total</dt><dd id="mfSuppImpactBeforeTotal">$0.00</dd></div>
+<div class="is-pending" id="mfImpactOutcomePendingRow"><dt><span>Existing unpaid balance</span><small>Before these changes</small></dt><dd id="mfImpactOutcomePending">$0.00</dd></div>
+<div class="is-change"><dt>New price change</dt><dd id="mfImpactOutcomeDelta" role="status" aria-live="polite">$0.00</dd></div>
+<div class="is-balance"><dt><span id="mfImpactOutcomeBalanceLabel">Balance due</span><small id="mfImpactOutcomeBalanceHint">Existing balance + price change</small></dt><dd id="mfImpactOutcomeBalance" role="status" aria-live="polite">$0.00</dd></div>
+</dl>
+</section>
+</section>
+</div>
+</aside>
+</div>
+<div id="modSideMount" hidden></div>
+</div>
+<div class="view-cancellation" id="viewCancellation">
+<div class="detail-head cx-cancellation-back-sticky">
+<button class="detail-close mvas-interactive-surface" id="cancellationBack">&larr; Back to booking</button>
+</div>
+<div class="cx-page" id="cancellationPageContent"></div>
+<div class="sr-only" id="cancellationStatus" role="status" aria-live="polite" aria-atomic="true"></div>
+</div>
+<div class="view-history" id="viewHistory">
+<div class="detail-head">
+<button class="detail-close mvas-interactive-surface" id="historyBack">&larr; Back to booking</button>
+<div class="mf-crumb">Booking history &middot; <strong id="histBookingId"></strong></div>
+</div>
+<div class="card hist-card">
+<div class="hist-head">
+<h1>Booking history</h1>
+<p>Every change made to this booking, most recent first.</p>
+</div>
+<div class="ov-timeline hist-timeline" id="fullHistory"></div>
+</div>
+</div>
+</div>
+<div class="mf-modal" id="roomModal" hidden></div>
+<div class="mf-modal" id="fareTableModal" hidden></div>
+<div class="mf-modal" id="addGuestModal" hidden></div>
+<div class="mf-modal" id="removeGuestModal" hidden></div>
+<div class="mf-modal" id="partialSupplementAssignModal" hidden></div>
+<div class="mf-modal" id="removeAllSupplementsModal" hidden></div>
+<div class="mf-modal" id="cancelModal" hidden></div>
+<div class="mf-modal" id="itineraryModal" hidden></div>
+<div class="mf-modal" id="modPreviewModal" hidden></div>
+<div class="mf-modal" id="supplementAssignModal" hidden></div>
+<section class="af-inline" id="advancedFilterPanel" role="region" aria-labelledby="advancedFilterTitle" hidden>
+<form class="af-form" id="advancedFilterForm" novalidate>
+<header class="af-header">
+<div><h2 id="advancedFilterTitle">Advanced filters</h2><p>Narrow the booking list using one or more criteria.</p></div>
+<button class="af-close" id="advancedFilterClose" type="button" aria-label="Collapse advanced filters">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+</button>
+</header>
+<div class="af-body">
+<section class="af-section" aria-labelledby="afFindTitle">
+<div class="af-section-head"><span class="af-section-number">1</span><div><h3 id="afFindTitle">Find a booking or guest</h3><p>Use an exact reference or known guest information.</p></div></div>
+<div class="af-grid">
+<label class="af-field af-field-wide"><span>Booking ID</span><input id="afBookingId" type="text" inputmode="numeric" autocomplete="off" placeholder="e.g. 54334373"><small>Exact or partial booking reference</small></label>
+<label class="af-field"><span>Guest or company</span><input id="afCustomer" type="text" autocomplete="off" placeholder="Enter a name"></label>
+<label class="af-field"><span>Email or phone</span><input id="afContact" type="text" autocomplete="off" placeholder="Enter at least 3 characters"></label>
+</div>
+</section>
+<section class="af-section" aria-labelledby="afDateTitle">
+<div class="af-section-head"><span class="af-section-number">2</span><div><h3 id="afDateTitle">Choose the relevant date</h3><p>Specify what the range should apply to.</p></div></div>
+<fieldset class="af-fieldset">
+<legend>Date type</legend>
+<div class="af-segmented">
+<label><input type="radio" name="afDateType" value="sailing" checked><span>Sailing date</span></label>
+<label><input type="radio" name="afDateType" value="booking"><span>Booking date</span></label>
+</div>
+</fieldset>
+<div class="af-grid af-date-grid">
+<label class="af-field"><span>From</span><input id="afDateFrom" type="date"></label>
+<label class="af-field"><span>To</span><input id="afDateTo" type="date"></label>
+</div>
+<p class="af-error" id="afDateError" role="alert" hidden>The end date must be on or after the start date.</p>
+</section>
+<section class="af-section" aria-labelledby="afDetailsTitle">
+<div class="af-section-head"><span class="af-section-number">3</span><div><h3 id="afDetailsTitle">Booking details</h3><p>Add operational criteria only when needed.</p></div></div>
+<fieldset class="af-fieldset">
+<legend>Status</legend>
+<div class="af-check-grid">
+<label class="af-check"><input type="checkbox" name="afStatus" value="pending"><span><i class="af-status-dot pending"></i>Pending</span></label>
+<label class="af-check"><input type="checkbox" name="afStatus" value="booked"><span><i class="af-status-dot booked"></i>Booked</span></label>
+<label class="af-check"><input type="checkbox" name="afStatus" value="cancelled"><span><i class="af-status-dot cancelled"></i>Cancelled / aborted</span></label>
+</div>
+</fieldset>
+<div class="af-grid">
+<label class="af-field"><span>Cruise</span><select id="afCruise"><option value="">All cruises</option><option value="MVAS Islander">MVAS Islander</option><option value="MVAS Voyager">MVAS Voyager</option></select></label>
+<label class="af-field"><span>Sailing / itinerary</span><select id="afItinerary"><option value="">All sailings</option></select></label>
+<label class="af-field"><span>Cabin number</span><input id="afCabin" type="text" autocomplete="off" placeholder="e.g. 4228"></label>
+<label class="af-field"><span>Guest name</span><input id="afGuest" type="text" autocomplete="off" placeholder="Enter guest name"></label>
+<label class="af-field af-field-wide"><span>Payment balance</span><select id="afBalance"><option value="">Any balance</option><option value="due">Balance due</option><option value="paid">Paid in full</option></select></label>
+</div>
+</section>
+</div>
+<footer class="af-footer">
+<button class="af-btn-ghost" id="clearDraftFilters" type="button">Clear all</button>
+<div class="af-footer-actions"><span id="afPreviewCount" aria-live="polite">20 matching bookings</span><button class="af-btn-primary" type="submit">Apply filters</button></div>
+</footer>
+</form>
+</section>
+<script src="https://unpkg.com/lucide@1.42.0/dist/umd/lucide.min.js"></script>
+<script src="script.js?v=327"></script>
+</body>
+</html>
