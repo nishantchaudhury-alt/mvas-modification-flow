@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bookings</title>
-<link rel="stylesheet" href="styles.css?v=343">
+<link rel="stylesheet" href="styles.css?v=366">
 </head>
 <body>
 <div class="topbar">
@@ -36,7 +36,7 @@
 <div class="page-header">
 <div><h1>Bookings</h1><p>Manage guest reservations, cabin assignments, and payment statuses.</p></div>
 <div class="page-header-value" id="bookingValueSummary">
-<span class="page-header-value-label" id="bookingValueLabel">Total booking value</span>
+<span class="page-header-value-label" id="bookingValueLabel">Active booking value</span>
 <strong class="page-header-value-amount" id="bookingValueTotal">$152,968.72</strong>
 <span class="page-header-value-meta" id="bookingValueMeta">Across 20 bookings</span>
 </div>
@@ -105,6 +105,26 @@
 </div>
 </div>
 </div>
+<div class="ov-pending-changes-slot" id="detailPendingChangesSlot">
+<section class="ov-changes-card ov-pending-changes-card" id="changeBox" aria-labelledby="pendingChangesTitle" hidden>
+<div class="ov-changes-head">
+<span class="ov-changes-heading"><span class="ov-changes-dot" aria-hidden="true"></span><span class="ov-changes-heading-copy"><h3 class="ov-changes-title" id="pendingChangesTitle">Unsaved changes</h3><small id="pendingChangesScope">Review this draft before saving</small></span></span>
+<span class="ov-changes-count" id="changesCount"></span>
+</div>
+<div class="ov-changes-summary" aria-label="Unsaved financial impact">
+<div class="ov-changes-net" id="cNetRow"><span id="cNetLabel"></span><span id="cNet"></span></div>
+<div class="ov-changes-balance"><span id="cEstimatedBalanceLabel"></span><span id="cEstimatedBalance"></span></div>
+</div>
+<ul class="ov-changes-items" id="changesItems"></ul>
+<div class="ov-changes-actions">
+<button class="ov-changes-review" id="detailReviewChanges" type="button" aria-haspopup="dialog" aria-controls="modPreviewModal" aria-expanded="false">Review changes</button>
+<details class="ov-changes-menu">
+<summary aria-label="More unsaved change actions" title="More actions"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></summary>
+<div class="ov-changes-menu-popover"><button class="ov-changes-reset" id="resetChanges" type="button">Discard all staged changes</button></div>
+</details>
+</div>
+</section>
+</div>
 <div class="ov-hr"></div>
 <div class="ov-sail-block">
 <h2 class="ov-section-label">Sailing details</h2>
@@ -154,6 +174,7 @@
 <div class="ov-preview-status-group">
 <span class="ov-due-badge" id="payDueIn"></span>
 <div class="ov-pp-block">
+<span class="ov-payment-context">Confirmed booking</span>
 <h2 class="ov-pp-title" id="ppTitle">Payment summary</h2>
 <div class="ov-balance-amount" id="pBalance" role="status" aria-live="polite" aria-label="Balance due"></div>
 <div class="ov-due-line"><svg class="i12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span id="pDueDate"></span></div>
@@ -163,6 +184,17 @@
 <div class="ov-progress-bar"><div class="ov-progress-fill" id="progressFill"></div></div>
 </div>
 </div>
+<section class="ov-payment-draft" id="paymentDraftImpact" aria-labelledby="paymentDraftImpactTitle" hidden>
+<div class="ov-payment-draft-head">
+<span><strong id="paymentDraftImpactTitle">After saving this draft</strong><small>Confirmed balance plus unsaved price impact</small></span>
+<span id="paymentDraftCount"></span>
+</div>
+<dl class="ov-payment-draft-ledger">
+<div><dt id="paymentConfirmedLabel">Confirmed balance due</dt><dd id="paymentConfirmedBalance"></dd></div>
+<div class="is-change" id="paymentDraftDeltaRow"><dt>Unsaved price impact</dt><dd id="paymentDraftDelta"></dd></div>
+<div class="is-total" id="paymentAfterSaveRow"><dt id="paymentAfterSaveLabel">Balance due after saving</dt><dd id="paymentAfterSave"></dd></div>
+</dl>
+</section>
 <div class="ov-promo-block">
 <label class="ov-flabel" for="promoInput">Apply promo code</label>
 <div class="ov-promo-row"><input type="text" id="promoInput" placeholder="Enter coupon code&hellip;"><button id="promoApply">Apply</button></div>
@@ -187,24 +219,14 @@
 <div class="ov-ledger-row" id="pInsuranceRow" hidden><div class="ov-ledger-desc"><span class="ov-ledger-title">Travel Protection Plus</span><span class="ov-ledger-sub" id="pInsuranceSub">Required for every guest</span></div><span class="ov-ledger-amt" id="pInsuranceAdj"></span></div>
 <div class="ov-ledger-row credit" id="pPromoRow" hidden><div class="ov-ledger-desc"><span class="ov-ledger-title">Promotion</span><span class="ov-ledger-sub" id="pPromoSub"></span></div><span class="ov-ledger-amt" id="pPromo"></span></div>
 </div>
-<div class="ov-changes-card" id="changeBox" hidden>
-<div class="ov-changes-head"><span class="ov-changes-heading"><span class="ov-changes-dot" aria-hidden="true"></span><h3 class="ov-changes-title">Staged changes</h3></span><span class="ov-changes-count" id="changesCount"></span></div>
-<ul class="ov-changes-items" id="changesItems"></ul>
-<div class="ov-changes-summary">
-<div class="ov-changes-orig"><span>Starting total</span><span id="cOriginal"></span></div>
-<div class="ov-changes-net" id="cNetRow"><span id="cNetLabel"></span><span id="cNet"></span></div>
-</div>
-<button class="ov-changes-review" id="detailReviewChanges" type="button" aria-haspopup="dialog" aria-controls="modPreviewModal" aria-expanded="false">Review changes</button>
-<button class="ov-changes-reset" id="resetChanges">Discard all staged changes</button>
-</div>
 <div class="ov-ledger-row total ov-total-payable"><div class="ov-ledger-desc"><span class="ov-ledger-title">Booking total</span></div><span class="ov-ledger-amt" id="pTotalPayable"></span></div>
 <div class="ov-side-actions">
 <div class="ov-payment-dropdown">
 <button class="ov-btn-pay" id="paymentMenuBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="paymentMenu"><svg class="i16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Payment</button>
 <div class="ov-payment-menu" id="paymentMenu" role="menu">
-<button class="ov-payment-menu-item" data-payaction="wallet" role="menuitem">Pay by credit/wallet</button>
-<button class="ov-payment-menu-item" data-payaction="cash" role="menuitem">Pay by cash/offline</button>
-<button class="ov-payment-menu-item" data-payaction="link" role="menuitem">Send payment link</button>
+<button class="ov-payment-menu-item" data-payaction="wallet" role="menuitem" disabled aria-disabled="true" title="Not available in this prototype">Pay by credit/wallet <small>Not available</small></button>
+<button class="ov-payment-menu-item" data-payaction="cash" role="menuitem" disabled aria-disabled="true" title="Not available in this prototype">Pay by cash/offline <small>Not available</small></button>
+<button class="ov-payment-menu-item" data-payaction="link" role="menuitem" disabled aria-disabled="true" title="Not available in this prototype">Send payment link <small>Not available</small></button>
 </div>
 </div>
 <div class="ov-cancellation-menu-wrap">
@@ -373,6 +395,6 @@
 </form>
 </section>
 <script src="https://unpkg.com/lucide@1.42.0/dist/umd/lucide.min.js"></script>
-<script src="script.js?v=331"></script>
+<script src="script.js?v=355"></script>
 </body>
 </html>

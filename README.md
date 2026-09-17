@@ -42,6 +42,7 @@ An internet connection is recommended because Lucide icons are loaded from the u
 ├── index.html     # Application shell and static interface markup
 ├── styles.css     # MVAS visual system and responsive layouts
 ├── script.js      # Prototype data, state, calculations, and interactions
+├── scripts/       # Lightweight design-system checks
 ├── assets/        # Brand assets
 └── Booking_Modification_and_Cancellation_Experience_Design_Report.docx
 ```
@@ -53,6 +54,17 @@ An internet connection is recommended because Lucide icons are loaded from the u
 - Group changes by the affected booking area for fast scanning.
 - Use progressive disclosure for dense cabin, supplement, and guest information.
 - Keep additions and price increases visually consistent and easy to distinguish.
+- Use the 4px spacing grid for component padding, margins, and gaps.
+
+## Design-system checks
+
+Run the spacing audit after changing layouts or component CSS:
+
+```bash
+node scripts/check-spacing-grid.mjs
+```
+
+The check covers positive pixel values used for padding, margins, and gaps. Borders, typography, icon dimensions, responsive fluid values, negative overlap fixes, and optical positioning are intentionally outside the spacing-grid rule.
 
 ## Notes
 

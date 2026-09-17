@@ -1,5 +1,5 @@
 const bookings=[
-{id:"54334373",name:"Amish Sethi",guests:[],party:{adult:4,youngAdult:1,child:2,infant:1},date:"16 Jan 2027",time:"16:00 departure",cabins:["4228","4229"],itin:"5N Cozumel & Progreso",value:9221.20,pending:300.00,status:"pending",created:"20 Jul 2026",createdTime:"05:59"},
+{id:"54334373",name:"Amish Sethi",guests:["Priya Sethi","Rohan Sethi","Kavya Sethi","Arjun Mehta","Sneha Mehta","Aarav Mehta","Diya Sharma"],party:{adult:4,youngAdult:1,child:2,infant:1},date:"16 Jan 2027",time:"16:00 departure",cabins:["4228","4229"],itin:"5N Cozumel & Progreso",farecode:"FLEX-5NIGHT",source:"Website",advisor:"Not assigned",agency:"Direct booking",commissionPct:0,email:"amish.sethi@example.com",phone:"+1 (305) 555-0142",value:9221.20,pending:300.00,status:"pending",created:"20 Jul 2026",createdTime:"05:59"},
 {id:"54334374",name:"Fatima Stephenson",guests:["Barrett Daniels"],date:"14 Jun 2027",time:"16:00 departure",cabins:["6331"],itin:"5N Progreso & Cozumel",value:7116.54,pending:3707.98,status:"pending",created:"20 Jul 2026",createdTime:"06:16"},
 {id:"54334375",name:"Shoshana Olsen",guests:["Guinevere Kramer"],date:"14 Jun 2027",time:"16:00 departure",cabins:["7292"],itin:"5N Progreso & Cozumel",value:8634.56,pending:4373.00,status:"pending",created:"20 Jul 2026",createdTime:"06:59"},
 {id:"54334376",name:"Aryan Punjabi",guests:[],date:"13 Mar 2027",time:"16:00 departure",cabins:["5266","5275"],itin:"5N Cozumel & Progreso",value:7862.94,pending:4406.94,status:"pending",created:"20 Jul 2026",createdTime:"07:03"},
@@ -15,7 +15,7 @@ const bookings=[
 {id:"54334388",name:"Amish Sethi",guests:[],date:"30 Jan 2028",time:"16:00 departure",cabins:["4228"],itin:"5N Cozumel & Progreso",value:9350.00,pending:0,status:"booked",created:"21 Jul 2026",createdTime:"12:30"},
 {id:"54334389",name:"Diego Cruz",guests:["Marta Cruz"],date:"14 Jun 2027",time:"16:00 departure",cabins:["6650"],itin:"5N Progreso & Cozumel",value:7402.88,pending:1950.00,status:"pending",created:"21 Jul 2026",createdTime:"13:47"},
 {id:"54334390",name:"Grace Lin",guests:[],date:"13 Mar 2027",time:"16:00 departure",cabins:["5580"],itin:"5N Cozumel & Progreso",value:6120.00,pending:2500.00,status:"pending",created:"21 Jul 2026",createdTime:"14:02"},
-{id:"54334391",name:"Naveen G",guests:["Aditi G"],date:"08 May 2027",time:"16:00 departure",cabins:["5101","5102"],itin:"5N Key West & Cozumel",value:8990.40,pending:0,status:"booked",created:"21 Jul 2026",createdTime:"15:19"},
+{id:"54334391",name:"Naveen G",guests:["Aditi G"],date:"08 May 2027",time:"16:00 departure",cabins:["5102","5103"],itin:"5N Key West & Cozumel",value:8990.40,pending:0,status:"booked",created:"21 Jul 2026",createdTime:"15:19"},
 {id:"54334392",name:"Oscar Petit",guests:[],date:"22 Feb 2027",time:"16:00 departure",cabins:["3390"],itin:"5N Cozumel & Progreso",value:5765.20,pending:2900.00,status:"pending",created:"21 Jul 2026",createdTime:"16:38"},
 {id:"54334393",name:"Test Sdds",guests:[],date:"05 Sep 2027",time:"16:00 departure",cabins:["4470"],itin:"5N Progreso & Cozumel",value:4980.00,pending:0,status:"booked",created:"22 Jul 2026",createdTime:"02:11"},
 {id:"54334394",name:"Fatima Stephenson",guests:[],date:"19 Nov 2027",time:"15:30 departure",cabins:["2250"],itin:"5N Mexico Duo",value:10120.60,pending:4750.00,status:"pending",created:"22 Jul 2026",createdTime:"03:55"}
@@ -37,8 +37,8 @@ return `${parts[2]}-${months[parts[1]]||"01"}-${String(parts[0]).padStart(2,"0")
 function bookingMeta(b){
 const slug=b.name.toLowerCase().replace(/[^a-z0-9]+/g,".").replace(/^\.|\.$/g,"");
 return {
-email:`${slug}@example.com`,
-phone:`+1 305 55${b.id.slice(-5)}`,
+email:b.email||`${slug}@example.com`,
+phone:b.phone||`+1 305 55${b.id.slice(-5)}`,
 cruise:b.ship||(b.itin.includes("Key West")?"MVAS Voyager":"MVAS Islander"),
 sailingDate:displayDateToISO(b.date),
 bookingDate:displayDateToISO(b.created),
@@ -63,7 +63,7 @@ if(contact&&!(meta.email+" "+meta.phone).toLowerCase().replace(/\s/g,"").include
 if(filters.statuses.length&&!filters.statuses.includes(b.status))return false;
 if(filters.cruise&&meta.cruise!==filters.cruise)return false;
 if(filters.itinerary&&b.itin!==filters.itinerary)return false;
-if(filters.cabin&&!b.cabins.some(c=>c.toLowerCase().includes(filters.cabin.trim().toLowerCase())))return false;
+if(filters.cabin&&!bookingRoomNumbers(b).some(c=>c.toLowerCase().includes(filters.cabin.trim().toLowerCase())))return false;
 const guest=filters.guest.trim().toLowerCase();
 if(guest&&!bookingGuestNames(b).join(" ").toLowerCase().includes(guest))return false;
 if(filters.balance==="due"&&b.pending<=0)return false;
@@ -97,12 +97,23 @@ const nights=(b.itin.match(/^(\d+)N/)||[])[1]||"5";
 return `${family}-${nights}NIGHT`;
 }
 function shipNameFor(b){return bookingMeta(b).cruise;}
+function bookingRoomNumbers(b){
+const savedPlan=Number(b.pricingBase?.recordVersion)===Number(b.recordVersion??1)&&Array.isArray(b.pricingBase?.cabinPlan)
+?b.pricingBase.cabinPlan:null;
+return(b.cabins||[]).map((room,index)=>String(savedPlan?.[index]?.room??room));
+}
 function cabinCategoryFor(b){
-const categories=["Interior","Ocean View","Balcony","Suite"];
-return categories[Number(b.cabins[0]||0)%categories.length];
+const labels={"Interior Stateroom":"Interior","Ocean View":"Ocean View","Balcony Stateroom":"Balcony","Suite":"Suite"};
+const savedPlan=Number(b.pricingBase?.recordVersion)===Number(b.recordVersion??1)&&Array.isArray(b.pricingBase?.cabinPlan)
+?b.pricingBase.cabinPlan:null;
+const categories=[...new Set((b.cabins||[]).map((room,index)=>{
+const type=savedPlan?.[index]?.code?catEntry(savedPlan[index].code).type:cabinType(room);
+return labels[type]||type;
+}))];
+return categories.length===1?categories[0]:categories.length?"Mixed categories":"Not assigned";
 }
 function rowHTML(b){
-return `<tr data-id="${b.id}" data-status="${b.status}" data-search="${(b.id+" "+bookingGuestNames(b).join(" ")+" "+b.cabins.join(" ")+" "+shipNameFor(b)+" "+b.itin+" "+farecodeFor(b)+" "+cabinCategoryFor(b)).toLowerCase()}">
+return `<tr data-id="${b.id}" data-status="${b.status}" data-search="${(b.id+" "+bookingGuestNames(b).join(" ")+" "+bookingRoomNumbers(b).join(" ")+" "+shipNameFor(b)+" "+b.itin+" "+farecodeFor(b)+" "+cabinCategoryFor(b)).toLowerCase()}">
 <td><a href="#" class="booking-id">${b.id}</a></td>
 <td><div class="cust-name">${b.name}</div></td>
 <td><div class="date-main">${b.date}</div><div class="date-sub">${b.time}</div></td>
@@ -120,7 +131,7 @@ function getFiltered(filters=advancedFilters){
 return bookings.filter(b=>{
 if(searchTerm){
 const meta=bookingMeta(b);
-const hay=(b.id+" "+bookingGuestNames(b).join(" ")+" "+b.cabins.join(" ")+" "+shipNameFor(b)+" "+b.itin+" "+farecodeFor(b)+" "+cabinCategoryFor(b)+" "+meta.email+" "+meta.phone).toLowerCase();
+const hay=(b.id+" "+bookingGuestNames(b).join(" ")+" "+bookingRoomNumbers(b).join(" ")+" "+shipNameFor(b)+" "+b.itin+" "+farecodeFor(b)+" "+cabinCategoryFor(b)+" "+meta.email+" "+meta.phone).toLowerCase();
 if(!hay.includes(searchTerm))return false;
 }
 return matchesAdvancedFilters(b,filters);
@@ -136,11 +147,12 @@ document.getElementById("tableBody").innerHTML=pageItems.length?pageItems.map(ro
 const end=Math.min(start+pageItems.length,filtered.length);
 const queryActive=searchTerm||getFilterDescriptors(advancedFilters).length;
 document.getElementById("footerText").textContent=filtered.length?`Showing ${start+1}–${end} of ${filtered.length}${queryActive?" matching":""} bookings`:"No bookings found";
-document.getElementById("bookingValueLabel").textContent=queryActive?"Filtered booking value":"Total booking value";
-document.getElementById("bookingValueTotal").textContent=fmt(filtered.reduce((sum,booking)=>sum+booking.value,0));
+const activeBookings=filtered.filter(booking=>booking.status!=="cancelled");
+document.getElementById("bookingValueLabel").textContent=queryActive?"Filtered active booking value":"Active booking value";
+document.getElementById("bookingValueTotal").textContent=fmt(activeBookings.reduce((sum,booking)=>sum+booking.value,0));
 document.getElementById("bookingValueMeta").textContent=queryActive
-?`Across ${filtered.length} matching booking${filtered.length===1?"":"s"}`
-:`Across ${filtered.length} booking${filtered.length===1?"":"s"}`;
+?`Across ${activeBookings.length} active matching booking${activeBookings.length===1?"":"s"}`
+:`Across ${activeBookings.length} active booking${activeBookings.length===1?"":"s"}`;
 renderPager(totalPages);
 renderAppliedFilters();
 updateScrollHint();
@@ -384,14 +396,14 @@ return `${String(hour12).padStart(2,"0")}:${String(minutes).padStart(2,"0")} ${h
    booking derives one deterministically so the tables stay consistent. */
 const GUEST_ROSTERS={
 "54334373":[
-{name:"Amish Sethi",dob:"15 Mar 1985",cabin:"4228",supplements:3,insurance:true},
-{name:"Priya Sethi",dob:"22 Jul 1987",cabin:"4228",supplements:2,insurance:true},
-{name:"Rohan Sethi",dob:"08 Nov 2006",cabin:"4228",supplements:1,insurance:true},
-{name:"Kavya Sethi",dob:"14 Apr 2014",cabin:"4228",supplements:0,insurance:true},
-{name:"Arjun Mehta",dob:"03 Sep 1982",cabin:"4229",supplements:4,insurance:true},
-{name:"Sneha Mehta",dob:"19 Dec 1984",cabin:"4229",supplements:2,insurance:true},
-{name:"Aarav Mehta",dob:"27 Jun 2018",cabin:"4229",supplements:0,insurance:true},
-{name:"Diya Sharma",dob:"11 Feb 2025",cabin:"4229",supplements:0,insurance:true}
+{name:"Amish Sethi",dob:"15 Mar 1985",cabin:"4228",supplements:3,supps:{presale:1,shore:1,paradise:1},insurance:true,profile:{first:"Amish",middle:"",last:"Sethi",iso:"US",email:"amish.sethi@example.com",phone:"(305) 555-0142",gender:"Male",address:"1421 Brickell Avenue",city:"Miami",zip:"33101",state:"Florida"}},
+{name:"Priya Sethi",dob:"22 Jul 1987",cabin:"4228",supplements:2,supps:{daybed:1,paradise:1},insurance:true,profile:{first:"Priya",middle:"",last:"Sethi",iso:"US",email:"priya.sethi@example.com",phone:"(305) 555-0143",gender:"Female",address:"1421 Brickell Avenue",city:"Miami",zip:"33101",state:"Florida"}},
+{name:"Rohan Sethi",dob:"08 Nov 2006",cabin:"4228",supplements:1,supps:{paradise:1},insurance:true,profile:{first:"Rohan",middle:"",last:"Sethi",iso:"US",email:"rohan.sethi@example.com",phone:"(305) 555-0144",gender:"Male",address:"1421 Brickell Avenue",city:"Miami",zip:"33101",state:"Florida"}},
+{name:"Kavya Sethi",dob:"14 Apr 2014",cabin:"4228",supplements:0,supps:{},insurance:true,profile:{first:"Kavya",middle:"",last:"Sethi",iso:"US",email:"kavya.sethi@example.com",phone:"(305) 555-0145",gender:"Female",address:"1421 Brickell Avenue",city:"Miami",zip:"33101",state:"Florida"}},
+{name:"Arjun Mehta",dob:"03 Sep 1982",cabin:"4229",supplements:4,supps:{landshark:1,saltair:1,paradise:1,photo:1},insurance:true,profile:{first:"Arjun",middle:"",last:"Mehta",iso:"US",email:"arjun.mehta@example.com",phone:"(305) 555-0151",gender:"Male",address:"801 Bayshore Drive",city:"Miami",zip:"33101",state:"Florida"}},
+{name:"Sneha Mehta",dob:"19 Dec 1984",cabin:"4229",supplements:2,supps:{paradise:1,photo:1},insurance:true,profile:{first:"Sneha",middle:"",last:"Mehta",iso:"US",email:"sneha.mehta@example.com",phone:"(305) 555-0152",gender:"Female",address:"801 Bayshore Drive",city:"Miami",zip:"33101",state:"Florida"}},
+{name:"Aarav Mehta",dob:"27 Jun 2018",cabin:"4229",supplements:0,supps:{},insurance:true,profile:{first:"Aarav",middle:"",last:"Mehta",iso:"US",email:"aarav.mehta@example.com",phone:"(305) 555-0153",gender:"Male",address:"801 Bayshore Drive",city:"Miami",zip:"33101",state:"Florida"}},
+{name:"Diya Sharma",dob:"11 Feb 2025",cabin:"4229",supplements:0,supps:{},insurance:true,profile:{first:"Diya",middle:"",last:"Sharma",iso:"US",email:"diya.sharma@example.com",phone:"(305) 555-0154",gender:"Female",address:"801 Bayshore Drive",city:"Miami",zip:"33101",state:"Florida"}}
 ],
 "54334377":[
 {name:"Amish Sethi",dob:"15 Mar 1985",cabin:"5295",supplements:2,insurance:true},
@@ -440,15 +452,18 @@ return{...guest,guestId:baseGuestId(b.id,guest)};
 });
 }
 
-/* Completed cancellations are authoritative booking transactions, unlike the
-   separate modification draft below. Persist only the committed booking record,
-   roster, price baseline and audit data needed to reproduce that transaction. */
+/* Completed booking transactions are authoritative, unlike the separate
+   modification draft below. Persist only the committed booking record, roster,
+   price baseline and audit data needed to reproduce each transaction. */
 const CANCELLATION_COMMIT_VERSION=1;
 const CANCELLATION_COMMIT_PREFIX="mvas-booking-cancellation-commit:v1:";
+const MODIFICATION_COMMIT_VERSION=1;
+const MODIFICATION_COMMIT_PREFIX="mvas-booking-modification-commit:v1:";
 function cancellationCommitOrigin(){
 try{return String(location.origin||"null");}catch(_error){return"unknown";}
 }
 function cancellationCommitKey(bookingId){return CANCELLATION_COMMIT_PREFIX+String(bookingId);}
+function modificationCommitKey(bookingId){return MODIFICATION_COMMIT_PREFIX+String(bookingId);}
 function cancellationSnapshotGuest(g){
 const supps={};
 Object.entries(g.supps||{}).forEach(([id,value])=>{
@@ -466,8 +481,11 @@ return{
 status:b.status,name:b.name,guests:Array.isArray(b.guests)?b.guests.map(String):[],
 party:b.party&&typeof b.party==="object"?{...b.party}:null,
 cabins:Array.isArray(b.cabins)?b.cabins.map(String):[],value:roundMoney(b.value),pending:roundMoney(b.pending),
+paidToDate:Number.isFinite(Number(b.paidToDate))?roundMoney(b.paidToDate):roundMoney(b.value-b.pending),
 cancel:b.cancel&&typeof b.cancel==="object"?{...b.cancel}:null,
 events:Array.isArray(b.events)?b.events.map(event=>({time:String(event.time||""),title:String(event.title||""),desc:String(event.desc||""),...(event.src?{src:String(event.src)}:{})})):[],
+historySeed:Array.isArray(b.historySeed)?b.historySeed.map(event=>({time:String(event.time||""),title:String(event.title||""),desc:String(event.desc||""),...(event.src?{src:String(event.src)}:{})})):[],
+appliedPromos:Array.isArray(b.appliedPromos)?b.appliedPromos.map(String):[],
 pricingBase:b.pricingBase&&typeof b.pricingBase==="object"?JSON.parse(JSON.stringify(b.pricingBase)):null
 };
 }
@@ -482,13 +500,29 @@ roster:(guests||[]).map(cancellationSnapshotGuest)
 }));
 }catch(_error){/* The completed in-memory transaction still succeeds if storage is unavailable. */}
 }
+function persistCommittedModification(b,guests){
+try{
+const sourceRecordVersion=BOOKING_SOURCE_RECORD_VERSION.get(String(b.id));
+localStorage.setItem(modificationCommitKey(b.id),JSON.stringify({
+version:MODIFICATION_COMMIT_VERSION,origin:cancellationCommitOrigin(),bookingId:String(b.id),
+sourceRecordVersion,recordVersion:Number(b.recordVersion),commitType:"modification",
+committedAt:new Date().toISOString(),booking:cancellationSnapshotBooking(b),
+roster:(guests||[]).map(cancellationSnapshotGuest)
+}));
+}catch(_error){/* The completed in-memory transaction still succeeds if storage is unavailable. */}
+}
 function validCancellationMoney(value){return Number.isFinite(Number(value))&&Number(value)>=0;}
 function hydrateCommittedCancellation(b){
 let saved;
 try{
-const raw=localStorage.getItem(cancellationCommitKey(b.id));
-if(!raw)return;
-saved=JSON.parse(raw);
+const candidates=[cancellationCommitKey(b.id),modificationCommitKey(b.id)]
+.map(key=>{
+try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):null;}catch(_error){return null;}
+}).filter(Boolean)
+.filter(candidate=>candidate&&["full","partial","modification"].includes(candidate.commitType))
+.sort((a,b)=>Number(b.recordVersion)-Number(a.recordVersion)||String(b.committedAt||"").localeCompare(String(a.committedAt||"")));
+if(!candidates.length)return;
+saved=candidates[0];
 }catch(_error){return;}
 const seedVersion=BOOKING_SOURCE_RECORD_VERSION.get(String(b.id));
 const recordVersion=Number(saved?.recordVersion),booking=saved?.booking,roster=saved?.roster;
@@ -498,7 +532,7 @@ const valid=saved&&Number(saved.version)===CANCELLATION_COMMIT_VERSION
 &&String(saved.bookingId)===String(b.id)
 &&Number(saved.sourceRecordVersion)===seedVersion
 &&Number.isInteger(recordVersion)&&recordVersion>seedVersion
-&&(saved.commitType==="full"||saved.commitType==="partial")
+&&(saved.commitType==="full"||saved.commitType==="partial"||saved.commitType==="modification")
 &&booking&&typeof booking==="object"
 &&["pending","booked","cancelled"].includes(booking.status)
 &&(saved.commitType!=="full"||booking.status==="cancelled")
@@ -540,12 +574,44 @@ b.status=booking.status;
 b.name=String(booking.name||normalizedRoster[0].name);
 b.guests=Array.isArray(booking.guests)?booking.guests.map(String):normalizedRoster.slice(1).map(guest=>guest.name);
 if(booking.party&&typeof booking.party==="object")b.party={...booking.party};else delete b.party;
-b.cabins=cabins;b.value=roundMoney(booking.value);b.pending=roundMoney(booking.pending);b.recordVersion=recordVersion;
+b.cabins=cabins;b.value=roundMoney(booking.value);b.pending=roundMoney(booking.pending);
+b.paidToDate=validCancellationMoney(booking.paidToDate)?roundMoney(booking.paidToDate):roundMoney(b.value-b.pending);
+b.recordVersion=recordVersion;
 if(booking.cancel&&typeof booking.cancel==="object")b.cancel={...booking.cancel};else delete b.cancel;
 b.events=Array.isArray(booking.events)?booking.events.map(event=>({time:String(event?.time||""),title:String(event?.title||""),desc:String(event?.desc||""),...(event?.src?{src:String(event.src)}:{})})):[];
+b.historySeed=Array.isArray(booking.historySeed)?booking.historySeed.map(event=>({time:String(event?.time||""),title:String(event?.title||""),desc:String(event?.desc||""),...(event?.src?{src:String(event.src)}:{})})):[];
+b.appliedPromos=Array.isArray(booking.appliedPromos)?booking.appliedPromos.map(String):[];
 if(pricingBase)b.pricingBase=pricingBase;else delete b.pricingBase;
 GUEST_ROSTERS[b.id]=normalizedRoster;
 }
+/* The design-review booking is a fixed scenario, not generated demo noise.
+   Its sold products, cabin plan, per-passenger fare allocations and taxes are
+   authored together and must reconcile to the booking total before rendering. */
+function seedReferenceBookingPricing(){
+const b=bookings.find(booking=>booking.id==="54334373");
+const roster=GUEST_ROSTERS["54334373"];
+if(!b||!roster)return;
+const cabinFares=[1140.66,1140.66,1140.65,684.39,1261.49,1261.49,756.89,315.37];
+const govtTaxes=[27.74,27.74,27.74,16.65,27.74,27.74,16.64,6.94];
+const cruiseFees=[29.45,29.45,29.44,17.67,29.44,29.44,17.67,7.36];
+const cabinFare=roundMoney(cabinFares.reduce((sum,value)=>sum+value,0));
+const taxes=roundMoney(govtTaxes.reduce((sum,value)=>sum+value,0)+cruiseFees.reduce((sum,value)=>sum+value,0));
+const supplements=358.75,insurance=792,discount=0;
+const reconciledTotal=roundMoney(cabinFare+taxes+supplements+insurance-discount);
+if(reconciledTotal!==roundMoney(b.value))throw new Error(`Reference booking pricing does not reconcile: ${reconciledTotal}`);
+b.recordVersion=Number(b.recordVersion??1);
+b.pricingBase={
+recordVersion:b.recordVersion,cabinFare,taxes,supplements,insurance,discount,
+newGuestCabinFare:roundMoney(cabinFare/roster.length),
+cabinPlan:[{room:"4228",code:"I6"},{room:"4229",code:"O5"}],
+guests:roster.map((guest,index)=>({
+guestId:guest.guestId||baseGuestId(b.id,guest),supps:{...(guest.supps||{})},pkg:null,
+insurance:guest.insurance!==false,profile:{...(guest.profile||{})},
+baseCabinFare:cabinFares[index],baseGovtTax:govtTaxes[index],baseCruiseFee:cruiseFees[index],basePromotion:0
+}))
+};
+}
+seedReferenceBookingPricing();
 bookings.forEach(hydrateCommittedCancellation);
 /* ---- guest profiles -------------------------------------------------- */
 /* the booking feed carries no contact details, so each guest's profile is
@@ -579,6 +645,7 @@ return GUEST_DIRECTORY.filter(p=>
 directoryFullName(p).toLowerCase().includes(t)||p.email.toLowerCase().includes(t)).slice(0,5);
 }
 function guestProfile(g,i,b){
+if(g?.profile&&typeof g.profile==="object")return{...g.profile};
 const seed=seedOf(b.id+"|"+g.name+"|"+i);
 const parts=g.name.split(" ");
 const first=parts[0],last=parts.slice(1).join(" ")||"Guest";
@@ -658,16 +725,17 @@ return{...e,occ,total:OCC_KEYS.reduce((a,k)=>a+occ[k],0)};
 });
 }
 const AGE_WEIGHT=[1,1,0.6,0.25];      /* fare share by age band */
-const PROMO_CODES={SAVE10:{type:"pct",value:0.10,label:"10% off cabin fare"},MVAS50:{type:"flat",value:50,label:"$50 off total"},SAILFREE:{type:"flat",value:150,label:"$150 onboard credit"}};
+const PROMO_CODES={SAVE10:{type:"pct",value:0.10,label:"10% off cabin fare"},MVAS50:{type:"flat",value:50,label:"$50 off booking total"},SAILFREE:{type:"flat",value:150,label:"$150 off booking total"}};
 let detail=null;
 
 /* Keep an in-progress modification as a booking-specific local draft.  Only the
    mutable working state is stored: the freshly built booking remains the source
    of truth for inventory, sailing information and the original-price baseline. */
-const DETAIL_DRAFT_VERSION=2;
+const DETAIL_DRAFT_VERSION=4;
 const DETAIL_DRAFT_PREFIX="mvas-booking-modification-draft:";
 const FARE_SNAPSHOT_KEYS=["baseCabin","cabinUpgrade","cabinFare","govtTax","cruiseFee","taxes","onboard","protection","enhancements","basePromotion","subtotal","promotion","total"];
 function detailDraftKey(bookingId){return DETAIL_DRAFT_PREFIX+String(bookingId);}
+function detailBaselineVersion(bookingId){return String(bookingId)==="54334373"?2:1;}
 function clearDetailDraft(bookingId){
 try{localStorage.removeItem(detailDraftKey(bookingId));}catch(_error){}
 }
@@ -691,6 +759,15 @@ roomBy:[...(d.base?.roomBy||[])],cabinBy:[...(d.base?.cabinBy||[])],
 profileBy:(d.base?.profileBy||[]).map(profile=>({...profile})),
 guests:(d.base?.guests||[]).map(cloneGuestState)},
 selected:d.selected&&typeof d.selected==="object"?{...d.selected}:d.selected};
+}
+function committedDetailState(d){
+const committed=cloneDetailState(d);
+committed.guests=(d.base?.guests||[]).map(cloneGuestState);
+committed.cabinPlan=(d.b?.cabins||[]).map((num,index)=>({
+num,room:String(d.base?.roomBy?.[index]??num),code:d.base?.cabinCodeBy?.[index]||baseCabinCode(num)
+}));
+committed.promo=null;
+return committed;
 }
 function fareSnapshot(row){
 return FARE_SNAPSHOT_KEYS.reduce((snapshot,key)=>{
@@ -757,6 +834,52 @@ affected.add(base.guestId);
 });
 return affected;
 }
+/* v2 drafts for the review fixture stored the delta against supplement maps
+   that were synthesized from counts. Rebase that delta onto the authored v3
+   maps so a real agent's staged work survives the fixture correction without
+   treating the corrected sold products as new pending changes. */
+const REFERENCE_V2_SUPPLEMENTS={
+"Amish Sethi":{paradise:1,wifi:1,presale:1},
+"Priya Sethi":{paradise:1,wifi:1},
+"Rohan Sethi":{paradise:1},
+"Kavya Sethi":{},
+"Arjun Mehta":{paradise:1,wifi:1,presale:1,daybed:1},
+"Sneha Mehta":{paradise:1,wifi:1},
+"Aarav Mehta":{},
+"Diya Sharma":{}
+};
+function migrateReferenceV2Supplements(saved,fallback,fresh,draftVersion){
+if(draftVersion!==2||String(fresh.b.id)!=="54334373"||!fallback)return saved?.supps;
+const legacy=REFERENCE_V2_SUPPLEMENTS[fallback.name];
+if(!legacy)return saved?.supps;
+const authored=fallback.supps||{},staged=saved?.supps||{};
+const rebased={};
+new Set([...Object.keys(legacy),...Object.keys(authored),...Object.keys(staged)]).forEach(id=>{
+const quantity=Math.max(0,Math.floor((Number(authored[id])||0)+(Number(staged[id])||0)-(Number(legacy[id])||0)));
+if(quantity)rebased[id]=quantity;
+});
+return rebased;
+}
+function legacyReferenceProfile(g,index,b){
+const seed=seedOf(b.id+"|"+g.name+"|"+index);
+const parts=g.name.split(" "),first=parts[0],last=parts.slice(1).join(" ")||"Guest";
+const iso=IN_SURNAMES.has(last)?"IN":"US";
+const[city,zip]=FL_CITIES[seed%FL_CITIES.length];
+return{first,middle:"",last,iso,
+email:(first+"."+last).toLowerCase().replace(/[^a-z.]/g,"")+"@example.com",
+phone:iso==="IN"?(90000+seed%10000)+" "+(10000+(seed*7)%90000):"("+(200+seed%700)+") "+(100+seed%900)+"-"+(1000+(seed*13)%9000),
+gender:MALE_FIRST.has(first)?"Male":FEMALE_FIRST.has(first)?"Female":GENDERS[seed%2],
+address:(100+seed%899)+" "+STREETS[seed%STREETS.length]+", Margaritaville",city,zip,state:"Florida"};
+}
+function migrateReferenceLegacyProfile(saved,fallback,fresh,draftVersion,index){
+const authored={...(fallback?.profile||{})},staged={...(saved?.profile||{})};
+if(draftVersion>=DETAIL_DRAFT_VERSION||String(fresh.b.id)!=="54334373"||!fallback?.name)return{...authored,...staged};
+const legacy=legacyReferenceProfile(fallback,index,fresh.b),rebased={...authored};
+new Set([...Object.keys(legacy),...Object.keys(staged)]).forEach(key=>{
+if(String(staged[key]??"")!==String(legacy[key]??""))rebased[key]=staged[key];
+});
+return rebased;
+}
 function restoreDetailDraft(fresh){
 let draft;
 try{
@@ -765,9 +888,10 @@ if(!raw)return fresh;
 draft=JSON.parse(raw);
 }catch(_error){clearDetailDraft(fresh.b.id);return fresh;}
 const draftVersion=Number(draft?.version);
-const valid=draft&&(draftVersion===1||draftVersion===DETAIL_DRAFT_VERSION)
+const valid=draft&&[1,2,3,DETAIL_DRAFT_VERSION].includes(draftVersion)
 &&String(draft.bookingId)===String(fresh.b.id)
 &&Number(draft.recordVersion??1)===Number(fresh.b.recordVersion??1)
+&&(draftVersion<DETAIL_DRAFT_VERSION||Number(draft.baselineVersion)===detailBaselineVersion(fresh.b.id))
 &&Array.isArray(draft.guests)&&draft.guests.length>0
 &&Array.isArray(draft.cabinPlan)&&draft.cabinPlan.length===fresh.cabinPlan.length;
 if(!valid){clearDetailDraft(fresh.b.id);return fresh;}
@@ -795,11 +919,11 @@ fallback=fallback||{};
 const dobDate=new Date(saved.dobDate||saved.dob||fallback.dobDate);
 if(Number.isNaN(dobDate.getTime()))return null;
 const restored={...fallback,...saved,guestId,dobDate,band:ageBand(ageAt(dobDate,fresh.sail)),insurance:true,
-profile:{...(fallback.profile||{}),...(saved.profile||{})},
+profile:migrateReferenceLegacyProfile(saved,fallback,fresh,draftVersion,i),
 /* Guest cancellation now has its own routed workflow. Do not revive legacy
    removal markers inside a Modification draft. */
 pendingRemoval:null};
-restored.supps=normalizeSupplementMap(saved.supps,restored,fresh.sail);
+restored.supps=normalizeSupplementMap(migrateReferenceV2Supplements(saved,fallback,fresh,draftVersion),restored,fresh.sail);
 restored.supplements=suppCount(restored.supps);
 restored.pkg=restored.pkg&&packageAllowed(PKG_BY_ID[restored.pkg],restored,fresh.sail)?restored.pkg:null;
 return restored;
@@ -826,14 +950,14 @@ const fare=fareSnapshot(guest.pendingRemoval.fare),laundryPrice=SUPP_BY_ID.laund
 ["onboard","enhancements","subtotal","total"].forEach(key=>{fare[key]=roundMoney(fare[key]-laundryPrice);});
 guest.pendingRemoval={...guest.pendingRemoval,fare};
 });
-/* Upgrade every valid v1 envelope once. Future intentional laundry selections
-   are v2 data and are never touched by the narrow migration above. */
-if(draftVersion===1){
+/* Upgrade every valid legacy envelope once. Future authored selections carry
+   the fixture-baseline version and are never interpreted against old data. */
+if(draftVersion!==DETAIL_DRAFT_VERSION){
 try{
 if(!isDirty(fresh))clearDetailDraft(fresh.b.id);
 else localStorage.setItem(detailDraftKey(fresh.b.id),JSON.stringify({
 version:DETAIL_DRAFT_VERSION,bookingId:fresh.b.id,savedAt:new Date().toISOString(),
-recordVersion:fresh.b.recordVersion??1,
+recordVersion:fresh.b.recordVersion??1,baselineVersion:detailBaselineVersion(fresh.b.id),
 cabinPlan:fresh.cabinPlan.map(c=>({num:c.num,room:c.room,code:c.code})),
 guests:fresh.guests.map(draftGuest),promo:fresh.promo||null
 }));
@@ -847,7 +971,7 @@ try{
 if(!isDirty(detail)){clearDetailDraft(detail.b.id);return;}
 localStorage.setItem(detailDraftKey(detail.b.id),JSON.stringify({
 version:DETAIL_DRAFT_VERSION,bookingId:detail.b.id,savedAt:new Date().toISOString(),
-recordVersion:detail.b.recordVersion??1,
+recordVersion:detail.b.recordVersion??1,baselineVersion:detailBaselineVersion(detail.b.id),
 cabinPlan:detail.cabinPlan.map(c=>({num:c.num,room:c.room,code:c.code})),
 guests:detail.guests.map(draftGuest),promo:detail.promo||null
 }));
@@ -875,6 +999,7 @@ const pkgBy=rawPkgBy.map((pkgId,index)=>pkgId&&packageAllowed(PKG_BY_ID[pkgId],r
 const rawSuppsBy=roster.map(g=>{
 const saved=pricingSnapshot?savedGuestById.get(g.guestId):null;
 if(saved?.supps&&typeof saved.supps==="object")return{...saved.supps};
+if(g.supps&&typeof g.supps==="object")return{...g.supps};
 const o={};
 const eligibleCatalog=SUPP_CATALOG.filter(supplement=>suppAllowed(supplement,g,sail));
 for(let k=0;k<Math.min(g.supplements,eligibleCatalog.length);k++)o[eligibleCatalog[k].id]=1;
@@ -931,6 +1056,7 @@ inventory:stateroomInventory(b),
 cabinPlan,
 base:{
 cabinFare,taxes,supplements,insurance:baseInsurance,discount:baseDiscount,total:b.value,pending:b.pending,
+paidToDate:Number.isFinite(Number(b.paidToDate))?roundMoney(b.paidToDate):roundMoney(b.value-b.pending),
 newGuestCabinFare:pricingSnapshot&&Number.isFinite(pricingSnapshot.newGuestCabinFare)
 ?roundMoney(pricingSnapshot.newGuestCabinFare):roundMoney(cabinFare/Math.max(roster.length,1)),
 units:baseUnits,
@@ -971,9 +1097,19 @@ return activeGuests(d).filter(candidate=>candidate.cabin===g.cabin).findIndex(ca
 /* A downgrade may credit cabin fare down to zero, never below it. Catalogue
    deltas can exceed a guest's sold cabin allocation, especially for children
    and infants, so every consumer uses this same guarded adjustment. */
+function newGuestCabinFare(d,g,cabinIdx=d.b.cabins.indexOf(g?.cabin)){
+const baseGuests=d.base.guests||[];
+const cabinNumber=d.b.cabins[cabinIdx];
+let comparable=baseGuests.filter(guest=>guest.cabin===cabinNumber);
+if(!comparable.length)comparable=baseGuests;
+const weightTotal=comparable.reduce((sum,guest)=>sum+(AGE_WEIGHT[guest.band]||0),0);
+const fareTotal=comparable.reduce((sum,guest)=>sum+(Number(guest.baseCabinFare)||0),0);
+const adultEquivalent=weightTotal>0?fareTotal/weightTotal:Number(d.base.newGuestCabinFare)||0;
+return Math.max(0,roundMoney(adultEquivalent*(AGE_WEIGHT[g?.band]||0)));
+}
 function cabinAdjustmentForGuest(d,g,cabinIdx,perHeadFare,code=d.cabinPlan[cabinIdx].code){
 const before=baseGuestFor(d,g);
-const baseFare=Math.max(0,roundMoney(before?before.baseCabinFare:perHeadFare));
+const baseFare=Math.max(0,roundMoney(before?before.baseCabinFare:newGuestCabinFare(d,g,cabinIdx)));
 const raw=catEntry(code).price-catEntry(d.base.cabinCodeBy[cabinIdx]).price;
 return roundMoney(Math.max(-baseFare,raw));
 }
@@ -1030,7 +1166,7 @@ const insuranceAdj=insurance-(d.base.insurance??d.base.insured*INSURANCE_RATE);
 /* a newly added guest inherits the original per-head cabin rate rather than
    splitting the fixed cabinFare across more heads — nothing gets redistributed */
 const perHeadFare=d.base.newGuestCabinFare??roundMoney(d.base.cabinFare/origCount);
-const newGuestFare=roundMoney(newGuests.length*perHeadFare);
+const newGuestFare=roundMoney(newGuests.reduce((sum,g)=>sum+newGuestCabinFare(d,g),0));
 /* a category change is charged per occupant, bounded by that guest's cabin
    allocation so a downgrade can never create a negative cabin fare */
 const cabinAdj=roundMoney(d.cabinPlan.reduce((sum,c,idx)=>
@@ -1049,7 +1185,7 @@ const perGuestBase=d.guests.map(g=>{
 if(!isGuestActive(g))return 0;
 const before=baseGuestFor(d,g);
 if(before)return roundMoney((before.baseCabinFare||0)+(before.baseGovtTax||0)+(before.baseCruiseFee||0));
-return roundMoney(perHeadFare+newGuestTaxComponents(d,g).taxes);
+return roundMoney(newGuestCabinFare(d,g)+newGuestTaxComponents(d,g).taxes);
 });
 /* each guest carries their own supplement and package cost, priced from the catalogue */
 const perGuestSupp=d.guests.map(g=>!isGuestActive(g)?0:suppValue(g.supps,g.pkg)
@@ -1059,7 +1195,7 @@ const perGuest=perGuestBase.map((base,i)=>roundMoney(base+perGuestSupp[i]+perGue
 /* Payment position is derived from the same modification baseline as the fare
    calculation. This keeps Review changes honest when the booking object has
    been rebased after a committed cancellation. */
-const paidToDate=Math.max(0,roundMoney(d.base.total-d.base.pending));
+const paidToDate=Math.max(0,roundMoney(Number.isFinite(Number(d.base.paidToDate))?d.base.paidToDate:d.base.total-d.base.pending));
 const unpaidAfterChanges=roundMoney(total-paidToDate);
 const pending=Math.max(0,unpaidAfterChanges);
 const creditDue=Math.max(0,roundMoney(-unpaidAfterChanges));
@@ -1111,8 +1247,9 @@ return{govt,cruise:taxes-govt};
 const PASSENGER_TYPE=["Adult Passenger","Young Adult Passenger","Child Passenger","Infant Passenger"];
 const PASSENGER_ABBR=["A","YA","C","I"];
 /* ---- supplements & packages catalogue ----
-   the first six are the originally-sold MVAS supplements; buildDetailState seeds a
-   booking's existing supplements off the head of this list, so they must stay first. */
+   Reference bookings carry explicit product IDs. Generated filler bookings may
+   still derive deterministic selections when their lightweight fixture has only
+   a count, but catalogue order never defines the reviewed booking's sold data. */
 const SUPP_CATALOG=[
 {id:"paradise",name:"Paradise Certificates",emoji:"🎟️",cat:"Experiences",pricePP:18.75,info:"Prepaid onboard credit redeemable at participating bars, shops, spa services, and excursion desks. Unused value is non-refundable."},
 {id:"wifi",name:"Coconut Telegraph Wi-Fi 3-Night",emoji:"📶",cat:"Connectivity",pricePP:23.75,info:"One-device social and messaging access for three consecutive nights. Streaming and ship-to-shore calls are not included."},
@@ -1257,8 +1394,8 @@ deck:String(plan.room).charAt(0),guests,allGuests,counts:bandCounts};
 }
 /* roster-wide overview: who's traveling, and the age-band breakdown behind
    the per-cabin counts, at a glance before drilling into cabin specifics */
-function renderGuestSummary(){
-const d=detail,guests=activeGuests(d),primary=guests[0],total=guests.length,cabinTotal=d.cabinPlan.length;
+function renderGuestSummary(d=detail){
+const guests=activeGuests(d),primary=guests[0],total=guests.length,cabinTotal=d.cabinPlan.length;
 const counts=[0,0,0,0];
 guests.forEach(g=>counts[g.band]++);
 const breakdown=counts.map((count,i)=>count>0?
@@ -1278,17 +1415,16 @@ document.getElementById("sGuestSummary").innerHTML=`
 }
 let cabinDisclosureBookingId=null;
 let expandedCabinIndexes=new Set();
-function syncCabinDisclosureState(cabins){
-const bookingId=detail.b.id;
+function syncCabinDisclosureState(d){
+const bookingId=d.b.id;
 if(cabinDisclosureBookingId===bookingId)return;
 cabinDisclosureBookingId=bookingId;
 expandedCabinIndexes=new Set();
 }
-function renderCabinCards(p){
-const d=detail;
+function renderCabinCards(p,d=detail){
 const cabins=cabinGroups(d);
 const fareRows=guestFareRows(d,p);
-syncCabinDisclosureState(cabins);
+syncCabinDisclosureState(d);
 document.getElementById("sCabinCount").textContent=cabins.length;
 document.getElementById("sCabinCount").setAttribute("aria-label",`${cabins.length} cabin${cabins.length===1?"":"s"}`);
 document.getElementById("sCabinCards").innerHTML=cabins.map(c=>{
@@ -1304,6 +1440,11 @@ const age=ageAt(g.dobDate,d.sail);
 const supp=p.perGuestSupp[i];
 const fare=fareRows[i];
 const primary=isPrimaryGuest(d,g);
+const supplementProducts=Object.values(g.supps||{}).filter(quantity=>Number(quantity)>0).length;
+const supplementUnits=suppCount(g.supps);
+const supplementCopy=supplementProducts===supplementUnits
+?`${supplementProducts} product${supplementProducts===1?"":"s"}`
+:`${supplementProducts} products · ${reviewQuantity(supplementUnits)} units`;
 return `<div class="ov-gt-row ov-gt-body${primary?" primary":""}">
 <div class="ov-gt-name">
 <div class="ov-gt-name-row"><span class="ov-gt-guest" title="${esc(g.name)}">${esc(g.name)}</span>${primary?'<span class="ov-tag-primary">Primary</span>':""}</div>
@@ -1311,7 +1452,7 @@ return `<div class="ov-gt-row ov-gt-body${primary?" primary":""}">
 </div>
 <div class="ov-gt-cell">${g.dob} (${age})</div>
 <div class="ov-gt-ins${g.insurance?"":" off"}">${g.insurance?"Yes":"No"}</div>
-<div class="ov-gt-cell ov-gt-r">${suppCount(g.supps)} supplement${suppCount(g.supps)===1?"":"s"}${g.pkg?` &middot; ${esc(PKG_BY_ID[g.pkg].name)}`:""}</div>
+<div class="ov-gt-cell ov-gt-r">${supplementCopy}${g.pkg?` &middot; ${esc(PKG_BY_ID[g.pkg].name)} package`:""}</div>
 <div class="ov-gt-fare">
 <span class="ov-gt-fare-amt">${fmt(fare.total)}</span>
 ${supp>0.005?`<span class="ov-gt-fare-sub">Includes ${fmt(supp)} extras</span>`:""}
@@ -1348,22 +1489,26 @@ return `<div class="ov-cabin-card mvas-interactive-surface${isExpanded?"":" coll
    shared by the sidebar preview and the full-page view, so the two never drift */
 function historyItems(d){
 const b=d.b;
-/* events recorded during this session (a cancellation, a refund) sit above the
-   deterministic history the booking was seeded with */
-const items=(b.events||[]).slice();
 const historyTime=minutesAfter=>{
 const dt=parseBDate(b.created),[hours,minutes]=b.createdTime.split(":").map(Number);
 dt.setHours(hours,minutes+minutesAfter,0,0);
 const hour12=((dt.getHours()+11)%12)+1,meridiem=dt.getHours()<12?"AM":"PM";
 return `${String(dt.getDate()).padStart(2,"0")} ${MONTHS[dt.getMonth()]} ${dt.getFullYear()} · ${String(hour12).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")} ${meridiem}`;
 };
-const paid=b.value-b.pending;
-if(paid>0)items.push({time:historyTime(22),title:"Payment Received",desc:`Paid ${fmt(paid)} · Balance ${fmt(b.pending)}`,src:"Payment gateway"});
-if(d.base.units>0)items.push({time:historyTime(14),title:"Guest Supplements Added",desc:`${d.base.units} supplement selections assigned across ${activeGuests(d).length} guests`,src:"JD · Reservations"});
-items.push({time:historyTime(8),title:"Cabin Assignments Confirmed",desc:b.cabins.map((room,i)=>`Cabin ${i+1}: Room #${room}`).join(" · "),src:"Inventory system"});
-items.push({time:historyTime(4),title:"Guest details verified",desc:`${activeGuests(d).length} guests verified · Insurance active for all guests`,src:"JD · Reservations"});
-items.push({time:historyTime(0),title:"Booking Created",desc:`${d.info.ship} · ${d.info.shipSub} · ${farecodeFor(b)}`,src:"Booking engine"});
-return items;
+if(!Array.isArray(b.historySeed)||!b.historySeed.length){
+const confirmedGuests=d.base.guests||[];
+const confirmedGuestCount=confirmedGuests.length;
+const supplementGuestCount=confirmedGuests.filter(guest=>suppCount(guest.supps)>0||guest.pkg).length;
+const paid=roundMoney(Number.isFinite(Number(d.base.paidToDate))?d.base.paidToDate:d.base.total-d.base.pending);
+b.historySeed=[];
+if(paid>0)b.historySeed.push({time:historyTime(22),title:"Payment Received",desc:`Paid ${fmt(paid)} · Balance ${fmt(d.base.pending)}`,src:"Payment gateway"});
+if(d.base.units>0)b.historySeed.push({time:historyTime(14),title:"Guest Supplements Added",desc:`${d.base.units} supplement units assigned to ${supplementGuestCount} of ${confirmedGuestCount} guests`,src:"JD · Reservations"});
+b.historySeed.push({time:historyTime(8),title:"Cabin Assignments Confirmed",desc:(d.base.roomBy||b.cabins).map((room,i)=>`Cabin ${i+1}: Room #${room}`).join(" · "),src:"Inventory system"});
+b.historySeed.push({time:historyTime(4),title:"Guest details verified",desc:`${confirmedGuestCount} guests verified · Insurance active for ${d.base.insured} guest${d.base.insured===1?"":"s"}`,src:"JD · Reservations"});
+b.historySeed.push({time:historyTime(0),title:"Booking Created",desc:`${d.info.ship} · ${d.info.shipSub} · ${farecodeFor(b)}`,src:"Booking engine"});
+}
+/* Completed transactions append above the immutable sold-booking events. */
+return[...(b.events||[]),...b.historySeed];
 }
 function timelineHtml(items){
 return items.map(it=>`<div class="ov-tl-item">
@@ -1387,9 +1532,9 @@ return `<dl class="ov-change-item-facts">${facts.map(fact=>`<div class="ov-chang
 const REVIEW_CHANGE_GROUPS=[
 {key:"cabin",title:"Cabin changes",description:"Room and stateroom category assignments",kinds:["room-change"]},
 {key:"guest-cancellation",title:"Guest cancellations",description:"Staged cancellations, fare credits, and position changes",kinds:["guest-removed"]},
-{key:"guest-addition",title:"Guest additions",description:"New guests, assigned fare, and protection",kinds:["guest-added"]},
+{key:"guest-addition",title:"Guest additions",description:"New guests, assigned fare, protection, and supplements",kinds:["guest-added"],includeNestedSupplements:true},
 {key:"guest-update",title:"Guest updates",description:"Cabin transfers and guest profile changes",kinds:["guest-moved","guest-updated"]},
-{key:"supplements",title:"Supplement changes",description:"Products and packages assigned to guests",kinds:["package-change","supplement-change"]},
+{key:"supplements",title:"Supplement changes",description:"Supplement products grouped for fast assignment review",kinds:["package-change","supplement-change"]},
 {key:"extras",title:"Extras & offers",description:"Travel protection and promotions",kinds:["protection-change","promo-change"]},
 {key:"other",title:"Other changes",description:"Additional staged booking updates",kinds:[]}
 ];
@@ -1476,14 +1621,25 @@ const adjustment=roundMoney(item.amt-calculated);
 if(Math.abs(adjustment)<=.005)return"";
 return `<tr class="mf-review-extra-rounding"><th scope="row"><strong>Rounding adjustment</strong><small>Keeps the displayed staged total reconciled</small></th><td data-label="Quantity">—</td><td data-label="Unit price">—</td><td class="mf-review-extra-money${reviewImpactClass(adjustment)}" data-label="Line impact">${fmtSigned(adjustment)}</td></tr>`;
 }
+function reviewChangedProductLines(review){
+return(review?.lines||[]).filter(line=>line.beforeQty!==line.afterQty||Math.abs(line.delta)>.005||line.beforeCoverage?.id!==line.afterCoverage?.id);
+}
+function stagedChangeUnitCount(items){
+return(items||[]).reduce((sum,item)=>{
+if(["supplement-change","package-change"].includes(item.kind))return sum+Math.max(1,reviewChangedProductLines(item.review).length);
+return sum+1;
+},0);
+}
 function reviewSupplementDetailsHtml(item,review,nested=false){
 if(!review.lines?.length)return changeItemFactsHtml(item);
+const changedLines=reviewChangedProductLines(review);
+if(!changedLines.length)return changeItemFactsHtml(item);
 return `<div class="mf-review-extra-detail${nested?" is-nested":""}">
-${nested?"":`<div class="mf-review-extra-detail-head"><span>Supplement details</span><small>All selected products and direct charges</small></div>`}
+${nested?"":`<div class="mf-review-extra-detail-head"><span>Supplement details</span><small>Only products changed in this draft</small></div>`}
 <div class="mf-review-extra-table-wrap"><table class="mf-review-extra-table">
 <caption class="sr-only">Supplement changes for ${esc(review.guest||reviewChangeItemTitle(item))}</caption>
 <thead><tr><th scope="col">Supplement</th><th scope="col">Quantity</th><th scope="col">Unit price</th><th scope="col">Line impact</th></tr></thead>
-<tbody>${review.lines.map(line=>`<tr>
+<tbody>${changedLines.map(line=>`<tr>
 <th scope="row"><strong>${esc(line.name)}</strong><small>${esc(line.category)} · ${esc(reviewSupplementCoverage(line))}</small></th>
 <td data-label="Quantity"><span class="mf-review-extra-quantity">${reviewSupplementQuantityHtml(line,nested)}</span></td>
 <td class="mf-review-extra-rate" data-label="Unit price">${fmt(line.unitPrice)}<small>per unit</small></td>
@@ -1572,7 +1728,7 @@ const productCount=productLines.length;
 const productUnits=productLines.reduce((sum,line)=>sum+(Number(line.afterQty)||0),0);
 const supplementKey=String(item.subjectGuestId||item.label||"guest");
 const supplementPanelId=`review-supplements-${supplementKey.replace(/[^a-zA-Z0-9_-]/g,"-")}`;
-const supplementCollapsed=Boolean(mod.reviewSupplementCollapsedIds?.has(supplementKey));
+const supplementExpanded=Boolean(mod.reviewSupplementExpandedIds?.has(supplementKey));
 const lines=(ledger.lines||[]).filter(line=>!line.requiresNested||nestedItems.length).map(line=>({
 ...line,amount:roundMoney(line.amount+(line.addNestedImpact?nestedImpact:0))
 }));
@@ -1584,12 +1740,12 @@ const amountCopy=line.displayAmount||fmtSigned(line.amount);
 const classes=["mf-review-guest-ledger-row",line.level?`is-${line.level}`:"",line.amount<-.005?"credit":"",line.retained?"is-retained":""].filter(Boolean).join(" ");
 if(line.products&&productsHtml){
 const productCopy=`${productCount} selected product${productCount===1?"":"s"} · ${reviewQuantity(productUnits)} unit${productUnits===1?"":"s"}`;
-return `<div class="${classes} is-supplement-accordion${supplementCollapsed?" is-collapsed":""}">
-<dt><button type="button" class="mf-review-guest-supplement-toggle" data-review-supplement-toggle="${esc(supplementKey)}" aria-expanded="${String(!supplementCollapsed)}" aria-controls="${supplementPanelId}">
-<span class="mf-review-guest-supplement-toggle-copy"><strong>${esc(line.label)}</strong><small>${esc(productCopy)} · <span data-review-supplement-state>${supplementCollapsed?"Show details":"Hide details"}</span></small></span>
+return `<div class="${classes} is-supplement-accordion${supplementExpanded?"":" is-collapsed"}">
+<dt><button type="button" class="mf-review-guest-supplement-toggle" data-review-supplement-toggle="${esc(supplementKey)}" aria-expanded="${String(supplementExpanded)}" aria-controls="${supplementPanelId}">
+<span class="mf-review-guest-supplement-toggle-copy"><strong>${esc(line.label)}</strong><small>${esc(productCopy)} · <span data-review-supplement-state>${supplementExpanded?"Hide details":"Show details"}</span></small></span>
 <span class="mf-review-guest-supplement-toggle-meta"><strong>${esc(amountCopy)}</strong><span class="mf-review-guest-supplement-chevron" aria-hidden="true">${SVG_CARET}</span></span>
 </button></dt>
-<dd class="mf-review-guest-supplement-panel" id="${supplementPanelId}"${supplementCollapsed?" hidden":""}>${productsHtml}</dd>
+<dd class="mf-review-guest-supplement-panel" id="${supplementPanelId}"${supplementExpanded?"":" hidden"}>${productsHtml}</dd>
 </div>`;
 }
 return `<div class="${classes}"><dt><span>${esc(line.label)}</span>${line.note?`<small>${esc(line.note)}</small>`:""}</dt><dd>${esc(amountCopy)}</dd></div>`;
@@ -1604,6 +1760,168 @@ return `<div class="mf-review-guest-ledger-wrap">
 ${(ledger.notes||[]).length?`<ul class="mf-review-guest-ledger-notes">${ledger.notes.map(note=>`<li>${esc(note)}</li>`).join("")}</ul>`:""}
 </div>`;
 }
+function reviewSupplementAssignmentAction(line,type){
+const beforeQty=Number(line.beforeQty)||0,afterQty=Number(line.afterQty)||0;
+if(beforeQty<=0&&afterQty>0)return"Added";
+if(beforeQty>0&&afterQty<=0)return"Removed";
+if(type==="supplements"&&line.beforeCoverage?.id!==line.afterCoverage?.id)return"Coverage updated";
+if(beforeQty!==afterQty)return"Quantity updated";
+return"Updated";
+}
+function reviewSupplementProductEntries(items){
+return items.flatMap(item=>{
+const review=item.review;
+if(!review||!["supplements","packages"].includes(review.type))return[];
+const changedLines=reviewChangedProductLines(review);
+return changedLines.map(line=>({
+key:`${review.type}:${line.id||line.name}`,
+type:review.type,
+name:line.name,
+category:review.type==="packages"?"Package":line.category||"Supplement",
+guest:review.guest||reviewChangeItemTitle(item),
+action:reviewSupplementAssignmentAction(line,review.type),
+beforeQty:Number(line.beforeQty)||0,
+afterQty:Number(line.afterQty)||0,
+beforeCoverage:line.beforeCoverage||null,
+afterCoverage:line.afterCoverage||null,
+unitPrice:Number(line.unitPrice)||0,
+nights:Number(line.nights)||0,
+impact:roundMoney(line.delta)
+}));
+});
+}
+function reviewSupplementAssignmentDetail(entry){
+if(entry.type==="packages"){
+const before=entry.beforeQty>0?"Assigned":"Not assigned",after=entry.afterQty>0?"Assigned":"Not assigned";
+return `${before} → ${after} · ${fmt(entry.unitPrice)} per guest / night × ${entry.nights} nights`;
+}
+const coverage=reviewSupplementCoverage(entry);
+return `Quantity ${reviewQuantity(entry.beforeQty)} → ${reviewQuantity(entry.afterQty)} · ${coverage} · ${fmt(entry.unitPrice)} per unit`;
+}
+function reviewSupplementProductGroups(entries){
+const groups=new Map();
+entries.forEach(entry=>{
+if(!groups.has(entry.key))groups.set(entry.key,{key:entry.key,type:entry.type,name:entry.name,category:entry.category,entries:[]});
+groups.get(entry.key).entries.push(entry);
+});
+return [...groups.values()].sort((a,b)=>a.type===b.type?a.name.localeCompare(b.name):a.type==="packages"?-1:1);
+}
+function reviewSupplementProductViewHtml(entries){
+const groups=reviewSupplementProductGroups(entries);
+if(!groups.length)return `<div class="mf-review-product-empty"><strong>No product-level changes</strong><span>Use the guest view to review the available staged details.</span></div>`;
+return `<ul class="mf-review-product-groups" aria-label="Supplement changes grouped by product">${groups.map((group,index)=>{
+const actions=[...new Set(group.entries.map(entry=>entry.action))];
+const action=actions.length===1?actions[0]:"Mixed changes";
+const actionClass=action==="Added"?" is-added":action==="Removed"?" is-removed":"";
+const guestNames=[...new Set(group.entries.map(entry=>entry.guest))];
+const guestCopy=guestNames.length<=3?guestNames.join(", "):`${guestNames.slice(0,3).join(", ")} +${guestNames.length-3} more`;
+const impact=roundMoney(group.entries.reduce((sum,entry)=>sum+entry.impact,0));
+const detailId=`review-supplement-product-${index}`;
+return `<li class="ov-change-item mf-review-product-group has-collapsible-detail is-collapsed">
+<button type="button" class="mf-review-item-toggle" data-review-item-toggle aria-expanded="false" aria-controls="${detailId}" aria-label="Expand guest assignments for ${esc(group.name)}">
+<span class="mf-review-change-item-copy"><small class="mf-review-change-kind mf-review-product-action${actionClass}">${esc(action)}</small><span class="ov-change-item-label">${esc(group.name)}</span><small class="mf-review-product-meta">${esc(group.category)} · ${guestNames.length} guest${guestNames.length===1?"":"s"} · ${esc(guestCopy)}</small></span>
+<span class="ov-change-item-impact"><small>Net impact</small><strong class="ov-change-item-amt${impact<0?" credit":""}">${fmtSigned(impact)}</strong></span>
+<span class="mf-review-item-chevron" aria-hidden="true">${SVG_CHEV}</span>
+</button>
+<div class="mf-review-item-detail mf-review-product-detail" id="${detailId}" hidden>
+<header class="mf-review-product-detail-head"><span>Guest-level changes</span><small>${group.entries.length} change${group.entries.length===1?"":"s"} included in this product total</small></header>
+<ul class="mf-review-product-assignments">${group.entries.map(entry=>`<li>
+<span class="mf-review-product-assignment-copy"><strong>${esc(entry.guest)}</strong><small><b>${esc(entry.action)}</b> · ${esc(reviewSupplementAssignmentDetail(entry))}</small></span>
+<span class="mf-review-product-assignment-impact${reviewImpactClass(entry.impact)}"><small>Line impact</small><strong>${fmtSigned(entry.impact)}</strong></span>
+</li>`).join("")}</ul>
+</div>
+</li>`;
+}).join("")}</ul>`;
+}
+function reviewSupplementViewsHtml(items,entries){
+const productCount=reviewSupplementProductGroups(entries).length;
+const guestList=`<ul class="mf-review-change-group-items">${items.map((item,itemIndex)=>changeItemHtml(item,true,{collapsibleDetail:true,detailId:`review-supplements-guest-${itemIndex}`})).join("")}</ul>`;
+return `<div class="mf-review-supplement-review">
+<div class="mf-review-supplement-toolbar">
+<span class="mf-review-supplement-toolbar-copy"><strong>${productCount} product${productCount===1?"":"s"} · ${entries.length} assignment${entries.length===1?"":"s"}</strong><small>Scan by product, then expand only the guest assignments you need to verify.</small></span>
+<span class="mf-review-supplement-view-switch" role="group" aria-label="Group supplement changes by">
+<button type="button" data-review-supplement-view="product" aria-pressed="true">By product</button>
+<button type="button" data-review-supplement-view="guest" aria-pressed="false">By guest</button>
+</span>
+</div>
+<div data-review-supplement-panel="product">${reviewSupplementProductViewHtml(entries)}</div>
+<div data-review-supplement-panel="guest" hidden>${guestList}</div>
+</div>`;
+}
+function reviewNestedChangeOwnership(items){
+const addedGuestIds=new Set(items.filter(item=>item.kind==="guest-added"&&item.subjectGuestId).map(item=>String(item.subjectGuestId)));
+const byGuest=new Map(),owned=new Set();
+items.forEach(item=>{
+if(!["supplement-change","package-change"].includes(item.kind)||!item.subjectGuestId||!addedGuestIds.has(String(item.subjectGuestId)))return;
+const guestId=String(item.subjectGuestId),list=byGuest.get(guestId)||[];
+list.push(item);byGuest.set(guestId,list);owned.add(item);
+});
+return{byGuest,owned};
+}
+function reviewChangeFact(item,label){return item.facts?.find(fact=>fact.label===label)?.value||"";}
+function reviewCabinGroupDescription(items){
+return items.map(item=>{
+const change=item.cabinChange||{},category=change.category||{},room=change.room||{};
+const cabinNumber=Number(change.cabinIndex)+1||reviewChangeItemTitle(item).match(/\d+/)?.[0]||"—";
+const before=category.changed?`${category.beforeCode}/${room.before}`:`Room ${room.before}`;
+const after=category.changed?`${category.afterCode}/${room.after}`:`${room.after}`;
+return `Cabin ${cabinNumber}: ${before} → ${after}`;
+}).join(" · ");
+}
+function reviewSupplementGroupDescription(entries){
+const products=reviewSupplementProductGroups(entries);
+if(!products.length)return"No supplement assignments changed";
+if(products.length===1){
+const product=products[0],guestCount=new Set(product.entries.map(entry=>entry.guest)).size;
+const actions=[...new Set(product.entries.map(entry=>entry.action))];
+const action=actions.length!==1?"updated for":actions[0]==="Added"?"added for":actions[0]==="Removed"?"removed from":"updated for";
+return `${product.name} ${action} ${guestCount} guest${guestCount===1?"":"s"}`;
+}
+const names=products.slice(0,2).map(product=>product.name).join(" · ");
+return `${names}${products.length>2?` · +${products.length-2} more`:""}`;
+}
+function reviewGroupPresentation(group,members,nestedByGuest,supplementEntries){
+if(group.key==="cabin")return{title:"Cabin assignments",description:reviewCabinGroupDescription(members),countLabel:`${members.length} room assignment${members.length===1?"":"s"}`};
+if(group.key==="guest-addition"){
+const names=members.map(reviewChangeItemTitle),nestedItems=members.flatMap(item=>nestedByGuest.get(String(item.subjectGuestId))||[]);
+const productCount=reviewSupplementProductGroups(reviewSupplementProductEntries(nestedItems)).length;
+const assignedCabins=members.map(item=>reviewChangeFact(item,"Assigned cabin")).filter(Boolean);
+const cabinNumbers=[...new Set(assignedCabins.map(value=>value.match(/Cabin \d+/)?.[0]).filter(Boolean))];
+const cabinCopy=members.length===1
+?(assignedCabins[0]||"Cabin assigned")
+:cabinNumbers.length?`Across ${cabinNumbers.length} cabin${cabinNumbers.length===1?"":"s"}`:"Cabins assigned";
+return{
+title:"Guest additions",
+description:`${members.length===1?`${names[0]} · `:""}${cabinCopy} · Fare and protection${productCount?` · ${productCount} supplement${productCount===1?"":"s"}`:""}`,
+countLabel:`${members.length} guest${members.length===1?"":"s"}`
+};
+}
+if(group.key==="guest-cancellation")return{title:members.length===1?`${reviewChangeItemTitle(members[0])} cancelled`:group.title,description:group.description,countLabel:`${members.length} guest${members.length===1?"":"s"}`};
+if(group.key==="guest-update")return{title:members.length===1?`${reviewChangeItemTitle(members[0])} updated`:group.title,description:group.description,countLabel:`${members.length} guest${members.length===1?"":"s"}`};
+if(group.key==="supplements"){
+const productCount=reviewSupplementProductGroups(supplementEntries).length;
+return{title:"Supplements for existing guests",description:reviewSupplementGroupDescription(supplementEntries),countLabel:`${productCount} product${productCount===1?"":"s"} · ${supplementEntries.length} assignment${supplementEntries.length===1?"":"s"}`};
+}
+return{title:group.title,description:group.description,countLabel:`${members.length} update${members.length===1?"":"s"}`};
+}
+function reviewChangeGroupModels(items){
+const knownKinds=new Set(REVIEW_CHANGE_GROUPS.flatMap(group=>group.kinds));
+const ownership=reviewNestedChangeOwnership(items);
+return REVIEW_CHANGE_GROUPS.flatMap(group=>{
+const members=items.filter(item=>{
+if(group.key==="supplements"&&ownership.owned.has(item))return false;
+return group.key==="other"?!knownKinds.has(item.kind):group.kinds.includes(item.kind);
+});
+if(!members.length)return[];
+const nestedItems=group.includeNestedSupplements?members.flatMap(item=>ownership.byGuest.get(String(item.subjectGuestId))||[]):[];
+const supplementEntries=group.key==="supplements"?reviewSupplementProductEntries(members):[];
+const amounts=[...members,...nestedItems].map(item=>Number(item.amt)||0);
+const impact=roundMoney(amounts.reduce((sum,amount)=>sum+amount,0));
+const hasCharge=amounts.some(amount=>amount>.005),hasCredit=amounts.some(amount=>amount<-.005);
+const allFlat=amounts.every(amount=>Math.abs(amount)<=.005);
+return[{group,members,nestedItems,nestedByGuest:ownership.byGuest,supplementEntries,impact,impactLabel:hasCharge&&hasCredit?"Net price impact":"Price impact",impactValue:allFlat?"No price change":Math.abs(impact)<=.005&&hasCharge&&hasCredit?`${fmt(0)} net`:fmtSigned(impact),impactClass:allFlat?" flat":reviewImpactClass(impact),presentation:reviewGroupPresentation(group,members,ownership.byGuest,supplementEntries)}];
+});
+}
 function changeItemHtml(item,grouped=false,options={}){
 const nestedItems=options.nestedItems||[];
 const visibleAmt=options.visibleAmt??item.amt;
@@ -1611,71 +1929,85 @@ const visibleImpactLabel=options.impactLabel||item.impactLabel||"Price impact";
 const title=grouped?reviewChangeItemTitle(item):item.label;
 const kindLabel=REVIEW_CHANGE_KIND_LABELS[item.kind]||"Booking update";
 const guestLedger=grouped&&item.fareLedger;
+const detailContent=guestLedger?reviewGuestFareLedgerHtml(item,nestedItems,visibleAmt,visibleImpactLabel):grouped&&item.review?reviewExtraDetailsHtml(item):changeItemFactsHtml(item);
+if(options.collapsibleDetail&&grouped){
+const detailId=options.detailId||`review-change-item-${String(title).replace(/[^a-zA-Z0-9_-]/g,"-")}`;
+return `<li class="ov-change-item${item.kind?` ${item.kind}`:""} has-collapsible-detail is-collapsed">
+<button type="button" class="mf-review-item-toggle" data-review-item-toggle aria-expanded="false" aria-controls="${esc(detailId)}" aria-label="Expand details for ${esc(title)}">
+<span class="mf-review-change-item-copy"><small class="mf-review-change-kind">${esc(kindLabel)}</small><span class="ov-change-item-label">${esc(title)}</span></span>
+<span class="ov-change-item-impact"><small>${esc(visibleImpactLabel)}</small><strong class="ov-change-item-amt${visibleAmt<0?" credit":""}">${fmtSigned(visibleAmt)}</strong></span>
+<span class="mf-review-item-chevron" aria-hidden="true">${SVG_CHEV}</span>
+</button>
+<div class="mf-review-item-detail" id="${esc(detailId)}" hidden>${detailContent}</div>
+</li>`;
+}
 return `<li class="ov-change-item${item.kind?` ${item.kind}`:""}${nestedItems.length?" has-nested-supplements":""}">
 <div class="ov-change-item-head">
 ${grouped?`<span class="mf-review-change-item-copy"><small class="mf-review-change-kind">${esc(kindLabel)}</small><span class="ov-change-item-label">${esc(title)}</span></span>`:`<span class="ov-change-item-label">${esc(title)}</span>`}
 ${guestLedger?"":`<span class="ov-change-item-impact"><small>${esc(visibleImpactLabel)}</small><strong class="ov-change-item-amt${visibleAmt<0?" credit":""}">${fmtSigned(visibleAmt)}</strong></span>`}
 </div>
-${guestLedger?reviewGuestFareLedgerHtml(item,nestedItems,visibleAmt,visibleImpactLabel):grouped&&item.review?reviewExtraDetailsHtml(item):changeItemFactsHtml(item)}
+${detailContent}
 ${grouped&&nestedItems.length&&!guestLedger?nestedItems.map(nestedGuestSupplementHtml).join(""):""}
 </li>`;
 }
 function groupedChangeItemsHtml(items){
-const knownKinds=new Set(REVIEW_CHANGE_GROUPS.flatMap(group=>group.kinds));
-const addedGuestIds=new Set(items.filter(item=>item.kind==="guest-added"&&item.subjectGuestId).map(item=>item.subjectGuestId));
-const nestedSupplementsByGuest=new Map();
-const nestedSupplements=new Set();
-items.forEach(item=>{
-if(item.kind!=="supplement-change"||!item.subjectGuestId||!addedGuestIds.has(item.subjectGuestId))return;
-const list=nestedSupplementsByGuest.get(item.subjectGuestId)||[];
-list.push(item);nestedSupplementsByGuest.set(item.subjectGuestId,list);nestedSupplements.add(item);
-});
-return REVIEW_CHANGE_GROUPS.map(group=>{
-const members=items.filter(item=>{
-if(group.key==="extras"&&nestedSupplements.has(item))return false;
-return group.key==="other"?!knownKinds.has(item.kind):group.kinds.includes(item.kind);
-});
-if(!members.length)return"";
-const nestedCount=group.includeNestedSupplements?members.reduce((sum,item)=>sum+(nestedSupplementsByGuest.get(item.subjectGuestId)?.length||0),0):0;
-const groupCount=members.length+nestedCount;
-const groupImpact=roundMoney(members.reduce((sum,item)=>{
-const nestedItems=group.includeNestedSupplements&&item.kind==="guest-added"?(nestedSupplementsByGuest.get(item.subjectGuestId)||[]):[];
-return sum+item.amt+nestedItems.reduce((nestedSum,child)=>nestedSum+child.amt,0);
-},0));
-const groupContent=group.key==="cabin"?reviewCabinChangeTableHtml(members):`<ul class="mf-review-change-group-items">${members.map(item=>{
-const nestedItems=group.includeNestedSupplements&&item.kind==="guest-added"?(nestedSupplementsByGuest.get(item.subjectGuestId)||[]):[];
+return reviewChangeGroupModels(items).map(({group,members,nestedByGuest,supplementEntries,impactLabel,impactValue,impactClass,presentation})=>{
+const groupContent=group.key==="cabin"?reviewCabinChangeTableHtml(members):group.key==="supplements"?reviewSupplementViewsHtml(members,supplementEntries):`<ul class="mf-review-change-group-items">${members.map((item,itemIndex)=>{
+const nestedItems=group.includeNestedSupplements&&item.kind==="guest-added"?(nestedByGuest.get(String(item.subjectGuestId))||[]):[];
 const visibleAmt=roundMoney(item.amt+nestedItems.reduce((sum,child)=>sum+child.amt,0));
-return changeItemHtml(item,true,{nestedItems,visibleAmt,impactLabel:nestedItems.length?"Fare + selected extras":item.impactLabel});
+return changeItemHtml(item,true,{nestedItems,visibleAmt,impactLabel:nestedItems.length?"Fare + selected extras":item.impactLabel,collapsibleDetail:group.key==="supplements",detailId:`review-${group.key}-item-${itemIndex}`});
 }).join("")}</ul>`;
-return `<li class="mf-review-change-group" data-review-change-group="${group.key}">
+const groupPanelId=`review-change-group-panel-${group.key}`;
+return `<li class="mf-review-change-group is-collapsed" data-review-change-group="${group.key}">
 <section aria-labelledby="review-change-group-${group.key}">
-<header class="mf-review-change-group-head">
+<button type="button" class="mf-review-change-group-head mf-review-change-group-toggle" data-review-group-toggle="${group.key}" aria-expanded="false" aria-controls="${groupPanelId}" aria-label="Expand ${esc(presentation.title)}">
 <span class="mf-review-change-group-icon" aria-hidden="true">${reviewChangeGroupIcon(group.key)}</span>
-<span class="mf-review-change-group-copy"><h4 id="review-change-group-${group.key}">${esc(group.title)}</h4><small>${esc(group.description)}</small></span>
+<span class="mf-review-change-group-copy"><span class="mf-review-change-group-title" id="review-change-group-${group.key}">${esc(presentation.title)}</span><small><span class="mf-review-change-group-meta">${esc(presentation.countLabel)}</span><i aria-hidden="true">·</i><span class="mf-review-change-group-detail">${esc(presentation.description)}</span></small></span>
 <span class="mf-review-change-group-summary">
-<span class="mf-review-change-group-count">${groupCount} change${groupCount===1?"":"s"}</span>
-<span class="mf-review-change-group-impact${reviewImpactClass(groupImpact)}"><small>Net impact</small><strong>${fmtSigned(groupImpact)}</strong></span>
+<span class="mf-review-change-group-impact${impactClass}"><small>${esc(impactLabel)}</small><strong>${esc(impactValue)}</strong></span>
 </span>
-</header>
-${groupContent}
+<span class="mf-review-change-group-chevron" aria-hidden="true">${SVG_CHEV}</span>
+</button>
+<div class="mf-review-change-group-body" id="${groupPanelId}" hidden>${groupContent}</div>
 </section>
 </li>`;
 }).join("");
 }
+function committedPriceDetail(d){
+const baseGuests=d.base.guests||[];
+const nights=d.info.nights||5;
+const packages=roundMoney(baseGuests.reduce((sum,g)=>sum+(g.pkg&&PKG_BY_ID[g.pkg]?PKG_BY_ID[g.pkg].rate*nights:0),0));
+const parts=taxBreakdown(d.base.taxes||0);
+const total=roundMoney(d.base.total||0);
+const paidToDate=Math.max(0,roundMoney(Number.isFinite(Number(d.base.paidToDate))?d.base.paidToDate:total-(d.base.pending||0)));
+const pending=Math.max(0,roundMoney(total-paidToDate));
+const creditDue=Math.max(0,roundMoney(paidToDate-total));
+return{
+total,pending,creditDue,paidToDate,
+cabinFare:roundMoney(d.base.cabinFare||0),taxes:roundMoney(d.base.taxes||0),
+govtTax:roundMoney(parts.govt),cruiseFee:roundMoney(parts.cruise),
+supplements:roundMoney(d.base.supplements||0),packages,
+insurance:roundMoney(d.base.insurance||0),activeInsured:Number(d.base.insured)||0,
+insured:Number(d.base.insured)||0,retainedProtectionCount:0,
+baseDiscount:roundMoney(d.base.discount||0),promoAmt:0,discount:roundMoney(d.base.discount||0)
+};
+}
 function renderPricePanel(p){
 const d=detail;
 const dirty=isDirty(d);
+const payment=committedPriceDetail(d);
 const dueDate=addDays(d.sail,-5);
-const paidAmt=p.paidToDate;
-const hasCredit=p.creditDue>.005;
-const paidPct=p.total>0?Math.max(0,Math.min(100,Math.round((paidAmt/p.total)*100))):0;
+const paidAmt=payment.paidToDate;
+const hasCredit=payment.creditDue>.005;
+const paidPct=payment.total>0?Math.max(0,Math.min(100,Math.round((paidAmt/payment.total)*100))):0;
 const daysDiff=Math.ceil((dueDate-new Date())/(1000*60*60*24));
 const badge=document.getElementById("payDueIn");
-const settled=!hasCredit&&p.pending<=0.005;
+const settled=!hasCredit&&payment.pending<=0.005;
 badge.textContent=hasCredit?"Credit to review":settled?"Fully paid":"Due in "+Math.max(daysDiff,0)+" days";
 badge.classList.toggle("paid",settled);
 badge.classList.toggle("credit",hasCredit);
-document.getElementById("pBalance").textContent=fmt(hasCredit?p.creditDue:p.pending);
+document.getElementById("pBalance").textContent=fmt(hasCredit?payment.creditDue:payment.pending);
+document.getElementById("pBalance").setAttribute("aria-label",hasCredit?"Credit to review":"Balance due");
 const dueLine=document.getElementById("pDueDate");
 dueLine.textContent=hasCredit?"Paid amount exceeds the updated booking total":settled?"Paid in full":"Final payment due "+fmtDateShort(dueDate);
 dueLine.closest(".ov-due-line").classList.toggle("settled",settled);
@@ -1683,53 +2015,75 @@ dueLine.closest(".ov-due-line").classList.toggle("credit",hasCredit);
 document.getElementById("pPaidToDate").textContent=fmt(paidAmt);
 document.getElementById("pPaidPct").textContent=hasCredit?"Above updated total":paidPct+"% Paid";
 document.getElementById("progressFill").style.width=(hasCredit?100:paidPct)+"%";
-const cabinTypes=[...new Set(d.cabinPlan.map(c=>catEntry(c.code).type.replace(" Stateroom","")))];
+const cabinTypes=[...new Set(d.base.cabinCodeBy.map(code=>catEntry(code).type.replace(" Stateroom","")))];
 const cabinLabel=cabinTypes.length===1?`Cabin fare (${cabinTypes[0]})`:"Cabin fare (mixed categories)";
 /* Allocate any sub-cent display remainder to cabin fare so the visible ledger
    always adds back to the displayed booking total. The pricing model stays raw. */
 const moneyCents=value=>Math.round((value+Number.EPSILON)*100);
-const otherDisplayCents=moneyCents(p.taxes)+moneyCents(p.supplements)+moneyCents(p.packages)+moneyCents(p.insurance)-moneyCents(p.discount);
-const displayedCabinFare=(moneyCents(p.total)-otherDisplayCents)/100;
+const otherDisplayCents=moneyCents(payment.taxes)+moneyCents(payment.supplements)+moneyCents(payment.packages)+moneyCents(payment.insurance)-moneyCents(payment.discount);
+const displayedCabinFare=(moneyCents(payment.total)-otherDisplayCents)/100;
 document.getElementById("pCabinTitle").textContent=cabinLabel;
-const activeCount=activeGuests(d).length;
+const activeCount=d.base.guests.length;
 document.getElementById("pCabinSub").textContent=activeCount+" guest"+(activeCount===1?"":"s")+" · "+d.cabinPlan.length+" cabin"+(d.cabinPlan.length===1?"":"s");
 document.getElementById("pCabinFare").textContent=fmt(displayedCabinFare);
-document.getElementById("pTaxes").textContent=fmt(p.taxes);
-document.getElementById("pGovtTax").textContent=fmt(p.govtTax);
-document.getElementById("pCruiseFee").textContent=fmt(p.cruiseFee);
-document.getElementById("pSupplements").textContent=fmt(p.supplements);
+document.getElementById("pTaxes").textContent=fmt(payment.taxes);
+document.getElementById("pGovtTax").textContent=fmt(payment.govtTax);
+document.getElementById("pCruiseFee").textContent=fmt(payment.cruiseFee);
+document.getElementById("pSupplements").textContent=fmt(payment.supplements);
 const packagesRow=document.getElementById("pPackagesRow");
-packagesRow.hidden=p.packages<=.005;
-document.getElementById("pPackages").textContent=fmt(p.packages);
+packagesRow.hidden=payment.packages<=.005;
+document.getElementById("pPackages").textContent=fmt(payment.packages);
 const insuranceRow=document.getElementById("pInsuranceRow");
-insuranceRow.hidden=p.insurance<=.005;
+insuranceRow.hidden=payment.insurance<=.005;
 insuranceRow.classList.remove("credit");
-document.getElementById("pInsuranceSub").textContent=p.retainedProtectionCount
-?`${p.activeInsured} active guest${p.activeInsured===1?"":"s"} × ${fmt(INSURANCE_RATE)} + ${p.retainedProtectionCount} non-refundable retained premium${p.retainedProtectionCount===1?"":"s"}`
-:p.insured+" guest"+(p.insured===1?"":"s")+" × "+fmt(INSURANCE_RATE);
-document.getElementById("pInsuranceAdj").textContent=fmt(p.insurance);
+document.getElementById("pInsuranceSub").textContent=payment.insured+" guest"+(payment.insured===1?"":"s")+" × "+fmt(INSURANCE_RATE);
+document.getElementById("pInsuranceAdj").textContent=fmt(payment.insurance);
 const promoRow=document.getElementById("pPromoRow");
-promoRow.hidden=p.discount<=.005;
-document.getElementById("pPromo").textContent=fmtSigned(-p.discount);
-document.getElementById("pPromoSub").textContent=d.promo
-?((p.baseDiscount>.005?"Committed discount + ":"")+d.promo+" · "+PROMO_CODES[d.promo].label)
-:p.baseDiscount>.005?"Committed booking discount":"";
-document.getElementById("pTotalPayable").textContent=fmt(p.total);
+promoRow.hidden=payment.discount<=.005;
+document.getElementById("pPromo").textContent=fmtSigned(-payment.discount);
+const appliedPromo=(d.b.appliedPromos||[]).at(-1);
+document.getElementById("pPromoSub").textContent=payment.baseDiscount>.005
+?(appliedPromo?`Committed promotion · ${appliedPromo}`:"Committed booking discount"):"";
+const promoInput=document.getElementById("promoInput"),promoApply=document.getElementById("promoApply");
+const promoLocked=payment.discount>.005;
+promoInput.disabled=promoLocked;promoApply.disabled=promoLocked;
+promoInput.placeholder=promoLocked?"Promotion already applied":"Enter coupon code…";
+if(promoLocked)promoInput.value="";
+document.getElementById("pTotalPayable").textContent=fmt(payment.total);
 const box=document.getElementById("changeBox");
 box.hidden=!dirty;
+document.getElementById("detailPendingChangesSlot").hidden=!dirty;
+const paymentDraft=document.getElementById("paymentDraftImpact");
+paymentDraft.hidden=!dirty;
 const items=dirty?changeItems(p):[];
 const review=document.getElementById("detailReviewChanges");
 review.disabled=!dirty;
 review.setAttribute("aria-expanded",String(dirty&&mod.previewOpen));
 if(dirty){
 const flat=Math.abs(p.delta)<=0.005;
-document.getElementById("changesCount").textContent=items.length+" staged";
+const changeCount=stagedChangeUnitCount(items);
+const affectedAreaCount=reviewChangeGroupModels(items).length;
+document.getElementById("changesCount").textContent=changeCount+" change"+(changeCount===1?"":"s");
+document.getElementById("pendingChangesScope").textContent=`Affects ${affectedAreaCount} booking area${affectedAreaCount===1?"":"s"} · Review before saving`;
 document.getElementById("changesItems").innerHTML=items.map(item=>changeItemHtml(item)).join("");
-document.getElementById("cOriginal").textContent=fmt(d.base.total);
 document.getElementById("cNet").textContent=flat?fmt(0):fmtSigned(p.delta);
-document.getElementById("cNetLabel").textContent="Net price change";
+document.getElementById("cNetLabel").textContent="Unsaved price impact";
+const projectedCredit=p.creditDue>.005;
+const projectedSettled=!projectedCredit&&p.pending<=.005;
+document.getElementById("cEstimatedBalanceLabel").textContent=projectedCredit?"Credit after saving":projectedSettled?"Payment status after saving":"Balance due after saving";
+document.getElementById("cEstimatedBalance").textContent=projectedSettled?"Paid in full":fmt(projectedCredit?p.creditDue:p.pending);
 document.getElementById("cNetRow").classList.toggle("credit",!flat&&p.delta<0);
-review.setAttribute("aria-label",`Review ${items.length} staged booking change${items.length===1?"":"s"}`);
+document.getElementById("paymentDraftCount").textContent=changeCount+" change"+(changeCount===1?"":"s");
+document.getElementById("paymentConfirmedLabel").textContent=hasCredit?"Confirmed credit":settled?"Confirmed payment status":"Confirmed balance due";
+document.getElementById("paymentConfirmedBalance").textContent=settled?"Paid in full":fmt(hasCredit?payment.creditDue:payment.pending);
+document.getElementById("paymentDraftDelta").textContent=flat?fmt(0):fmtSigned(p.delta);
+document.getElementById("paymentDraftDeltaRow").classList.toggle("credit",!flat&&p.delta<0);
+document.getElementById("paymentAfterSaveLabel").textContent=projectedCredit?"Credit after saving":projectedSettled?"Payment status after saving":"Balance due after saving";
+document.getElementById("paymentAfterSave").textContent=projectedSettled?"Paid in full":fmt(projectedCredit?p.creditDue:p.pending);
+const paymentAfterSaveRow=document.getElementById("paymentAfterSaveRow");
+paymentAfterSaveRow.classList.toggle("credit",projectedCredit);
+paymentAfterSaveRow.classList.toggle("paid",projectedSettled);
+review.setAttribute("aria-label",`Review ${changeCount} unsaved booking change${changeCount===1?"":"s"}`);
 }
 }
 /* every line item behind the net change, so the agent sees why the total moved, not just that it did */
@@ -1833,6 +2187,7 @@ const toIdx=d.b.cabins.indexOf(after.cabin);
 const finalPosition=activeCabinFarePosition(d,after);
 const insuranceCharge=after.insurance!==false?INSURANCE_RATE:0;
 const addedTax=newGuestTaxComponents(d,after);
+const addedCabinFare=newGuestCabinFare(d,after,toIdx);
 accountedInsurance+=insuranceCharge;
 const additionRoom=d.cabinPlan[toIdx]?.room||after.cabin;
 const categoryPricingSeparate=d.cabinPlan[toIdx]?.code!==d.base.cabinCodeBy[toIdx];
@@ -1841,8 +2196,8 @@ const additionLedger={mode:"addition",context:[
 {label:"Assigned cabin",value:`Cabin ${toIdx+1} · Room ${additionRoom}`},
 {label:"Fare position",value:`New → FP-${finalPosition}`}
 ],lines:[
-{label:"Cabin fare",amount:p.perHeadFare,level:"parent",contributes:true},
-{label:"Base cabin fare",amount:p.perHeadFare,level:"child",contributes:false},
+{label:"Cabin fare",amount:addedCabinFare,level:"parent",contributes:true},
+{label:"Base cabin fare",amount:addedCabinFare,level:"child",contributes:false},
 {label:"Taxes, fees & port expenses",amount:addedTax.taxes,level:"parent",contributes:true},
 {label:"Government taxes & fees",amount:addedTax.govtTax,level:"child",contributes:false},
 {label:"Required cruise fees & expenses",amount:addedTax.cruiseFee,level:"child",contributes:false},
@@ -1850,13 +2205,13 @@ const additionLedger={mode:"addition",context:[
 {label:"Selected supplements",amount:0,addNestedImpact:true,requiresNested:true,products:true,level:"child",contributes:false},
 {label:"Travel Protection Plus",amount:insuranceCharge,note:"Required for every guest",level:"child",contributes:false}
 ],notes:categoryPricingSeparate?["Stateroom pricing remains itemized under Cabin changes."]:[]};
-items.push({kind:"guest-added",subjectGuestId:guestId,label:`Guest addition · ${after.name}`,sub:`Cabin ${toIdx+1} · Room ${additionRoom} · New → FP-${finalPosition}`,detail:`Cabin fare ${fmt(p.perHeadFare)} · Taxes and port fees ${fmt(addedTax.taxes)}${insuranceCharge?` · Travel Protection Plus ${fmt(insuranceCharge)}`:""}`,facts:[
+items.push({kind:"guest-added",subjectGuestId:guestId,label:`Guest addition · ${after.name}`,sub:`Cabin ${toIdx+1} · Room ${additionRoom} · New → FP-${finalPosition}`,detail:`Cabin fare ${fmt(addedCabinFare)} · Taxes and port fees ${fmt(addedTax.taxes)}${insuranceCharge?` · Travel Protection Plus ${fmt(insuranceCharge)}`:""}`,facts:[
 {label:"Assigned cabin",value:`Cabin ${toIdx+1} · Room ${additionRoom}`},
 {label:"Fare position",value:`New → FP-${finalPosition}`},
-{label:"Cabin fare",value:fmt(p.perHeadFare)},
+{label:"Cabin fare",value:fmt(addedCabinFare)},
 {label:"Taxes, fees & port expenses",value:fmt(addedTax.taxes)},
 ...(insuranceCharge?[{label:"Travel Protection Plus",value:fmt(insuranceCharge)}]:[])
-],fareLedger:additionLedger,impactLabel:"Added fare",amt:roundMoney(p.perHeadFare+addedTax.taxes+insuranceCharge)});
+],fareLedger:additionLedger,impactLabel:"Added fare",amt:roundMoney(addedCabinFare+addedTax.taxes+insuranceCharge)});
 }else if(before&&after){
 const beforeProtected=Boolean(before.insurance),afterProtected=Boolean(after.insurance);
 if(beforeProtected!==afterProtected)protectionChanges.push({name:after.name||before.name,beforeActive:beforeProtected,afterActive:afterProtected,count:1,
@@ -1935,12 +2290,107 @@ if(sink)sink.amt=(displayCents(sink.amt)+residualCents)/100;
 }
 return items;
 }
+function commitModification(){
+if(!detail||!isDirty(detail)||detail.b.status==="cancelled")return false;
+syncGuestDerivedFields(detail);
+const pricing=priceDetail(detail);
+const items=changeItems(pricing);
+const stagedPromo=detail.promo;
+const reconciliation=reviewPricingReconciliation(detail,pricing,items);
+if(!reconciliation.balanced)return false;
+
+/* Freeze the sold-booking history before rebasing any values. */
+historyItems(committedDetailState(detail));
+const fareRows=guestFareRows(detail,pricing);
+const activeEntries=detail.guests.map((guest,index)=>({guest,index})).filter(({guest})=>isGuestActive(guest));
+const committedGuests=activeEntries.map(({guest,index})=>{
+const committed=cloneGuestState(guest),row=fareRows[index];
+committed.pendingRemoval=null;
+committed.baseCabinFare=Math.max(0,roundMoney(row?.cabinFare||0));
+committed.baseGovtTax=Math.max(0,roundMoney(row?.govtTax||0));
+committed.baseCruiseFee=Math.max(0,roundMoney(row?.cruiseFee||0));
+committed.basePromotion=Math.max(0,roundMoney(-(row?.promotion||0)));
+committed.supplements=suppCount(committed.supps);
+return committed;
+});
+if(!committedGuests.length)return false;
+
+const b=detail.b;
+const previousTotal=roundMoney(detail.base.total);
+const counts=[0,0,0,0];
+committedGuests.forEach(guest=>{counts[guest.band]=(counts[guest.band]||0)+1;});
+detail.guests=committedGuests;
+detail.base.cabinFare=roundMoney(pricing.currentCabinSubtotal);
+detail.base.taxes=roundMoney(pricing.taxes);
+detail.base.supplements=roundMoney(pricing.supplements);
+detail.base.insurance=roundMoney(pricing.insurance);
+detail.base.discount=roundMoney(pricing.discount);
+detail.base.total=roundMoney(pricing.total);
+detail.base.pending=roundMoney(pricing.pending);
+detail.base.paidToDate=roundMoney(pricing.paidToDate);
+detail.base.units=committedGuests.reduce((sum,guest)=>sum+suppCount(guest.supps),0);
+detail.base.insured=committedGuests.filter(guest=>guest.insurance!==false).length;
+detail.base.suppsBy=committedGuests.map(guest=>({...guest.supps}));
+detail.base.pkgBy=committedGuests.map(guest=>guest.pkg||null);
+detail.base.supplementsBy=committedGuests.map(guest=>suppCount(guest.supps));
+detail.base.insuranceBy=committedGuests.map(guest=>guest.insurance!==false);
+detail.base.cabinCodeBy=detail.cabinPlan.map(cabin=>cabin.code);
+detail.base.roomBy=detail.cabinPlan.map(cabin=>String(cabin.room));
+detail.base.cabinBy=committedGuests.map(guest=>guest.cabin);
+detail.base.profileBy=committedGuests.map(guest=>({...guest.profile}));
+detail.base.guests=committedGuests.map(cloneGuestState);
+detail.base.origGuestCount=committedGuests.length;
+detail.base.newGuestCabinFare=roundMoney(detail.base.cabinFare/committedGuests.length);
+detail.promo=null;
+
+b.name=committedGuests[0].name;
+b.guests=committedGuests.slice(1).map(guest=>guest.name);
+b.party={adult:counts[0],youngAdult:counts[1],child:counts[2],infant:counts[3]};
+b.value=detail.base.total;
+b.pending=detail.base.pending;
+b.paidToDate=detail.base.paidToDate;
+b.appliedPromos=Array.isArray(b.appliedPromos)?b.appliedPromos:[];
+if(stagedPromo&&!b.appliedPromos.includes(stagedPromo))b.appliedPromos.push(stagedPromo);
+b.status=b.pending>.005?"pending":"booked";
+b.recordVersion=Number(b.recordVersion??1)+1;
+b.pricingBase={
+recordVersion:b.recordVersion,cabinFare:detail.base.cabinFare,taxes:detail.base.taxes,
+supplements:detail.base.supplements,insurance:detail.base.insurance,discount:detail.base.discount,
+newGuestCabinFare:detail.base.newGuestCabinFare,
+cabinPlan:detail.cabinPlan.map(cabin=>({num:cabin.num,room:String(cabin.room),code:cabin.code})),
+guests:committedGuests.map(guest=>({
+guestId:guest.guestId,baseCabinFare:guest.baseCabinFare,baseGovtTax:guest.baseGovtTax,
+baseCruiseFee:guest.baseCruiseFee,basePromotion:guest.basePromotion||0,
+supps:{...guest.supps},pkg:guest.pkg||null,insurance:guest.insurance!==false,profile:{...guest.profile}
+}))
+};
+GUEST_ROSTERS[b.id]=committedGuests.map(cancellationSnapshotGuest);
+const changeCount=stagedChangeUnitCount(items);
+const now=new Date();
+const timestamp=`${fmtDateShort(now)} · ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+const balanceCopy=pricing.creditDue>.005?`Credit to review ${fmt(pricing.creditDue)}`:`Balance ${fmt(pricing.pending)}`;
+b.events=b.events||[];
+b.events.unshift({time:timestamp,title:"Booking Modification Saved",desc:`${changeCount} change${changeCount===1?"":"s"} applied · Total ${fmt(previousTotal)} → ${fmt(pricing.total)} · ${balanceCopy}`,src:"JD · Reservations"});
+clearDetailDraft(b.id);
+persistCommittedModification(b,committedGuests);
+detail=buildDetailState(b);
+const promoInput=document.getElementById("promoInput"),promoMsg=document.getElementById("promoMsg");
+promoInput.value="";promoInput.classList.remove("error");
+promoMsg.hidden=true;promoMsg.classList.remove("error","ok");
+document.getElementById("sStatusBadge").innerHTML=statusBadgeHtml(b);
+document.getElementById("sCommission").textContent=bookingMeta(b).commissionPct+"% · "+fmt(detail.base.cabinFare*bookingMeta(b).commissionPct/100);
+render();
+return true;
+}
 function renderDetail(){
 syncGuestDerivedFields(detail);
-const p=priceDetail(detail);
-renderGuestSummary();
-renderCabinCards(p);
-renderPricePanel(p);
+const pendingPricing=priceDetail(detail);
+const committed=committedDetailState(detail);
+const committedPricing=priceDetail(committed);
+renderGuestSummary(committed);
+renderCabinCards(committedPricing,committed);
+renderPricePanel(pendingPricing);
+historyItems(committed);
 /* runs last so the cancelled state overrides the live payment figures */
 applyCancelledUi();
 }
@@ -1965,8 +2415,12 @@ document.getElementById("sDepartsPort").textContent="Port of "+info.from+", FL";
 document.getElementById("sReturnDate").innerHTML=fmtDateShort(retDate)+' <em>- 07:00</em>';
 document.getElementById("sReturnPort").textContent="Port of "+info.to+", FL";
 const promoInput=document.getElementById("promoInput");
-promoInput.value="";promoInput.classList.remove("error");
-document.getElementById("promoMsg").hidden=true;
+promoInput.value=detail.promo||"";promoInput.classList.remove("error");
+if(detail.promo)showPromoMsg("Staged: "+PROMO_CODES[detail.promo].label,"ok");
+else{
+const promoMsg=document.getElementById("promoMsg");
+promoMsg.hidden=true;promoMsg.classList.remove("error","ok");
+}
 renderDetail();
 }
 const modalFocusOrigins=new Map();
@@ -2222,10 +2676,8 @@ const allGuestRows=guest?guestFareRows(d,p):null;
 const guestRows=guest?guests.map(selected=>allGuestRows[d.guests.findIndex(candidate=>candidate.guestId===selected.guestId)]).filter(Boolean):[];
 const guestRow=guestRows.length===1?guestRows[0]:null;
 const total=guest?roundMoney(guestRows.reduce((sum,row)=>sum+row.total,0)):p.total;
-/* Allocate collected money only across guests who were part of the sold booking.
-   A guest added in the current modification remains visible and cancellable, but
-   their still-unpaid staged fare cannot create a refund. */
-const bookingPaid=Math.max(0,roundMoney(p.total-p.pending));
+/* Allocate collected money only across guests who were part of the sold booking. */
+const bookingPaid=Math.max(0,roundMoney(p.paidToDate));
 const soldGuestTotal=guest?roundMoney(d.guests.reduce((sum,candidate,index)=>
 sum+(isBaseGuest(d,candidate)?allGuestRows[index]?.total||0:0),0)):0;
 const selectedSoldTotal=guest?roundMoney(guests.reduce((sum,selected)=>{
@@ -2235,18 +2687,18 @@ return sum+(isBaseGuest(d,selected)?allGuestRows[index]?.total||0:0);
 const paid=guest?roundMoney(Math.min(total,soldGuestTotal>0?selectedSoldTotal*Math.min(1,bookingPaid/soldGuestTotal):0)):bookingPaid;
 const days=daysUntilSailing(d.sail);
 const tier=cx.noShow?{pct:1,label:"No-show at sailing"}:cancelTier(days);
-const govt=guest?roundMoney(guestRows.reduce((sum,row)=>sum+row.govtTax,0)):p.govtTax;
+const protectedTaxes=guest?roundMoney(guestRows.reduce((sum,row)=>sum+row.taxes,0)):p.taxes;
 const insuredCount=guest?guests.filter(selected=>selected.insurance).length:p.insured;
 const insTotal=insuredCount*INSURANCE_RATE;
 const insRetained=cx.keepInsurance?insTotal:0;
 /* each ledger line below is additive: total − retained premium − penalty = refund */
 const refundable=roundMoney(total-insRetained);
-const penaltyBase=Math.max(0,roundMoney(refundable-govt));
+const penaltyBase=Math.max(0,roundMoney(refundable-protectedTaxes));
 const penalty=roundMoney(penaltyBase*tier.pct);
 const computed=Math.max(0,roundMoney(refundable-penalty));
 const capped=Math.max(0,roundMoney(Math.min(computed,paid)));
 const refund=cx.overrideOn?Math.max(0,roundMoney(Math.min(money(cx.overrideAmt),paid))):capped;
-return{paid,days,tier,govt,insTotal,insRetained,total,penaltyBase,penalty,
+return{paid,days,tier,protectedTaxes,insTotal,insRetained,total,penaltyBase,penalty,
 computed,capped,refund,cappedByPaid:computed>paid+0.005,guest,guests,guestRow,guestRows,guestCount:guests.length,insuredCount};
 }
 function cancelWallet(){
@@ -2271,10 +2723,16 @@ return c>=0&&w>=0;
 }
 return false;
 }
+function cancelOverrideDraftReady(q=cancelQuote()){
+if(!cx?.overrideOn)return true;
+const raw=String(cx.overrideAmt??"").trim();
+const amount=Number(raw);
+return raw!==""&&Number.isFinite(amount)&&amount>=0&&amount<=q.paid+0.005&&!!cx.overrideReason.trim();
+}
 function cancelStep1Ready(){
 if(!cx.reason)return false;
 if(cx.reason==="Other"&&!cx.note.trim())return false;
-if(cx.overrideOn&&!cx.overrideReason.trim())return false;
+if(cx.overrideOn&&(!cancelOverrideDraftReady()||!cx.overrideConfirmed))return false;
 return true;
 }
 function cancelDestLabel(q){
@@ -2298,7 +2756,7 @@ return{presentation:options.presentation||"modal",entry:options.entry||"legacy",
 scope:guest?"guest":"booking",guestId:guest?.guestId||null,guestIds:guest?[guest.guestId]:[],guestIdx:guest?guestIdx:-1,
 sourceRecordVersion:Number(detail.b.recordVersion??1),
 step:0,reason:"",note:"",noShow:false,keepInsurance:false,
-overrideOn:false,overrideAmt:"",overrideReason:"",
+overrideOn:false,overrideAmt:"",overrideReason:"",overrideConfirmed:false,
 source:"original",walletId:"",walletState:"idle",walletCreated:null,
 chequePayee:guest?guest.name:detail.b.name,
 chequeAddr:prof?prof.address+", "+prof.city+", "+prof.state+" "+prof.zip:"",
@@ -2324,7 +2782,7 @@ rows.push({label:q.guest?(q.guestCount>1?"Selected guest fare total":"Guest fare
 if(q.insRetained>0.005)rows.push({label:"Travel protection retained",
 sub:q.insuredCount+" guest"+(q.insuredCount===1?"":"s")+" · policy stays active",amt:-q.insRetained,neg:true});
 rows.push({label:(q.guest?(q.guestCount>1?"Selected guest cancellation penalty (":"Guest cancellation penalty ("):"Cancellation penalty (")+pct+"%)",
-sub:q.tier.label+" · excludes "+fmt(q.govt)+" government taxes",amt:-q.penalty,neg:true});
+sub:q.tier.label+" · excludes "+fmt(q.protectedTaxes)+" taxes and port fees",amt:-q.penalty,neg:true});
 if(q.cappedByPaid)rows.push({label:"Unpaid balance",
 sub:"Not collected, so it is not refundable",amt:-(q.computed-q.paid),adjustment:true});
 const lineRows=rows.map(r=>{
@@ -2383,6 +2841,7 @@ return `<section class="cx-section-card cx-calculation-card" aria-labelledby="ca
 }
 function cancelStep1Html(q,options={}){
 const insTotal=q.insTotal;
+const overrideCanConfirm=cancelOverrideDraftReady(q);
 const integrated=Boolean(options.integrated);
 const hasExternalReview=Boolean(integrated||(q.guest&&cx.presentation==="page"));
 const headingTag=integrated?"h3":hasExternalReview?"h2":"h3";
@@ -2435,7 +2894,7 @@ ${cx.overrideOn?`<div class="cx-override">
 <input class="mf-input" id="cancellationOverrideReason" data-cxovreason value="${esc(cx.overrideReason)}" placeholder="Why this differs from the calculated amount" autocomplete="off" required aria-required="true">
 </div>
 </div>
-<p class="cx-ov-note">Calculated refund is <strong>${fmt(q.capped)}</strong>. Maximum allowed is <strong>${fmt(q.paid)}</strong> — the amount paid to date.</p>
+<div class="cx-override-foot"><p class="cx-ov-note">Calculated refund is <strong>${fmt(q.capped)}</strong>. Maximum allowed is <strong>${fmt(q.paid)}</strong> — the amount paid to date.</p><button type="button" class="cx-override-confirm${cx.overrideConfirmed?" is-confirmed":""}" data-cxconfirmoverride${overrideCanConfirm?"":" disabled"} aria-label="${cx.overrideConfirmed?"Refund override confirmed":"Confirm refund override"}">${cx.overrideConfirmed?`${SVG_CHECK}<span>Override confirmed</span>`:`<span>Confirm override</span>`}</button></div>
 </div>`:""}
 </div>
 </section>
@@ -2610,7 +3069,10 @@ return cancelStep1Ready()
 function partialCancellationDecisionGuidance(q=cancelQuote(),allocations=cx?.supplementAllocations){
 if(!cx.reason)return "Select a cancellation reason.";
 if(cx.reason==="Other"&&!cx.note.trim())return "Add an internal note for the selected reason.";
+if(cx.overrideOn&&!String(cx.overrideAmt??"").trim())return "Enter the refund override amount.";
 if(cx.overrideOn&&!cx.overrideReason.trim())return "Add a justification for the refund override.";
+if(cx.overrideOn&&!cancelOverrideDraftReady(q))return `Enter a refund amount no greater than ${fmt(q.paid)}.`;
+if(cx.overrideOn&&!cx.overrideConfirmed)return "Confirm the refund override.";
 const summary=partialAllocationSummary(allocations||[]);
 if(summary.unresolvedLines)return `Resolve ${summary.unresolvedLines} supplement assignment${summary.unresolvedLines===1?"":"s"}.`;
 const wallet=cancelWallet();
@@ -2664,6 +3126,49 @@ return `<div class="cx-done" role="status" aria-live="polite">
 <div class="cx-done-row"><span>Reference</span><strong>${esc(r.ref)}</strong></div>
 </div>
 </div>`;
+}
+function cancelDonePageHtml(){
+const r=cx.done;
+const guestCount=r.guestNames?.length||1;
+const guestLabel=guestCount>1?`${guestCount} guests`:esc(r.guestName||r.guestNames?.[0]||"Guest");
+const guestCancellation=r.scope==="guest";
+const title=guestCancellation?(guestCount>1?"Guests cancelled":"Guest cancelled"):"Booking cancelled";
+const description=guestCancellation
+?`${guestLabel} ${guestCount>1?"have":"has"} been removed from booking #${esc(detail.b.id)}.`
+:`Booking #${esc(detail.b.id)} has been cancelled.`;
+return `<section class="cx-done-page-summary" role="status" aria-live="polite" aria-labelledby="cancelDoneTitle" aria-describedby="cancelDoneDescription">
+<header class="cx-done-page-hero">
+<span class="cx-done-ic" aria-hidden="true">${SVG_CHECK}</span>
+<div class="cx-done-page-heading">
+<span class="cx-done-page-eyebrow">Cancellation complete</span>
+<h2 class="cx-done-h" id="cancelDoneTitle" tabindex="-1">${title}</h2>
+<p class="cx-done-p" id="cancelDoneDescription">${description} ${guestCancellation?"The rest of the booking remains active.":"The refund has been queued for processing."}</p>
+</div>
+<span class="cx-done-page-state">${guestCancellation?"Booking remains active":"Booking closed"}</span>
+</header>
+<div class="cx-done-page-grid">
+<section class="cx-done-refund-card" aria-labelledby="cancelDoneRefundTitle">
+<span class="cx-done-section-label">Refund summary</span>
+<div class="cx-done-refund-head">
+<div><span id="cancelDoneRefundTitle">Refund amount</span><strong>${fmt(r.amount)}</strong></div>
+<span class="cx-done-refund-status">Confirmed</span>
+</div>
+<div class="cx-done-refund-destination"><span>Refund destination</span><strong>${esc(r.dest)}</strong></div>
+</section>
+<section class="cx-done-confirmation-card" aria-labelledby="cancelDoneDetailsTitle">
+<div class="cx-done-confirmation-head">
+<span class="cx-done-section-label" id="cancelDoneDetailsTitle">Confirmation details</span>
+<span>Keep this reference for your records</span>
+</div>
+<dl class="cx-done-facts">
+<div><dt>Cancelled ${guestCount===1?"guest":"guests"}</dt><dd>${guestLabel}</dd></div>
+<div><dt>Reason</dt><dd>${esc(r.reason)}</dd></div>
+<div><dt>Reference</dt><dd>${esc(r.ref)}</dd></div>
+<div><dt>Booking ID</dt><dd>#${esc(detail.b.id)}</dd></div>
+</dl>
+</section>
+</div>
+</section>`;
 }
 function cancellationContextHtml({compact=false,showPaid=true}={}){
 const p=priceDetail(detail);
@@ -2796,7 +3301,7 @@ label:"Travel protection retained",helper:"Policy remains active",amount:`&minus
 });
 refundCalculationRows.push({
 label:`Cancellation penalty (${penaltyPct}%)`,
-helper:quote.penalty>0.005?`${quote.tier.label} · ${fmt(quote.govt)} government taxes excluded`:`${quote.tier.label} · No penalty applies`,
+helper:quote.penalty>0.005?`${quote.tier.label} · ${fmt(quote.protectedTaxes)} taxes and port fees excluded`:`${quote.tier.label} · No penalty applies`,
 amount:quote.penalty>0.005?`&minus;&nbsp;${fmt(quote.penalty)}`:fmt(0),
 deduction:quote.penalty>0.005,
 penalty:true
@@ -2924,7 +3429,7 @@ const paidAmountRetained=Math.max(0,roundMoney(q.paid-q.refund));
 const uncollectedPortion=q.cappedByPaid?Math.max(0,roundMoney(q.computed-q.paid)):0;
 const manualAdjustment=cx.overrideOn?roundMoney(q.refund-q.capped):0;
 const refundCalculationItems=[{
-label:`Booking value removed`,
+label:`Cancelled booking value`,
 sub:`${selectedGuests.length} guest${selectedGuests.length===1?"":"s"} leaving`,
 amount:q.total
 }];
@@ -2934,9 +3439,9 @@ sub:`Policy stays active for ${q.insuredCount} guest${q.insuredCount===1?"":"s"}
 amount:-q.insRetained,
 deduction:true
 });
-refundCalculationItems.push({
+if(q.penalty>0.005)refundCalculationItems.push({
 label:`Cancellation penalty (${penaltyPct}%)`,
-sub:penaltyPct?`${q.tier.label} · ${fmt(q.govt)} government taxes excluded`:`${q.tier.label} · No penalty applied`,
+sub:`${q.tier.label} · ${fmt(q.protectedTaxes)} taxes and port fees excluded`,
 amount:-q.penalty,
 deduction:true
 });
@@ -2959,13 +3464,12 @@ const state=item.adjustment?(item.amount>0?" addition":" deduction"):item.deduct
 return `<div class="cx-confirm-refund-calculation-row${state}"><dt><strong>${item.label}</strong><span>${item.sub}</span></dt><dd>${sign}${fmt(Math.abs(item.amount))}</dd></div>`;
 }).join("");
 const refundHeroNote=cx.overrideOn
-?`Manual override · calculated refund was ${fmt(q.capped)}`
-:`From ${fmt(bookingValueDecrease)} in booking value removed`;
+?`Confirmed manual amount · calculated refund was ${fmt(q.capped)}`
+:`From ${fmt(bookingValueDecrease)} in cancelled booking value`;
 const destinationSource=CX_SOURCES.find(source=>source.id===cx.source);
 const destinationTitle=destinationSource?.title||"Refund destination";
 const card=cardFor(detail.b);
 const wallet=cancelWallet();
-const releasedCabinCount=Math.max(0,beforeCabinCount-afterCabinCount);
 const destinationAccount=cx.source==="original"
 ?`${card.brand} ending in ${card.last4}`
 :cx.source==="wallet"
@@ -2986,6 +3490,15 @@ const postCancellationPosition=remainingCreditDue>0.005
 :remainingBalanceDue>0.005
 ?{label:"Balance due after cancellation",value:remainingBalanceDue,note:"Still due on the active booking"}
 :{label:"Payment status after cancellation",value:0,note:"Active booking is paid in full"};
+const refundCalculationHasException=cx.overrideOn||q.insRetained>0.005||q.penalty>0.005||uncollectedPortion>0.005;
+const refundCalculationNote=q.penalty>0.005
+?`${fmt(q.protectedTaxes)} in taxes and port fees are excluded from the penalty base.`
+:cx.overrideOn
+?"The calculated amount is reconciled with the confirmed manual override."
+:uncollectedPortion>0.005
+?"The refund is limited to the amount collected for the guests leaving."
+:"Only amounts that affect the refund are shown.";
+const manualAdjustmentSign=manualAdjustment>0?"+":"−";
 return `<section class="cx-confirm-overview" aria-label="Cancellation review summary">
 <div class="cx-confirm-summary-grid">
 <section class="cx-confirm-summary-card cx-confirm-booking-summary" aria-labelledby="partialReviewBookingChangesTitle">
@@ -3024,44 +3537,40 @@ ${removedSupplementRows?`<section class="cx-confirm-supplement-group removed" ar
 </section>
 </section>
 <section class="cx-confirm-summary-card cx-confirm-refund-summary" aria-labelledby="partialReviewRefundSummaryTitle">
-<header class="cx-confirm-summary-card-head cx-confirm-refund-head"><div class="cx-confirm-summary-heading"><span class="cx-confirm-summary-icon" aria-hidden="true">${SVG_RECEIPT}</span><h3 id="partialReviewRefundSummaryTitle">Refund summary</h3></div><em class="${penaltyPct?"warning":""}">${penaltyPct?`${penaltyPct}% penalty`:"No penalty"}</em></header>
-<section class="cx-confirm-refund-hero" aria-labelledby="partialReviewRefundPayableTitle">
-<div><h4 id="partialReviewRefundPayableTitle">Refund payable</h4><span>${cx.overrideOn?"Manual override":"Calculated"}</span></div>
+<header class="cx-confirm-summary-card-head cx-confirm-refund-head"><div class="cx-confirm-summary-heading"><span class="cx-confirm-summary-icon" aria-hidden="true">${SVG_RECEIPT}</span><h3 id="partialReviewRefundSummaryTitle">Refund summary</h3></div><div class="cx-confirm-refund-badges">${cx.overrideOn?`<em class="override">Manual override confirmed</em>`:""}<em class="policy ${penaltyPct?"warning":""}">${penaltyPct?`${penaltyPct}% cancellation penalty`:"0% cancellation penalty"}</em></div></header>
+<section class="cx-confirm-refund-hero${cx.overrideOn?" is-overridden":""}" aria-labelledby="partialReviewRefundPayableTitle">
+<div><h4 id="partialReviewRefundPayableTitle">Refund to issue</h4><span>${cx.overrideOn?"Confirmed override":"Calculated amount"}</span></div>
 <strong>${fmt(q.refund)}</strong>
 <p>${refundHeroNote}</p>
+<dl class="cx-confirm-refund-delivery" aria-label="Refund delivery">
+<div><dt>Refund to</dt><dd><strong>${esc(destinationTitle)}</strong><span>${esc(destinationAccount)}</span></dd></div>
+<div><dt>Expected</dt><dd><strong>${esc(destinationTiming)}</strong><span>${esc(destinationRecipient)}</span></dd></div>
+</dl>
 </section>
-<dl class="cx-confirm-refund-context" aria-label="Refund scope and policy">
-<div><dt>Transaction scope</dt><dd><strong>${guestCountLabel}</strong><span>${releasedCabinCount?`${releasedCabinCount} cabin${releasedCabinCount===1?"":"s"} released`:"No cabins released"}</span></dd></div>
-<div><dt>Policy applied</dt><dd><strong>${penaltyPct?`${penaltyPct}% penalty`:"No penalty"}</strong><span>${esc(q.tier.label)}</span></dd></div>
+${cx.overrideOn?`<section class="cx-confirm-override-review" aria-labelledby="partialReviewOverrideTitle">
+<header><div><span>Manual exception</span><h4 id="partialReviewOverrideTitle">Override reconciliation</h4></div><em>Confirmed</em></header>
+<dl>
+<div><dt>Calculated refund</dt><dd>${fmt(q.capped)}</dd></div>
+${Math.abs(manualAdjustment)>0.005?`<div class="adjustment ${manualAdjustment>0?"addition":"deduction"}"><dt>Manual adjustment</dt><dd>${manualAdjustmentSign}${fmt(Math.abs(manualAdjustment))}</dd></div>`:""}
 </dl>
+<p><strong>Justification</strong><span>${esc(cx.overrideReason.trim())}</span></p>
+</section>`:""}
 <section class="cx-confirm-booking-value" aria-labelledby="partialReviewBookingValueTitle">
-<header><h4 id="partialReviewBookingValueTitle">Active booking after cancellation</h4><p>Value and payment position that remain on the booking.</p></header>
-<dl class="cx-confirm-booking-value-comparison">
-<div><dt>Before</dt><dd>${fmt(bookingTotalBefore)}</dd></div>
-<span aria-hidden="true">→</span>
-<div class="after"><dt>After</dt><dd>${fmt(bookingTotalAfter)}</dd></div>
-</dl>
-<div class="cx-confirm-booking-value-change"><span>Value removed from booking</span><strong>&minus;&nbsp;${fmt(bookingValueDecrease)}</strong></div>
-<dl class="cx-confirm-payment-position" aria-label="Payment position after cancellation">
-<div><dt><strong>Collected before cancellation</strong><span>Total payments received</span></dt><dd>${fmt(paidToDate)}</dd></div>
-<div><dt><strong>Payments remaining on booking</strong><span>Applied to the active guests</span></dt><dd>${fmt(remainingPaidOnBooking)}</dd></div>
+<header><h4 id="partialReviewBookingValueTitle">Remaining booking</h4><p>Financial position after cancelling ${guestCountLabel}.</p></header>
+<dl class="cx-confirm-payment-position" aria-label="Remaining booking payment position">
+<div><dt><strong>Updated booking total</strong><span>Previously ${fmt(bookingTotalBefore)}</span></dt><dd>${fmt(bookingTotalAfter)}</dd></div>
+<div><dt><strong>Payments applied to remaining booking</strong><span>Allocated to active guests</span></dt><dd>${fmt(remainingPaidOnBooking)}</dd></div>
 <div class="total${remainingCreditDue>0.005?" credit":""}"><dt><strong>${postCancellationPosition.label}</strong><span>${postCancellationPosition.note}</span></dt><dd>${fmt(postCancellationPosition.value)}</dd></div>
 </dl>
 </section>
-<section class="cx-confirm-refund-calculation" aria-labelledby="partialReviewRefundCalculationTitle">
-<header><h4 id="partialReviewRefundCalculationTitle">Refund calculation</h4><p>${q.days} day${q.days===1?"":"s"} before sailing · ${fmt(q.govt)} in government taxes excluded from the penalty base.</p></header>
+<details class="cx-confirm-refund-calculation"${refundCalculationHasException?" open":""}>
+<summary><div><h4 id="partialReviewRefundCalculationTitle">How this refund is calculated</h4><p>${refundCalculationNote}</p></div><span>${refundCalculationHasException?"Exception details":"View details"}</span></summary>
+<div class="cx-confirm-refund-calculation-body" aria-labelledby="partialReviewRefundCalculationTitle">
 <dl aria-label="Refund calculation">${refundCalculationRows}</dl>
-<dl class="cx-confirm-refund-total"><div><dt><strong>Refund payable</strong><span>${cx.overrideOn?"Approved manual amount":"Final calculated amount"}</span></dt><dd>${fmt(q.refund)}</dd></div></dl>
-<p class="cx-confirm-refund-reconciliation">${paidAmountRetained>0.005?`${fmt(q.paid)} was collected for the guests leaving. ${fmt(q.refund)} will be returned and ${fmt(paidAmountRetained)} retained under the cancellation terms.`:`The full ${fmt(q.paid)} collected for the guests leaving will be returned.`}</p>
-</section>
-<section class="cx-confirm-refund-destination" aria-labelledby="partialReviewRefundDestinationTitle">
-<header><div><span>Refund delivery</span><h4 id="partialReviewRefundDestinationTitle">${esc(destinationTitle)}</h4></div><em>Pending confirmation</em></header>
-<dl>
-<div><dt>Account</dt><dd>${esc(destinationAccount)}</dd></div>
-<div><dt>Recipient</dt><dd>${esc(destinationRecipient)}</dd></div>
-<div><dt>Expected timing</dt><dd>${esc(destinationTiming)}</dd></div>
-</dl>
-</section>
+<dl class="cx-confirm-refund-total"><div><dt><strong>Refund to issue</strong><span>${cx.overrideOn?"Confirmed manual amount":"Final calculated amount"}</span></dt><dd>${fmt(q.refund)}</dd></div></dl>
+<p class="cx-confirm-refund-reconciliation">${paidAmountRetained>0.005?`${fmt(q.paid)} was collected for the guests leaving: ${fmt(q.refund)} will be refunded and ${fmt(paidAmountRetained)} retained.`:`The full ${fmt(q.paid)} collected for the guests leaving will be refunded.`}</p>
+</div>
+</details>
 </section>
 </div>
 </section>`;
@@ -3103,9 +3612,9 @@ const extraRows=extras.map(extra=>`<li class="removed"><span class="cx-confirm-s
 const paidAmountRetained=Math.max(0,roundMoney(q.paid-q.refund));
 const uncollectedPortion=q.cappedByPaid?Math.max(0,roundMoney(q.computed-q.paid)):0;
 const manualAdjustment=cx.overrideOn?roundMoney(q.refund-q.capped):0;
-const calculationItems=[{label:"Booking value cancelled",sub:`${guestCountLabel} and ${cabinCountLabel}`,amount:q.total}];
+const calculationItems=[{label:"Cancelled booking value",sub:`${guestCountLabel} and ${cabinCountLabel}`,amount:q.total}];
 if(q.insRetained>0.005)calculationItems.push({label:"Travel protection retained",sub:`Policy stays active for ${q.insuredCount} guest${q.insuredCount===1?"":"s"}`,amount:-q.insRetained,deduction:true});
-calculationItems.push({label:`Cancellation penalty (${penaltyPct}%)`,sub:penaltyPct?`${q.tier.label} · ${fmt(q.govt)} government taxes excluded`:`${q.tier.label} · No penalty applied`,amount:-q.penalty,deduction:true});
+if(q.penalty>0.005)calculationItems.push({label:`Cancellation penalty (${penaltyPct}%)`,sub:`${q.tier.label} · ${fmt(q.protectedTaxes)} taxes and port fees excluded`,amount:-q.penalty,deduction:true});
 if(uncollectedPortion>0.005)calculationItems.push({label:"Uncollected portion",sub:"Excluded because it was not paid",amount:-uncollectedPortion,deduction:true});
 if(cx.overrideOn&&Math.abs(manualAdjustment)>0.005)calculationItems.push({label:"Manual adjustment",sub:"Approved refund override",amount:manualAdjustment,adjustment:true});
 const calculationRows=calculationItems.map(item=>{
@@ -3134,9 +3643,19 @@ const destinationTiming=cx.source==="original"
 ?"Processing starts after confirmation"
 :"Card timing varies; wallet credit starts after confirmation";
 const refundHeroNote=cx.overrideOn
-?`Manual override · calculated refund was ${fmt(q.capped)}`
+?`Confirmed manual amount · calculated refund was ${fmt(q.capped)}`
 :`From ${fmt(q.total)} in cancelled booking value`;
+const refundCalculationHasException=cx.overrideOn||q.insRetained>0.005||q.penalty>0.005||uncollectedPortion>0.005;
+const refundCalculationNote=q.penalty>0.005
+?`${fmt(q.protectedTaxes)} in taxes and port fees are excluded from the penalty base.`
+:cx.overrideOn
+?"The calculated amount is reconciled with the confirmed manual override."
+:uncollectedPortion>0.005
+?"The refund is limited to the amount collected before the booking closes."
+:"Only amounts that affect the refund are shown.";
+const manualAdjustmentSign=manualAdjustment>0?"+":"−";
 return `<section class="cx-confirm-overview cx-full-confirm-overview" aria-label="Full booking cancellation review">
+<div class="cx-full-confirmation-warning" role="note">${SVG_INFO}<div><strong>This cancels the entire booking.</strong><span>Every guest, cabin, and included extra below will be removed when you confirm.</span></div></div>
 <div class="cx-confirm-summary-grid">
 <section class="cx-confirm-summary-card cx-confirm-booking-summary" aria-labelledby="fullReviewCancellationTitle">
 <header class="cx-confirm-summary-card-head"><div class="cx-confirm-summary-heading"><span class="cx-confirm-summary-icon" aria-hidden="true">${SVG_CLIPBOARD_LIST}</span><h3 id="fullReviewCancellationTitle">Cancellation summary</h3></div></header>
@@ -3147,7 +3666,6 @@ return `<section class="cx-confirm-overview cx-full-confirm-overview" aria-label
 <div><dt>Cabins remaining</dt><dd><strong>0</strong><span>${cabinCount} released</span></dd></div>
 <div class="booking-status"><dt>Booking status</dt><dd><strong>Cancelled</strong><span>Booking closed</span></dd></div>
 </dl>
-<div class="cx-full-confirmation-warning" role="note">${SVG_INFO}<div><strong>This cancels the entire booking.</strong><span>Every guest, cabin, and included extra below will be removed when you confirm.</span></div></div>
 </section>
 <section class="cx-confirm-summary-section" aria-labelledby="fullReviewRecordTitle">
 <header><h4 id="fullReviewRecordTitle">Cancellation record</h4></header>
@@ -3171,33 +3689,41 @@ ${extras.length?`<div class="cx-confirm-supplement-groups"><section class="cx-co
 </section>
 </section>
 <section class="cx-confirm-summary-card cx-confirm-refund-summary" aria-labelledby="fullReviewRefundSummaryTitle">
-<header class="cx-confirm-summary-card-head cx-confirm-refund-head"><div class="cx-confirm-summary-heading"><span class="cx-confirm-summary-icon" aria-hidden="true">${SVG_RECEIPT}</span><h3 id="fullReviewRefundSummaryTitle">Refund summary</h3></div><em class="${penaltyPct?"warning":""}">${penaltyPct?`${penaltyPct}% penalty`:"No penalty"}</em></header>
-<section class="cx-confirm-refund-hero" aria-labelledby="fullReviewRefundPayableTitle"><div><h4 id="fullReviewRefundPayableTitle">Refund payable</h4><span>${cx.overrideOn?"Manual override":"Calculated"}</span></div><strong>${fmt(q.refund)}</strong><p>${refundHeroNote}</p></section>
-<dl class="cx-confirm-refund-context" aria-label="Refund scope and policy">
-<div><dt>Transaction scope</dt><dd><strong>${guestCountLabel} · ${cabinCountLabel}</strong><span>Entire booking will close</span></dd></div>
-<div><dt>Policy applied</dt><dd><strong>${penaltyPct?`${penaltyPct}% penalty`:"No penalty"}</strong><span>${esc(q.tier.label)}</span></dd></div>
+<header class="cx-confirm-summary-card-head cx-confirm-refund-head"><div class="cx-confirm-summary-heading"><span class="cx-confirm-summary-icon" aria-hidden="true">${SVG_RECEIPT}</span><h3 id="fullReviewRefundSummaryTitle">Refund summary</h3></div><div class="cx-confirm-refund-badges">${cx.overrideOn?`<em class="override">Manual override confirmed</em>`:""}<em class="policy ${penaltyPct?"warning":""}">${penaltyPct?`${penaltyPct}% cancellation penalty`:"0% cancellation penalty"}</em></div></header>
+<section class="cx-confirm-refund-hero${cx.overrideOn?" is-overridden":""}" aria-labelledby="fullReviewRefundPayableTitle">
+<div><h4 id="fullReviewRefundPayableTitle">Refund to issue</h4><span>${cx.overrideOn?"Confirmed override":"Calculated amount"}</span></div>
+<strong>${fmt(q.refund)}</strong>
+<p>${refundHeroNote}</p>
+<dl class="cx-confirm-refund-delivery" aria-label="Refund delivery">
+<div><dt>Refund to</dt><dd><strong>${esc(destinationTitle)}</strong><span>${esc(destinationAccount)}</span></dd></div>
+<div><dt>Expected</dt><dd><strong>${esc(destinationTiming)}</strong><span>${esc(destinationRecipient)}</span></dd></div>
 </dl>
+</section>
+${cx.overrideOn?`<section class="cx-confirm-override-review" aria-labelledby="fullReviewOverrideTitle">
+<header><div><span>Manual exception</span><h4 id="fullReviewOverrideTitle">Override reconciliation</h4></div><em>Confirmed</em></header>
+<dl>
+<div><dt>Calculated refund</dt><dd>${fmt(q.capped)}</dd></div>
+${Math.abs(manualAdjustment)>0.005?`<div class="adjustment ${manualAdjustment>0?"addition":"deduction"}"><dt>Manual adjustment</dt><dd>${manualAdjustmentSign}${fmt(Math.abs(manualAdjustment))}</dd></div>`:""}
+</dl>
+<p><strong>Justification</strong><span>${esc(cx.overrideReason.trim())}</span></p>
+</section>`:""}
 <section class="cx-confirm-booking-value" aria-labelledby="fullReviewBookingValueTitle">
-<header><h4 id="fullReviewBookingValueTitle">Booking after cancellation</h4><p>Value and payment position after the booking is closed.</p></header>
-<dl class="cx-confirm-booking-value-comparison"><div><dt>Before</dt><dd>${fmt(pricing.total)}</dd></div><span aria-hidden="true">→</span><div class="after"><dt>After</dt><dd>${fmt(0)}</dd></div></dl>
-<div class="cx-confirm-booking-value-change"><span>Value removed from booking</span><strong>&minus;&nbsp;${fmt(pricing.total)}</strong></div>
-<dl class="cx-confirm-payment-position" aria-label="Payment position after cancellation">
+<header><h4 id="fullReviewBookingValueTitle">Closed booking</h4><p>Financial position after the entire booking is cancelled.</p></header>
+<dl class="cx-confirm-payment-position" aria-label="Closed booking payment position">
+<div><dt><strong>Booking total after cancellation</strong><span>Previously ${fmt(pricing.total)}</span></dt><dd>${fmt(0)}</dd></div>
 <div><dt><strong>Collected before cancellation</strong><span>Total payments received</span></dt><dd>${fmt(q.paid)}</dd></div>
 ${pricing.pending>0.005?`<div><dt><strong>Uncollected before cancellation</strong><span>Closed with the booking; never refundable</span></dt><dd>${fmt(pricing.pending)}</dd></div>`:""}
-<div><dt><strong>Refund being returned</strong><span>Sent to the confirmed destination</span></dt><dd>${fmt(q.refund)}</dd></div>
 <div class="total"><dt><strong>Booking balance after cancellation</strong><span>The closed booking has no remaining balance</span></dt><dd>${fmt(0)}</dd></div>
 </dl>
 </section>
-<section class="cx-confirm-refund-calculation" aria-labelledby="fullReviewRefundCalculationTitle">
-<header><h4 id="fullReviewRefundCalculationTitle">Refund calculation</h4><p>${q.days} day${q.days===1?"":"s"} before sailing · ${fmt(q.govt)} in government taxes excluded from the penalty base.</p></header>
+<details class="cx-confirm-refund-calculation"${refundCalculationHasException?" open":""}>
+<summary><div><h4 id="fullReviewRefundCalculationTitle">How this refund is calculated</h4><p>${refundCalculationNote}</p></div><span>${refundCalculationHasException?"Exception details":"View details"}</span></summary>
+<div class="cx-confirm-refund-calculation-body" aria-labelledby="fullReviewRefundCalculationTitle">
 <dl aria-label="Refund calculation">${calculationRows}</dl>
-<dl class="cx-confirm-refund-total"><div><dt><strong>Refund payable</strong><span>${cx.overrideOn?"Approved manual amount":"Final calculated amount"}</span></dt><dd>${fmt(q.refund)}</dd></div></dl>
-<p class="cx-confirm-refund-reconciliation">${paidAmountRetained>0.005?`${fmt(q.paid)} was collected. ${fmt(q.refund)} will be returned and ${fmt(paidAmountRetained)} retained under the cancellation terms.`:`The full ${fmt(q.paid)} collected on this booking will be returned.`}</p>
-</section>
-<section class="cx-confirm-refund-destination" aria-labelledby="fullReviewRefundDestinationTitle">
-<header><div><span>Refund delivery</span><h4 id="fullReviewRefundDestinationTitle">${esc(destinationTitle)}</h4></div><em>Pending confirmation</em></header>
-<dl><div><dt>Account</dt><dd>${esc(destinationAccount)}</dd></div><div><dt>Recipient</dt><dd>${esc(destinationRecipient)}</dd></div><div><dt>Expected timing</dt><dd>${esc(destinationTiming)}</dd></div></dl>
-</section>
+<dl class="cx-confirm-refund-total"><div><dt><strong>Refund to issue</strong><span>${cx.overrideOn?"Confirmed manual amount":"Final calculated amount"}</span></dt><dd>${fmt(q.refund)}</dd></div></dl>
+<p class="cx-confirm-refund-reconciliation">${paidAmountRetained>0.005?`${fmt(q.paid)} was collected: ${fmt(q.refund)} will be refunded and ${fmt(paidAmountRetained)} retained.`:`The full ${fmt(q.paid)} collected on this booking will be refunded.`}</p>
+</div>
+</details>
 </section>
 </div>
 </section>`;
@@ -3317,7 +3843,7 @@ const sourceStatus=unresolvedCount
 :changedCount
 ?`${changedCount} reassigned`
 :`All assigned to ${primary?.name||"the primary guest"}`;
-return `<details class="cx-allocation-source${unresolvedCount?" needs-review":removedCount||changedCount?" has-changes":""}" data-cxallocationsource="${esc(allocation.sourceGuestId)}"${sourceExpanded?" open":""}>
+return `<details class="cx-allocation-source${unresolvedCount?" needs-review":removedCount||changedCount?" has-changes":""}${sourceFullyRemoved?" is-cancelled":""}" data-cxallocationsource="${esc(allocation.sourceGuestId)}"${sourceExpanded?" open":""}>
 <summary class="cx-allocation-source-head"><div class="cx-allocation-source-person"><span class="cx-allocation-source-avatar" aria-hidden="true">${esc(initials(source?.name||"Guest"))}</span><span class="cx-allocation-source-identity"><small>Supplements from</small><span><strong id="allocationSource${groupIndex}">${esc(source?.name||"Selected guest")}</strong><em>${sourceFullyRemoved?"Cancelled":"Cancelling"}</em></span></span></div><span class="cx-allocation-source-overview"><strong>${allocation.lines.length} supplement${allocation.lines.length===1?"":"s"} &middot; ${fmt(sourceValue)}</strong><small>${esc(sourceStatus)}</small></span><span class="cx-allocation-source-toggle" aria-hidden="true"><i data-lucide="chevron-down"></i></span></summary>
 <div class="cx-allocation-items" role="list" aria-label="Supplement assignments from ${esc(source?.name||"selected guest")}">
 <div class="cx-allocation-table-head" aria-hidden="true"><span>Supplement</span><span>Qty / value</span><span>Assigned to</span><span>Actions</span></div>
@@ -3615,7 +4141,7 @@ const full=cx.done.scope!=="guest";
 const completedGuestCount=cx.done.guestNames?.length||1;
 host.innerHTML=`<div class="cx-page-card">
 ${cancellationPageHeader(full?"Full booking cancellation":"Partial cancellation",full?"The booking cancellation and refund have been completed.":completedGuestCount>1?"The guest cancellations and refund have been completed.":"The guest cancellation and refund have been completed.",full?"Full booking":completedGuestCount>1?"Selected guests":"Selected guest",full?{}:{compactContext:true})}
-<div class="cx-page-done">${cancelDoneHtml()}<div class="cx-page-done-foot"><button type="button" class="ov-btn-solid" data-cxclose>Back to booking</button></div></div>
+<div class="cx-page-done cx-page-done-wide">${cancelDonePageHtml()}<div class="cx-page-done-foot"><button type="button" class="ov-btn-solid" data-cxclose>Back to booking</button></div></div>
 </div>`;
 hydrateCancellationIcons(host);return;
 }
@@ -3654,7 +4180,7 @@ host.innerHTML=`<div class="cx-partial-page-layout cx-confirm-page-layout cx-ful
 ${cancellationStepsHtml()}
 <div class="cx-page-card cx-full-cancellation-page${cx.step===1?" cx-confirm-page":""}">
 ${cancellationPageHeader(activeStage.title,activeStage.description,"",{compactContext:true})}
-${cancellationDraftNoticeHtml()}
+${cx.step===0?cancellationDraftNoticeHtml():""}
 ${cancellationVersionAlertHtml()}
 <section class="cx-page-workspace cx-full-cancellation-workspace${cx.step===1?" cx-confirm-workspace":""}" aria-label="${esc(activeStage.title)} workspace">
 ${stageContent}
@@ -3721,6 +4247,14 @@ if(walletCreditAmount)walletCreditAmount.textContent=fmt(walletAmount);
 }
 const foot=root.querySelector("[data-cxfoot]");
 if(foot)foot.innerHTML=cx.entry==="full"&&cx.presentation==="page"?fullCancellationFootHtml(q):cancelFootHtml(q);
+const overrideConfirm=root.querySelector("[data-cxconfirmoverride]");
+if(overrideConfirm){
+const canConfirm=cancelOverrideDraftReady(q);
+overrideConfirm.disabled=!canConfirm;
+overrideConfirm.classList.toggle("is-confirmed",!!cx.overrideConfirmed);
+overrideConfirm.setAttribute("aria-label",cx.overrideConfirmed?"Refund override confirmed":"Confirm refund override");
+overrideConfirm.innerHTML=cx.overrideConfirmed?`${SVG_CHECK}<span>Override confirmed</span>`:"<span>Confirm override</span>";
+}
 const fullInformation=root.querySelector(".cx-full-cancellation-info");
 if(fullInformation){
 const ready=cancelStep1Ready()&&cancelDestReady(q);
@@ -3756,7 +4290,7 @@ const cancelledCabins=new Set(cancelledGuests.map(guest=>guest.cabin));
 const fullPricing=priceDetail(detail);
 const currentFareRows=guestFareRows(detail,fullPricing);
 const remainingRowsById=new Map(detail.guests.map((guest,index)=>[guest.guestId,currentFareRows[index]]).filter(([guestId])=>!cancelledIds.has(guestId)));
-const paidBefore=Math.max(0,roundMoney(fullPricing.total-fullPricing.pending));
+const paidBefore=Math.max(0,roundMoney(fullPricing.paidToDate));
 const remainingTotal=Math.max(0,roundMoney([...remainingRowsById.values()].reduce((sum,row)=>sum+row.total,0)));
 const remainingTaxes=Math.max(0,roundMoney([...remainingRowsById.values()].reduce((sum,row)=>sum+row.taxes,0)));
 /* Any paid amount attributed to the cancelled guests leaves the active booking.
@@ -3793,6 +4327,7 @@ detail.base.insurance=remainingInsurance;
 detail.base.discount=remainingDiscount;
 detail.base.total=remainingTotal;
 detail.base.pending=remainingPending;
+detail.base.paidToDate=remainingPaid;
 detail.base.units=detail.guests.reduce((sum,g)=>sum+suppCount(g.supps),0);
 detail.base.insured=remainingInsured;
 detail.base.suppsBy=detail.guests.map(g=>({...g.supps}));
@@ -3819,6 +4354,7 @@ detail.promo=null;
 
 b.value=remainingTotal;
 b.pending=remainingPending;
+b.paidToDate=remainingPaid;
 if(cancelledIds.has(originalPrimaryId)&&detail.guests[0])b.name=detail.guests[0].name;
 b.guests=detail.guests.slice(1).map(g=>g.name);
 const partyKeys=["adult","youngAdult","child","infant"];
@@ -3861,7 +4397,7 @@ cx.keepInsurance?"Travel protection retained":"",
 cx.overrideOn?`Refund overridden: ${cx.overrideReason.trim()}`:""
 ].filter(Boolean);
 b.events.unshift({time:stamp,title:cancelledGuests.length>1?"Guest Cancellations Completed":"Guest Cancellation Completed",
-desc:`${cancelledGuests.map(guest=>guest.name).join(", ")} · ${fmt(q.refund)} refunded to ${dest} · ${auditDetails.join(" · ")} · Ref ${ref}`});
+desc:`${cancelledGuests.map(guest=>guest.name).join(", ")} · ${fmt(q.refund)} refund queued to ${dest} · ${auditDetails.join(" · ")} · Ref ${ref}`});
 persistCommittedCancellation(b,detail.guests,"partial");
 cx.done={scope:"guest",guestName:cancelledGuests[0].name,guestNames:cancelledGuests.map(guest=>guest.name),amount:q.refund,dest,reason:cx.reason,ref};
 renderCancellationExperience();
@@ -3904,8 +4440,9 @@ b.status="cancelled";
 b.cancel={reason:cx.reason,note:cx.note,noShow:cx.noShow,keptInsurance:cx.keepInsurance,
 overridden:cx.overrideOn,overrideReason:cx.overrideReason,
 penaltyPct:q.tier.pct,refund:q.refund,dest,ref,source:cx.source,paidAtCancel:q.paid};
+b.paidToDate=q.paid;
 b.events=b.events||[];
-b.events.unshift({time:stamp,title:"Refund issued",
+b.events.unshift({time:stamp,title:"Refund queued",
 desc:fmt(q.refund)+" · "+dest+" · Ref "+ref});
 b.events.unshift({time:stamp,title:"Booking Cancelled",
 desc:cx.reason+(cx.noShow?" · No-show":"")+" · "+Math.round(q.tier.pct*100)+"% penalty"
@@ -3945,15 +4482,15 @@ document.getElementById("ppTitle").textContent="Payment summary";
 return;
 }
 note.innerHTML=`<span class="ov-cn-t">This booking is cancelled</span>
-<span class="ov-cn-s">${esc(c.reason)} &middot; ${fmt(c.refund)} refunded to ${esc(c.dest)} &middot; Ref ${esc(c.ref)}</span>`;
+<span class="ov-cn-s">${esc(c.reason)} &middot; ${fmt(c.refund)} refund queued to ${esc(c.dest)} &middot; Ref ${esc(c.ref)}</span>`;
 /* a cancelled booking has no balance and no payment due date — the headline
-   figure becomes what was refunded, not what is owed */
+   figure becomes the queued refund, not what is owed */
 badge.textContent="Cancelled";
 badge.classList.remove("paid");badge.classList.add("cancelled");
-document.getElementById("ppTitle").textContent="Refund issued";
+document.getElementById("ppTitle").textContent="Refund queued";
 document.getElementById("pBalance").textContent=fmt(c.refund);
 const dueLine=document.getElementById("pDueDate");
-dueLine.textContent="Refunded to "+c.dest;
+dueLine.textContent="Expected to "+c.dest+" in 5–10 business days";
 dueLine.closest(".ov-due-line").classList.add("settled");
 }
 function statusBadgeHtml(b){
@@ -3982,7 +4519,7 @@ unified:{label:"Booking modification",steps:[0,1,2,3]}
 const IMPACT_SECTION_KEYS=["cabins","guests","supplements","extras","other"];
 function newModState(flow="unified"){
 const selected=MOD_FLOWS[flow]||MOD_FLOWS.unified;
-return{flow:MOD_FLOWS[flow]?flow:"unified",step:selected.steps[0],open:-1,guestCollapsedCabinIndexes:null,editCabin:-1,pendingCode:null,pendingRoom:null,roomDeck:null,roomCategoryOpen:false,roomNotice:"",catFilter:"All",locFilter:"All",roomFilters:{crib:false,rollaway:false,accessible:false,connecting:false},guestMenu:null,addGuestCabin:-1,addGuestStep:0,newGuestDraft:null,addGuestError:false,guestSearch:"",addGuestSuppSearch:"",addGuestSuppCat:null,removeGuestIdx:-1,suppSearch:"",suppCat:null,suppExpanded:null,selectedSuppsCollapsed:false,currentSuppExpanded:null,pkgExpanded:null,pkgSectionOpen:false,expandedFareCabin:-1,expandedFareContext:"modify",previewOpen:false,impactCollapsedSectionKeys:new Set(IMPACT_SECTION_KEYS),reviewSupplementCollapsedIds:new Set()};
+return{flow:MOD_FLOWS[flow]?flow:"unified",step:selected.steps[0],open:-1,guestCollapsedCabinIndexes:null,editCabin:-1,pendingCode:null,pendingRoom:null,roomDeck:null,roomCategoryOpen:false,roomNotice:"",catFilter:"All",locFilter:"All",roomFilters:{crib:false,rollaway:false,accessible:false,connecting:false},guestMenu:null,addGuestCabin:-1,addGuestStep:0,newGuestDraft:null,addGuestError:false,guestSearch:"",addGuestSuppSearch:"",addGuestSuppCat:null,removeGuestIdx:-1,suppSearch:"",suppCat:null,suppExpanded:null,selectedSuppsCollapsed:true,currentSuppExpanded:null,pkgExpanded:null,pkgSectionOpen:false,expandedFareCabin:-1,expandedFareContext:"modify",previewOpen:false,impactCollapsedSectionKeys:new Set(IMPACT_SECTION_KEYS),reviewSupplementExpandedIds:new Set()};
 }
 let mod=newModState();
 function modStepIds(){return(MOD_FLOWS[mod.flow]||MOD_FLOWS.unified).steps;}
@@ -4119,7 +4656,7 @@ const before=baseGuestFor(d,g);
 const original=Boolean(before);
 if(!isGuestActive(g))return{active:false,original,baseCabin:0,cabinUpgrade:0,cabinFare:0,govtTax:0,cruiseFee:0,taxes:0,onboard:0,protection:0,enhancements:0,basePromotion:0,subtotal:0};
 const cabinIdx=d.b.cabins.indexOf(g.cabin);
-const baseCabin=original?before.baseCabinFare:p.perHeadFare;
+const baseCabin=original?before.baseCabinFare:newGuestCabinFare(d,g,cabinIdx);
 const cabinUpgrade=cabinIdx>=0?cabinAdjustmentForGuest(d,g,cabinIdx,p.perHeadFare):0;
 const addedTax=original?null:newGuestTaxComponents(d,g);
 const govtTax=original?before.baseGovtTax:addedTax.govtTax;
@@ -4227,7 +4764,7 @@ return `<div class="mf-fare-guest-profile"><strong>${esc(g.name)}</strong><span>
 <tr class="mf-fare-position"><th scope="row">Fare position</th>${guestCells(g=>farePositionHtml(d,g))}</tr>
 ${componentRow("Cabin fare","cabinFare","mf-fare-parent")}
 ${componentRow("Base cabin fare","baseCabin","mf-fare-child")}
-${displayRows.some(row=>Math.abs(row.cabinUpgrade)>.005)?componentRow("Stateroom adjustment","cabinUpgrade","mf-fare-child"):""}
+${displayRows.some(row=>Math.abs(row.cabinUpgrade)>.005)?componentRow("Stateroom adjustment","cabinUpgrade","mf-fare-child",fmtSigned):""}
 ${componentRow("Taxes, fees &amp; port expenses","taxes","mf-fare-parent")}
 ${componentRow("Government taxes &amp; fees","govtTax","mf-fare-child")}
 ${componentRow("Required cruise fees &amp; expenses","cruiseFee","mf-fare-child")}
@@ -4279,7 +4816,7 @@ return `<section class="mf-cab-card" aria-label="Cabin ${idx+1} fare table">
 <div class="mf-cab-type">
 <div class="mf-cab-meta">
 <span class="mf-cab-id">Cabin ${idx+1}${roomChanged?`<span class="mf-cab-room-change" aria-label="Room changed from ${esc(originalRoom)} to ${esc(currentRoom)}"><span class="mf-cab-room-old">Room ${esc(originalRoom)}</span><span class="mf-cab-change-arrow" aria-hidden="true">&rarr;</span><span class="mf-cab-room-new">Room ${esc(currentRoom)}</span></span>`:`<span class="mf-cab-room">Room ${esc(currentRoom)}</span>`}</span>
-<span class="mf-cab-sub">${categoryChanged?`<span class="mf-cab-category-old">${esc(original.type)}</span><span class="mf-cab-change-arrow" aria-hidden="true">&rarr;</span><span class="mf-cab-category-new">${esc(c.type)}</span>`:esc(c.type)} &bull; Deck ${c.deck} &bull; ${roster.length} guest${roster.length===1?"":"s"}${stagedCount?` &bull; <em class="mf-cab-cancelling">${stagedCount} cancelling</em>`:""}${Math.abs(cabinImpact)>.005?` &bull; <em class="mf-cab-adj">${fmtSigned(cabinImpact)}</em>`:""}</span>
+<span class="mf-cab-sub">${categoryChanged?`<span class="mf-cab-category-old">${esc(original.name)}</span><span class="mf-cab-change-arrow" aria-hidden="true">&rarr;</span><span class="mf-cab-category-new">${esc(c.catName)}</span>`:esc(c.catName)} &bull; Deck ${c.deck} &bull; ${roster.length} guest${roster.length===1?"":"s"}${stagedCount?` &bull; <em class="mf-cab-cancelling">${stagedCount} cancelling</em>`:""}${Math.abs(cabinImpact)>.005?` &bull; <em class="mf-cab-adj">${fmtSigned(cabinImpact)}</em>`:""}</span>
 </div>
 </div>
 ${cabinActions?`<div class="mf-cab-actions">${cabinActions}</div>`:""}
@@ -4554,7 +5091,7 @@ return guest;
 }
 function addGuestQuote(candidate,idx){
 const before=priceDetail(detail),projected={...detail,guests:[...detail.guests,candidate]},after=priceDetail(projected);
-const cabinFare=Math.max(0,roundMoney(before.perHeadFare+cabinAdjustmentForGuest(projected,candidate,idx,before.perHeadFare)));
+const cabinFare=Math.max(0,roundMoney(newGuestCabinFare(projected,candidate,idx)+cabinAdjustmentForGuest(projected,candidate,idx,before.perHeadFare)));
 const taxes=newGuestTaxComponents(projected,candidate);
 return{
 before,after,cabinFare,taxes,
@@ -5202,26 +5739,85 @@ return{summary,bookingChanges,supplementChanges,supplementItems:supplementItems.
 function modificationReviewOutcomeHtml(summary,titleId="mfReviewOutcomeTitle"){
 const reconciliation=summary.reconciliation;
 const impactCopy=reconciliation.pricingNet===0?fmt(0):fmtSigned(reconciliation.pricingNet);
-const impactLabel=reconciliation.pricingNet>0?"Net price increase":reconciliation.pricingNet<0?"Net price decrease":"No net price change";
-const impactClass=summary.delta>0?" charge":summary.delta<0?" credit":"";
-const chargesCopy=reconciliation.charges>.005?`+${fmt(reconciliation.charges)}`:fmt(0);
-const creditsCopy=reconciliation.credits>.005?`−${fmt(reconciliation.credits)}`:fmt(0);
+const impactClass=reconciliation.pricingNet>0?" charge":reconciliation.pricingNet<0?" credit":"";
+const existingPosition=reconciliation.existingUnpaid>.005
+?`<div class="existing-balance"><dt>Existing unpaid balance</dt><dd>${fmt(reconciliation.existingUnpaid)}</dd></div>`
+:reconciliation.existingCredit>.005
+?`<div class="credit"><dt>Existing account credit</dt><dd>−${fmt(reconciliation.existingCredit)}</dd></div>`
+:"";
+const paymentOutcome=reconciliation.creditDue>.005
+?{label:"Credit after saving",value:fmt(reconciliation.creditDue),className:"balance credit",note:"Credit created after these changes"}
+:reconciliation.balanceDue>.005
+?{label:"Total balance due after saving",value:fmt(reconciliation.balanceDue),className:"balance",note:`Final payment due ${reconciliation.paymentDueDate}`}
+:{label:"Payment status after saving",value:"Paid in full",className:"balance paid",note:"No payment will be due"};
 return `<section class="mf-review-outcome${reconciliation.balanced?"":" is-unbalanced"}" aria-labelledby="${titleId}">
-<div class="mf-review-outcome-head"><span>Financial outcome</span><h3 id="${titleId}">Booking total after staged changes</h3><p>The updated total includes every charge and credit listed below.</p></div>
+<div class="mf-review-outcome-head"><span>Projected outcome</span><h3 id="${titleId}">Financial summary after saving</h3><p>See the updated booking total and remaining payment position before you confirm.</p></div>
 <div class="mf-review-outcome-layout">
 <div class="mf-review-total-hero">
-<span>Updated booking total</span>
+<div class="mf-review-total-label"><span>Updated booking total</span><em>Projected</em></div>
 <strong>${fmt(reconciliation.updatedTotal)}</strong>
-<span class="mf-review-total-impact${impactClass}"><b>${impactCopy}</b><span>${impactLabel} across ${summary.count} staged change${summary.count===1?"":"s"}</span></span>
-</div>
-<dl class="mf-review-calculation" aria-label="Booking total calculation">
-<div><dt>Starting booking total</dt><dd>${fmt(reconciliation.startingTotal)}</dd></div>
-<div class="charge"><dt>Charges added</dt><dd>${chargesCopy}</dd></div>
-<div class="credit"><dt>Credits applied</dt><dd>${creditsCopy}</dd></div>
+<p>After all staged changes are saved</p>
+<dl class="mf-review-total-facts" aria-label="Booking total comparison">
+<div><dt>Current booking total</dt><dd>${fmt(reconciliation.startingTotal)}</dd></div>
+<div class="${impactClass.trim()}"><dt>Net price change</dt><dd>${impactCopy}</dd></div>
 </dl>
+</div>
+<section class="mf-review-payment-position" aria-labelledby="${titleId}-payment-title">
+<header><span id="${titleId}-payment-title">Payment position</span><small>Existing payments included</small></header>
+<dl class="mf-review-calculation">
+<div><dt>Paid to date</dt><dd>${fmt(reconciliation.paidToDate)}</dd></div>
+${existingPosition}
+<div class="price-change${impactClass}"><dt>New price change</dt><dd>${impactCopy}</dd></div>
+<div class="${paymentOutcome.className}"><dt><strong>${paymentOutcome.label}</strong><small>${paymentOutcome.note}</small></dt><dd>${paymentOutcome.value}</dd></div>
+</dl>
+</section>
 </div>
 ${reconciliation.balanced?"":`<div class="mf-review-integrity-warning"><strong>These prices do not reconcile.</strong><span>The itemized changes differ from the updated booking total by ${fmt(Math.abs(reconciliation.variance))}. Saving is disabled until pricing is refreshed.</span></div>`}
 </section>`;
+}
+function modificationReviewRailHtml(summary,context="inline"){
+const reconciliation=summary.reconciliation;
+const modalContext=context==="modal";
+const impactCopy=reconciliation.pricingNet===0?fmt(0):fmtSigned(reconciliation.pricingNet);
+const impactClass=reconciliation.pricingNet>0?" charge":reconciliation.pricingNet<0?" credit":"";
+const existingPosition=reconciliation.existingUnpaid>.005
+?`<div class="existing-balance"><dt>Existing unpaid balance</dt><dd>${fmt(reconciliation.existingUnpaid)}</dd></div>`
+:reconciliation.existingCredit>.005
+?`<div class="credit"><dt>Existing account credit</dt><dd>−${fmt(reconciliation.existingCredit)}</dd></div>`
+:"";
+const paymentOutcome=reconciliation.creditDue>.005
+?{label:"Credit after saving",value:fmt(reconciliation.creditDue),className:"balance credit",note:"Credit created after these changes"}
+:reconciliation.balanceDue>.005
+?{label:"Total balance due after saving",value:fmt(reconciliation.balanceDue),className:"balance",note:`Final payment due ${reconciliation.paymentDueDate}`}
+:{label:"Payment status after saving",value:"Paid in full",className:"balance paid",note:"No payment will be due"};
+return `<aside class="mf-review-financial-rail" aria-labelledby="mfReviewFinancialRailTitle">
+<section class="mf-review-financial-card${reconciliation.balanced?"":" is-unbalanced"}">
+<header class="mf-review-financial-card-head"><span>Projected outcome</span><h3 id="mfReviewFinancialRailTitle">Financial summary after saving</h3><p>Review the updated booking total and remaining payment position before you confirm.</p></header>
+<section class="mf-review-rail-total" aria-labelledby="mfReviewRailTotalTitle">
+<div class="mf-review-rail-total-label"><span id="mfReviewRailTotalTitle">Updated booking total</span><em>Projected</em></div>
+<strong>${fmt(reconciliation.updatedTotal)}</strong>
+<p>After all staged changes are saved</p>
+<dl class="mf-review-rail-total-facts" aria-label="Booking total comparison">
+<div><dt>Current booking total</dt><dd>${fmt(reconciliation.startingTotal)}</dd></div>
+<div class="${impactClass.trim()}"><dt>Net price change</dt><dd>${impactCopy}</dd></div>
+</dl>
+</section>
+<section class="mf-review-rail-payment" aria-labelledby="mfReviewRailPaymentTitle">
+<header><span id="mfReviewRailPaymentTitle">Payment position</span><small>Existing payments included</small></header>
+<dl class="mf-review-rail-calculation">
+<div><dt>Paid to date</dt><dd>${fmt(reconciliation.paidToDate)}</dd></div>
+${existingPosition}
+<div class="price-change${impactClass}"><dt>New price change</dt><dd>${impactCopy}</dd></div>
+<div class="${paymentOutcome.className}"><dt><strong>${paymentOutcome.label}</strong><small>${paymentOutcome.note}</small></dt><dd>${paymentOutcome.value}</dd></div>
+</dl>
+</section>
+${reconciliation.balanced?"":`<div class="mf-review-rail-integrity"><strong>Pricing needs attention</strong><span>The staged totals differ by ${fmt(Math.abs(reconciliation.variance))}.</span></div>`}
+<div class="mf-review-rail-actions">
+<button type="button" class="mf-review-save" ${modalContext?"data-mod-save":"data-review-save"}${reconciliation.balanced?"":" disabled"}>Save changes</button>
+<button type="button" class="mf-review-discard" ${modalContext?"data-mod-discard":"data-review-discard"}>Discard staged changes</button>
+</div>
+</section>
+</aside>`;
 }
 function mfUnifiedBody(summary=modificationSummary()){
 if(mod.step===0){
@@ -5232,7 +5828,7 @@ ${mfCabinBody()}
 if(mod.step===1){
 return `<div class="mf-step-workspace" aria-label="Supplements">
 <div class="mf-step-surface"><div class="mf-workspace-editor"><section class="mf-workspace-subsection mf-workspace-supplement-subsection" aria-labelledby="mfSupplementAssignmentsTitle">
-<header class="mf-workspace-subsection-head"><span aria-hidden="true">${SVG_PACKAGE}</span><div><h2 id="mfSupplementAssignmentsTitle">Supplements &amp; packages</h2><p>Review current extras and manage eligible guest assignments.</p></div></header>
+<header class="mf-workspace-subsection-head"><span aria-hidden="true">${SVG_PACKAGE}</span><div><h2 id="mfSupplementAssignmentsTitle">Supplements</h2><p>Review current supplement products and manage eligible guest assignments.</p></div></header>
 ${mfSuppBody()}
 </section></div></div></div>`;
 }
@@ -5241,13 +5837,16 @@ return `<div class="mf-step-workspace" aria-label="Guest details">
 ${mfGuestsBody()}
 </div>`;
 }
+const affectedAreaCount=reviewChangeGroupModels(summary.items).length;
 return `<div class="mf-step-workspace mf-review-step" aria-label="Review and save">
 <div class="mf-review-step-body">
-${modificationReviewOutcomeHtml(summary,"mfInlineReviewOutcomeTitle")}
+<div class="mf-review-workspace">
 <section class="mf-review-changes-section" aria-labelledby="mfReviewChangesTitle">
-<header><div><span>Staged updates</span><h3 id="mfReviewChangesTitle">What will change</h3><p>Review the before-and-after details for every affected guest, cabin, and supplement.</p></div><em>${summary.count} total</em></header>
+<header><div><span>Staged updates</span><h3 id="mfReviewChangesTitle">What will change</h3><p>Review the before-and-after details for every affected guest, cabin, and supplement.</p></div><em>${affectedAreaCount} affected area${affectedAreaCount===1?"":"s"}</em></header>
 <div class="mf-preview-side-mount" id="mfInlineReviewSideMount"></div>
 </section>
+${modificationReviewRailHtml(summary)}
+</div>
 </div>
 </div>`;
 }
@@ -5349,6 +5948,8 @@ document.getElementById("modSideMount").appendChild(side);
 }
 function restoreInlineModificationReview(){
 const mount=document.getElementById("mfInlineReviewSideMount");
+const changeBox=mount?.querySelector("#changeBox");
+if(changeBox)document.getElementById("detailPendingChangesSlot").appendChild(changeBox);
 const side=mount?.querySelector(".ov-side");
 if(!side)return;
 restoreSideCardOrder();
@@ -5362,10 +5963,15 @@ const itemNet=roundMoney(charges-credits);
 const pricingNet=roundMoney(pricing.total-startingTotal);
 const itemizedUpdatedTotal=roundMoney(startingTotal+itemNet);
 const variance=roundMoney(pricing.total-itemizedUpdatedTotal);
+const existingPaymentPosition=roundMoney(startingTotal-pricing.paidToDate);
 return{
 startingTotal,charges,credits,itemNet,pricingNet,itemizedUpdatedTotal,
 updatedTotal:roundMoney(pricing.total),variance,balanced:Math.abs(variance)<=.005,
-paidToDate:pricing.paidToDate,balanceDue:pricing.pending,creditDue:pricing.creditDue
+paidToDate:pricing.paidToDate,
+existingUnpaid:Math.max(0,existingPaymentPosition),
+existingCredit:Math.max(0,roundMoney(-existingPaymentPosition)),
+balanceDue:pricing.pending,creditDue:pricing.creditDue,
+paymentDueDate:fmtDateShort(addDays(d.sail,-5))
 };
 }
 function modificationSummary(){
@@ -5373,7 +5979,7 @@ if(!detail)return{dirty:false,pricing:null,items:[],count:0,delta:0,total:0,reco
 const pricing=priceDetail(detail),dirty=isDirty(detail);
 const items=dirty?changeItems(pricing):[];
 const reconciliation=reviewPricingReconciliation(detail,pricing,items);
-return{dirty,pricing,items,count:items.length,delta:Math.abs(pricing.delta)<=.005?0:pricing.delta,total:pricing.total,reconciliation};
+return{dirty,pricing,items,count:stagedChangeUnitCount(items),recordCount:items.length,delta:Math.abs(pricing.delta)<=.005?0:pricing.delta,total:pricing.total,reconciliation};
 }
 const MODIFICATION_IMPACT_PRIORITY={
 "guest-added":0,"guest-removed":0,"guest-moved":1,"guest-updated":2,
@@ -5431,7 +6037,7 @@ if(addedGuestSupplementCount){
 const guestSection=sections.find(section=>section.key==="guests"&&section.reviewKey==="guest-addition");
 if(guestSection)guestSection.description="New guests, assigned fare, protection, and supplements";
 }
-if(standaloneSupplements.length)sections.push({key:"supplements",reviewKey:"supplements",title:"Supplement changes",icon:reviewChangeGroupIcon("supplements"),description:"Products and packages assigned to existing guests",groups:[{key:"supplement:summary",type:"supplement",items:standaloneSupplements.map(({item})=>item)}]});
+if(standaloneSupplements.length)sections.push({key:"supplements",reviewKey:"supplements",title:"Supplement changes",icon:reviewChangeGroupIcon("supplements"),description:"Supplement products assigned to existing guests",groups:[{key:"supplement:summary",type:"supplement",items:standaloneSupplements.map(({item})=>item)}]});
 }
 const extras=indexed.filter(({index,item})=>!consumed.has(index)&&["protection-change","promo-change"].includes(item.kind));
 if(extras.length){
@@ -5683,12 +6289,12 @@ return summary;
 function arrangePreviewSideCard(summary){
 const card=document.querySelector(".ov-side-card");
 if(!card)return;
+const side=card.closest(".ov-side");
+if(side){side.removeAttribute("aria-labelledby");side.setAttribute("aria-label","Staged booking changes");}
+const changesMenu=document.querySelector(".ov-changes-menu");
+if(changesMenu)changesMenu.open=false;
 card.querySelector(".mf-review-payment-heading")?.remove();
-["#changeBox"].forEach(selector=>{
-const node=card.querySelector(selector);
-if(node)card.appendChild(node);
-});
-[".ov-ledger",".ov-preview-status-group",".ov-total-payable",".ov-promo-block",".ov-side-actions","#cancelledNote"].forEach(selector=>{
+[".ov-ledger",".ov-preview-status-group",".ov-payment-draft",".ov-total-payable",".ov-promo-block",".ov-side-actions","#cancelledNote"].forEach(selector=>{
 const node=card.querySelector(selector);
 if(node)card.appendChild(node);
 });
@@ -5696,8 +6302,12 @@ if(node)card.appendChild(node);
 function restoreSideCardOrder(){
 const card=document.querySelector(".ov-side-card");
 if(!card)return;
+const side=card.closest(".ov-side");
+if(side){side.removeAttribute("aria-label");side.setAttribute("aria-labelledby","ppTitle");}
+const changesMenu=document.querySelector(".ov-changes-menu");
+if(changesMenu)changesMenu.open=false;
 card.querySelector(".mf-review-payment-heading")?.remove();
-[".ov-preview-status-group",".ov-promo-block",".ov-ledger","#changeBox",".ov-total-payable",".ov-side-actions","#cancelledNote"].forEach(selector=>{
+[".ov-preview-status-group",".ov-payment-draft",".ov-promo-block",".ov-ledger",".ov-total-payable",".ov-side-actions","#cancelledNote"].forEach(selector=>{
 const node=card.querySelector(selector);
 if(node)card.appendChild(node);
 });
@@ -5712,40 +6322,23 @@ const originId=event?.currentTarget?.id;
 host.dataset.previewOrigin=document.getElementById("viewDetail").classList.contains("active")?"detail":"modify";
 host.dataset.returnFocus=originId?`#${originId}`:"#mfPreview";
 const summary=modificationSummary();
-const reconciliation=summary.reconciliation;
-const impactCopy=reconciliation.pricingNet===0?fmt(0):fmtSigned(reconciliation.pricingNet);
-const impactLabel=reconciliation.pricingNet>0?"Net price increase":reconciliation.pricingNet<0?"Net price decrease":"No net price change";
-const impactClass=summary.delta>0?" charge":summary.delta<0?" credit":"";
-const chargesCopy=reconciliation.charges>.005?`+${fmt(reconciliation.charges)}`:fmt(0);
-const creditsCopy=reconciliation.credits>.005?`−${fmt(reconciliation.credits)}`:fmt(0);
+const affectedAreaCount=reviewChangeGroupModels(summary.items).length;
 host.innerHTML=`<div class="mf-modal-backdrop" data-mod-preview-close></div>
 <section class="mf-modal-card mf-modal-preview" role="dialog" aria-modal="true" aria-labelledby="modPreviewTitle" aria-describedby="modPreviewSub">
-<header class="mf-modal-head"><div class="mf-modal-title"><div class="mf-review-title-line"><h2 class="mf-modal-h" id="modPreviewTitle" tabindex="-1">Review changes</h2><span>${summary.count} staged change${summary.count===1?"":"s"}</span></div><span class="mf-modal-sub" id="modPreviewSub">Confirm what changed and how it affects the booking total.</span></div><button type="button" class="mf-modal-x" data-mod-preview-close aria-label="Close change review">${SVG_X}</button></header>
+<header class="mf-modal-head"><div class="mf-modal-title"><h2 class="mf-modal-h" id="modPreviewTitle" tabindex="-1">Review changes</h2><span class="mf-modal-sub" id="modPreviewSub">Confirm what changed and how it affects the booking total.</span></div><button type="button" class="mf-modal-x" data-mod-preview-close aria-label="Close change review">${SVG_X}</button></header>
 <div class="mf-preview-body">
-<section class="mf-review-outcome${reconciliation.balanced?"":" is-unbalanced"}" aria-labelledby="mfReviewOutcomeTitle">
-<div class="mf-review-outcome-head"><span>Financial outcome</span><h3 id="mfReviewOutcomeTitle">Booking total after staged changes</h3><p>The updated total includes every charge and credit listed below.</p></div>
-<div class="mf-review-outcome-layout">
-<div class="mf-review-total-hero">
-<span>Updated booking total</span>
-<strong>${fmt(reconciliation.updatedTotal)}</strong>
-<span class="mf-review-total-impact${impactClass}"><b>${impactCopy}</b><span>${impactLabel} across ${summary.count} staged change${summary.count===1?"":"s"}</span></span>
-</div>
-<dl class="mf-review-calculation" aria-label="Booking total calculation">
-<div><dt>Starting booking total</dt><dd>${fmt(reconciliation.startingTotal)}</dd></div>
-<div class="charge"><dt>Charges added</dt><dd>${chargesCopy}</dd></div>
-<div class="credit"><dt>Credits applied</dt><dd>${creditsCopy}</dd></div>
-</dl>
-</div>
-${reconciliation.balanced?"":`<div class="mf-review-integrity-warning"><strong>These prices do not reconcile.</strong><span>The itemized changes differ from the updated booking total by ${fmt(Math.abs(reconciliation.variance))}. Continuing is disabled until pricing is refreshed.</span></div>`}
-</section>
+<div class="mf-review-workspace mf-modal-review-workspace">
+<section class="mf-review-changes-section" aria-labelledby="modPreviewChangesTitle">
+<header><div><span>Staged updates</span><h3 id="modPreviewChangesTitle">What will change</h3><p>Review the before-and-after details for every affected guest, cabin, and supplement.</p></div><em>${affectedAreaCount} affected area${affectedAreaCount===1?"":"s"}</em></header>
 <div class="mf-preview-side-mount" id="modPreviewSideMount"></div>
+</section>
+${modificationReviewRailHtml(summary,"modal")}
 </div>
-<footer class="mf-modal-foot mf-preview-foot"><span class="mf-preview-foot-note">Confirm the combined guest, cabin, supplement, and pricing changes.</span><div class="mf-preview-foot-actions"><button type="button" class="mf-btn-ghost" data-mod-preview-close>Back to editing</button><button type="button" class="ov-btn-solid" data-mod-save${reconciliation.balanced?"":" disabled"}>Save changes</button></div></footer>
+</div>
 </section>`;
 mod.previewOpen=true;
 document.getElementById("detailReviewChanges").setAttribute("aria-expanded","true");
-document.getElementById("modPreviewSideMount").appendChild(document.querySelector(".ov-side"));
-arrangePreviewSideCard(summary);
+document.getElementById("modPreviewSideMount").appendChild(document.getElementById("changeBox"));
 const groupedChanges=host.querySelector("#changesItems");
 if(groupedChanges)groupedChanges.innerHTML=groupedChangeItemsHtml(summary.items);
 renderSupplementImpact(updateModificationPreviewState());
@@ -5759,6 +6352,8 @@ const previewOrigin=host.dataset.previewOrigin||"modify";
 mod.previewOpen=false;
 if(!isDirty(detail))host.dataset.returnFocus=previewOrigin==="detail"?"#modifyBookingBtn":"#mfNext";
 restoreSideCardOrder();
+const changeBox=host.querySelector("#changeBox")||document.getElementById("changeBox");
+if(changeBox)document.getElementById("detailPendingChangesSlot").appendChild(changeBox);
 (previewOrigin==="detail"?document.getElementById("detailLayout"):document.getElementById("modSideMount")).appendChild(side);
 setPaymentMenu(false);
 hideAccessibleModal(host);
@@ -5773,7 +6368,7 @@ return `<div><dt>Booking ID</dt><dd>#${esc(detail.b.id)}</dd></div>
 <div><dt>Farecode</dt><dd>${esc(farecodeFor(detail.b))}</dd></div>
 <div class="mf-page-context-sailing"><dt>Sailing</dt><dd>${esc(detail.info?.shipSub||detail.b.itin)}</dd></div>
 <div><dt>Departs</dt><dd>${esc(detail.b.date)}</dd></div>
-<div><dt>Current booking</dt><dd>${guests} guests · ${cabins} cabin${cabins===1?"":"s"}</dd></div>`;
+<div><dt>Working booking</dt><dd>${guests} guests · ${cabins} cabin${cabins===1?"":"s"}</dd></div>`;
 }
 function renderModify(){
 restoreInlineModificationReview();
@@ -5811,10 +6406,9 @@ next.title=!reconciled?"Pricing totals must reconcile before this modification c
 if(mod.step===3&&summary?.dirty){
 renderPricePanel(priceDetail(detail));
 const mount=document.getElementById("mfInlineReviewSideMount");
-const side=document.querySelector(".ov-side");
-if(mount&&side){
-mount.appendChild(side);
-arrangePreviewSideCard(summary);
+const changeBox=document.getElementById("changeBox");
+if(mount&&changeBox){
+mount.appendChild(changeBox);
 const groupedChanges=mount.querySelector("#changesItems");
 if(groupedChanges)groupedChanges.innerHTML=groupedChangeItemsHtml(summary.items);
 }
@@ -5913,9 +6507,12 @@ const cancellationMenuWrap=cancellationBtn.closest(".ov-cancellation-menu-wrap")
 function cancellationGuestCount(){
 return detail?activeGuests(detail).length:0;
 }
+function confirmedCancellationGuestCount(){
+return detail?(detail.base.guests||[]).length:0;
+}
 function setCancellationMenu(open,focusItem=null){
 const partialOption=cancellationMenu.querySelector('[data-cancellation-flow="partial"]');
-const canCancelPartially=Boolean(detail)&&cancellationGuestCount()>1&&detail.b.status!=="cancelled";
+const canCancelPartially=Boolean(detail)&&confirmedCancellationGuestCount()>1&&detail.b.status!=="cancelled";
 if(partialOption){
 partialOption.disabled=!canCancelPartially;
 partialOption.setAttribute("aria-disabled",String(!canCancelPartially));
@@ -5939,7 +6536,7 @@ partialStage:"select",supplementAllocations:[],
 supplementDecisionOpen:null,supplementDecisionDraft:null,supplementBulkOpen:false,supplementBulkDraft:null,supplementDecisionModes:{},confirmRemoveAll:false,impactGuestsOpen:false,
 supplementGroupsOpen:{},supplementSectionOpen:true,cancellationInfoOpen:false,
 step:"select",reason:"",note:"",noShow:false,keepInsurance:false,
-overrideOn:false,overrideAmt:"",overrideReason:"",source:"original",
+overrideOn:false,overrideAmt:"",overrideReason:"",overrideConfirmed:false,source:"original",
 walletId:"",walletState:"idle",walletCreated:null,chequePayee:"",chequeAddr:"",
 chequePayeeTouched:false,chequeAddrTouched:false,
 splitCard:"",splitWallet:"",done:null};
@@ -5964,15 +6561,14 @@ focusCancellationTarget(selector);
 }
 function openCancellationPage(mode){
 if(!detail)return;
-if(mode==="partial"&&cancellationGuestCount()<=1){setCancellationMenu(false);return;}
+if(mode==="partial"&&confirmedCancellationGuestCount()<=1){setCancellationMenu(false);return;}
 setCancellationMenu(false);
 setPaymentMenu(false);
 closeFareTableModal();
-/* Cancellation is its own transaction. Partial cancellation starts from an
-   isolated copy of the current working booking so staged guests remain visible;
-   full cancellation retains its committed-booking behavior. */
+/* Cancellation is its own transaction and always starts from the confirmed
+   booking. Any modification draft is paused intact and restored on Back. */
 cancellationReturnDetail=isDirty(detail)?detail:null;
-if(cancellationReturnDetail)detail=mode==="partial"?cloneDetailState(detail):buildDetailState(detail.b);
+if(cancellationReturnDetail)detail=buildDetailState(detail.b);
 cx=mode==="partial"
 ?partialCancellationSelectionState()
 :createCancellationState({presentation:"page",entry:"full"});
@@ -6150,7 +6746,7 @@ document.getElementById("mfNext").addEventListener("click",()=>{
 if(mod.step===0){goStep(1);return;}
 if(mod.step===1){goStep(2);return;}
 if(mod.step===2){goStep(3);return;}
-if(mod.step===3&&isDirty(detail))closeModify();
+if(mod.step===3&&isDirty(detail)&&commitModification())closeModify();
 });
 document.getElementById("mfSteps").addEventListener("click",e=>{
 const btn=e.target.closest("[data-step]");
@@ -6614,6 +7210,7 @@ const input=document.getElementById("promoInput");
 const code=input.value.trim().toUpperCase();
 if(!code){input.classList.add("error");showPromoMsg("Enter a promo code to continue.","error");return;}
 if(!PROMO_CODES[code]){input.classList.add("error");showPromoMsg(`"${code}" is not a valid promo code.`,"error");return;}
+if((detail.base.discount||0)>.005){input.classList.add("error");showPromoMsg("A promotion is already part of the confirmed booking.","error");return;}
 if(detail.promo===code){showPromoMsg("This code is already applied.","error");return;}
 input.classList.remove("error");
 detail.promo=code;
@@ -6624,8 +7221,9 @@ document.getElementById("promoInput").addEventListener("input",e=>{
 e.target.classList.remove("error");
 document.getElementById("promoMsg").hidden=true;
 });
-document.getElementById("resetChanges").addEventListener("click",()=>{
+function discardAllStagedChanges(){
 if(!detail)return;
+document.querySelector(".ov-changes-menu")?.removeAttribute("open");
 const previewWasOpen=mod.previewOpen;
 clearDetailDraft(detail.b.id);
 /* Restore complete immutable guest snapshots, including anyone removed from
@@ -6633,16 +7231,17 @@ clearDetailDraft(detail.b.id);
 detail.guests=(detail.base.guests||[]).map(cloneGuestState);
 detail.cabinPlan.forEach((c,i)=>{c.code=detail.base.cabinCodeBy[i];c.room=detail.base.roomBy[i];});
 resetPicker();mod.editCabin=-1;mod.addGuestCabin=-1;mod.addGuestStep=0;mod.newGuestDraft=null;mod.addGuestError=false;mod.removeGuestIdx=-1;mod.guestSearch="";mod.addGuestSuppSearch="";mod.addGuestSuppCat=null;
-mod.suppSearch="";mod.suppCat=null;mod.suppExpanded=null;mod.selectedSuppsCollapsed=false;mod.currentSuppExpanded=null;mod.pkgExpanded=null;mod.pkgSectionOpen=false;
+mod.suppSearch="";mod.suppCat=null;mod.suppExpanded=null;mod.selectedSuppsCollapsed=true;mod.currentSuppExpanded=null;mod.pkgExpanded=null;mod.pkgSectionOpen=false;
 mod.impactCollapsedSectionKeys=new Set(IMPACT_SECTION_KEYS);
-mod.reviewSupplementCollapsedIds.clear();
+mod.reviewSupplementExpandedIds.clear();
 detail.promo=null;detail.selected=null;
 const input=document.getElementById("promoInput");
 input.value="";input.classList.remove("error");
 document.getElementById("promoMsg").hidden=true;
 refresh();
 if(previewWasOpen)closeModificationPreview();
-});
+}
+document.getElementById("resetChanges").addEventListener("click",discardAllStagedChanges);
 /* Cancellation renders in either the legacy dialog or the new routed page.
    Both surfaces share one event controller so policy, validation and refund
    calculations cannot drift between the two entry points. */
@@ -6738,9 +7337,13 @@ if(e.target.closest("[data-cxoverride]")){
 cx.overrideOn=!cx.overrideOn;
 /* Seeding the field with the calculated figure makes the override an edit
    rather than a blank slate, so a mistyped amount is easier to spot. */
-if(cx.overrideOn)cx.overrideAmt=cancelQuote().capped.toFixed(2);
-else{cx.overrideAmt="";cx.overrideReason="";}
+if(cx.overrideOn){cx.overrideAmt=cancelQuote().capped.toFixed(2);cx.overrideConfirmed=false;}
+else{cx.overrideAmt="";cx.overrideReason="";cx.overrideConfirmed=false;}
 renderCancellationWithFocus(cx.overrideOn?"#cancellationOverrideAmount":"[data-cxoverride]");return;
+}
+if(e.target.closest("[data-cxconfirmoverride]")){
+if(!cancelOverrideDraftReady(cancelQuote()))return;
+cx.overrideConfirmed=true;syncCancelMoney();return;
 }
 const src=e.target.closest("[data-cxsrc]");
 if(src){cx.source=src.dataset.cxsrc;renderCancellationWithFocus(`[data-cxsrc="${cx.source}"]`);return;}
@@ -6793,8 +7396,8 @@ function handleCancellationInput(e){
 if(!cx)return;
 const t=e.target;
 if(t.matches("[data-cxnote]")){cx.note=t.value;syncCancelMoney();return;}
-if(t.matches("[data-cxovamt]")){cx.overrideAmt=t.value;syncCancelMoney();return;}
-if(t.matches("[data-cxovreason]")){cx.overrideReason=t.value;syncCancelMoney();return;}
+if(t.matches("[data-cxovamt]")){cx.overrideAmt=t.value;cx.overrideConfirmed=false;syncCancelMoney();return;}
+if(t.matches("[data-cxovreason]")){cx.overrideReason=t.value;cx.overrideConfirmed=false;syncCancelMoney();return;}
 if(t.matches("[data-cxpayee]")){cx.chequePayee=t.value;if(cx.entry==="partial")cx.chequePayeeTouched=true;syncCancelMoney();return;}
 if(t.matches("[data-cxaddr]")){cx.chequeAddr=t.value;if(cx.entry==="partial")cx.chequeAddrTouched=true;syncCancelMoney();return;}
 if(t.matches("[data-cxsplitcard]")){cx.splitCard=t.value;syncCancelMoney();return;}
@@ -6874,12 +7477,10 @@ document.getElementById("itineraryBtn").addEventListener("click",openItineraryMo
 document.getElementById("itineraryModal").addEventListener("click",e=>{if(e.target.closest("[data-itinerary-close]"))closeItineraryModal();});
 const paymentMenuBtn=document.getElementById("paymentMenuBtn");
 const paymentMenu=document.getElementById("paymentMenu");
-const PAY_ACTION_LABELS={wallet:"Pay by credit/wallet",cash:"Pay by cash/offline",link:"Send payment link"};
 function setPaymentMenu(open){paymentMenu.classList.toggle("open",open);paymentMenuBtn.setAttribute("aria-expanded",String(open));}
 paymentMenuBtn.addEventListener("click",e=>{e.stopPropagation();setPaymentMenu(!paymentMenu.classList.contains("open"));});
 document.querySelectorAll(".ov-payment-menu-item").forEach(item=>{
 item.addEventListener("click",()=>{
-alert(PAY_ACTION_LABELS[item.dataset.payaction]+" clicked");
 setPaymentMenu(false);
 });
 });
@@ -6921,10 +7522,60 @@ closeFareTableModal();
 openNewGuestRemoval(guestIdx,cabinIdx,`#mf-fare-table-${cabinIdx} [data-guestremove="${guestIdx}"], #mf-fare-table-${cabinIdx} [data-expand-fare="${cabinIdx}"]`);
 }
 });
+document.addEventListener("click",e=>{
+const reviewSave=e.target.closest("[data-review-save]");
+if(reviewSave){if(!reviewSave.disabled)document.getElementById("mfNext")?.click();return;}
+const reviewDiscard=e.target.closest("[data-review-discard]");
+if(reviewDiscard){discardAllStagedChanges();return;}
+const groupToggle=e.target.closest("[data-review-group-toggle]");
+if(groupToggle){
+const panel=document.getElementById(groupToggle.getAttribute("aria-controls"));
+if(!panel)return;
+const opening=groupToggle.getAttribute("aria-expanded")!=="true";
+groupToggle.setAttribute("aria-expanded",String(opening));
+groupToggle.setAttribute("aria-label",`${opening?"Collapse":"Expand"} ${groupToggle.querySelector(".mf-review-change-group-title")?.textContent||"change details"}`);
+panel.hidden=!opening;
+groupToggle.closest(".mf-review-change-group")?.classList.toggle("is-collapsed",!opening);
+return;
+}
+const supplementView=e.target.closest("[data-review-supplement-view]");
+if(supplementView){
+const review=supplementView.closest(".mf-review-supplement-review");
+if(!review)return;
+const selected=supplementView.dataset.reviewSupplementView;
+review.querySelectorAll("[data-review-supplement-view]").forEach(button=>button.setAttribute("aria-pressed",String(button===supplementView)));
+review.querySelectorAll("[data-review-supplement-panel]").forEach(panel=>{panel.hidden=panel.dataset.reviewSupplementPanel!==selected;});
+return;
+}
+const itemToggle=e.target.closest("[data-review-item-toggle]");
+if(!itemToggle)return;
+const panel=document.getElementById(itemToggle.getAttribute("aria-controls"));
+if(!panel)return;
+const opening=itemToggle.getAttribute("aria-expanded")!=="true";
+const title=itemToggle.querySelector(".ov-change-item-label")?.textContent||"change";
+if(opening){
+itemToggle.closest(".mf-review-change-group")?.querySelectorAll('[data-review-item-toggle][aria-expanded="true"]').forEach(openToggle=>{
+if(openToggle===itemToggle)return;
+const openPanel=document.getElementById(openToggle.getAttribute("aria-controls"));
+const openTitle=openToggle.querySelector(".ov-change-item-label")?.textContent||"change";
+openToggle.setAttribute("aria-expanded","false");
+openToggle.setAttribute("aria-label",`Expand details for ${openTitle}`);
+if(openPanel)openPanel.hidden=true;
+openToggle.closest(".has-collapsible-detail")?.classList.add("is-collapsed");
+});
+}
+itemToggle.setAttribute("aria-expanded",String(opening));
+itemToggle.setAttribute("aria-label",`${opening?"Collapse":"Expand"} details for ${title}`);
+panel.hidden=!opening;
+itemToggle.closest(".has-collapsible-detail")?.classList.toggle("is-collapsed",!opening);
+});
 document.getElementById("modPreviewModal").addEventListener("click",e=>{
+if(e.target.closest("[data-mod-discard]")){
+discardAllStagedChanges();return;
+}
 if(e.target.closest("[data-mod-save]")){
 if(e.target.closest("[data-mod-save]").disabled)return;
-closeModificationPreview();closeModify();return;
+if(commitModification()){closeModificationPreview();closeModify();}return;
 }
 const toggle=e.target.closest("[data-review-supplement-toggle]");
 if(toggle){
@@ -6937,9 +7588,9 @@ panel.hidden=!opening;
 toggle.closest(".is-supplement-accordion")?.classList.toggle("is-collapsed",!opening);
 const state=toggle.querySelector("[data-review-supplement-state]");
 if(state)state.textContent=opening?"Hide details":"Show details";
-if(!(mod.reviewSupplementCollapsedIds instanceof Set))mod.reviewSupplementCollapsedIds=new Set();
-if(opening)mod.reviewSupplementCollapsedIds.delete(key);
-else mod.reviewSupplementCollapsedIds.add(key);
+if(!(mod.reviewSupplementExpandedIds instanceof Set))mod.reviewSupplementExpandedIds=new Set();
+if(opening)mod.reviewSupplementExpandedIds.add(key);
+else mod.reviewSupplementExpandedIds.delete(key);
 return;
 }
 if(e.target.closest("[data-mod-preview-close]"))closeModificationPreview();
