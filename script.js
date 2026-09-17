@@ -3265,11 +3265,17 @@ const allDefaulted=summary.totalLines>0&&allocationLines.every(line=>line.destin
 const sharedDestination=allocationLines.length&&allocationLines[0].destination&&allocationLines[0].destination!=="remove"&&allocationLines.every(line=>line.destination===allocationLines[0].destination)
 ?allocationLines[0].destination:null;
 const sharedRecipient=sharedDestination?detail.guests.find(guest=>guest.guestId===sharedDestination):null;
-const bulkAssignmentName=sharedRecipient?.name||"Multiple outcomes";
-const bulkAssignmentCopy=sharedRecipient
-?`All ${summary.totalLines} supplement${summary.totalLines===1?" is":"s are"} assigned to this guest.`
-:"Assignments are split or marked for removal.";
 const allSupplementsRemoved=summary.totalLines>0&&summary.removedLines===summary.totalLines;
+const bulkOutcomeTitle=allSupplementsRemoved
+?"Remove from booking"
+:sharedRecipient
+?`Assign to ${sharedRecipient.name}`
+:"Mixed outcomes";
+const bulkOutcomeCopy=allSupplementsRemoved
+?`All ${summary.totalLines} affected supplement${summary.totalLines===1?" is":"s are"} marked for removal.`
+:sharedRecipient
+?`All ${summary.totalLines} affected supplement${summary.totalLines===1?" uses":"s use"} this assignment unless changed below.`
+:"The affected supplements currently have different assignments.";
 const canResetAllToPrimary=allocations.some(allocation=>allocation.lines.some(line=>primary&&line.destination!==primary.guestId&&partialAllocationRecipients(detail,line).some(guest=>guest.guestId===primary.guestId)));
 if(!cx.supplementDecisionModes)cx.supplementDecisionModes={};
 if(!cx.supplementGroupsOpen)cx.supplementGroupsOpen={};
@@ -3294,15 +3300,16 @@ ${cancellationVersionAlertHtml()}
 <h2 class="sr-only" id="cancellationStepTitle" tabindex="-1">Complete cancellation details</h2>
 <details class="cx-allocation-card" data-cxsupplementsection aria-labelledby="partialSupplementAllocationTitle"${cx.supplementSectionOpen!==false&&!cx.cancellationInfoOpen?" open":""}>
 <summary class="cx-allocation-card-head"><span class="cx-allocation-card-icon" aria-hidden="true"><i data-lucide="package"></i></span><span class="cx-allocation-card-heading"><strong id="partialSupplementAllocationTitle">Supplement reallocation</strong><small>${introCopy}</small></span>${summary.totalLines?`<span class="cx-allocation-card-status" aria-label="${summary.totalLines} affected supplements, total value ${fmt(summary.totalValue)}">Total value &middot; ${fmt(summary.totalValue)}</span>`:""}<span class="cx-allocation-card-toggle" aria-hidden="true"><i data-lucide="chevron-down"></i></span></summary>
-<div class="cx-allocation-list">${summary.totalLines?`<div class="cx-allocation-default-notice" role="group" aria-label="Bulk supplement assignment"><span class="cx-allocation-default-icon"><i data-lucide="users" aria-hidden="true"></i></span><div><span>Bulk assignment</span><strong>${esc(bulkAssignmentName)}</strong></div><p>${esc(bulkAssignmentCopy)} Change them together, then adjust exceptions below.</p><button type="button" data-cxsuppbulkassign aria-haspopup="dialog" aria-controls="partialSupplementAssignModal"><i data-lucide="users" aria-hidden="true"></i><span>${sharedRecipient?"Change all":"Assign all"}</span></button></div>`:`<div class="cx-allocation-empty" role="note"><i data-lucide="check-circle-2" aria-hidden="true"></i><span>No allocation decisions are required.</span></div>`}${allocations.filter(allocation=>allocation.lines.length).map((allocation,groupIndex)=>{
+<div class="cx-allocation-list">${summary.totalLines?`<div class="cx-allocation-default-notice" role="group" aria-label="Actions for all affected supplements"><span class="cx-allocation-default-icon"><i data-lucide="layers-3" aria-hidden="true"></i></span><div class="cx-allocation-default-copy"><span>All affected supplements</span><strong>${esc(bulkOutcomeTitle)}</strong><small>${esc(bulkOutcomeCopy)}</small></div><div class="cx-allocation-default-actions"><button type="button" class="assign" data-cxsuppbulkassign aria-haspopup="dialog" aria-controls="partialSupplementAssignModal"><i data-lucide="users" aria-hidden="true"></i><span>${allSupplementsRemoved?"Reassign all":sharedRecipient?"Change assignment":"Assign all"}</span></button>${canResetAllToPrimary?`<button type="button" class="restore" data-cxsuppprimary><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>${allSupplementsRemoved?"Undo removal":"Restore default"}</span></button>`:""}${allSupplementsRemoved?"":`<button type="button" class="remove" data-cxsuppremoveall aria-haspopup="dialog" aria-controls="removeAllSupplementsModal"><i data-lucide="trash-2" aria-hidden="true"></i><span>Remove all from booking</span></button>`}</div></div>`:`<div class="cx-allocation-empty" role="note"><i data-lucide="check-circle-2" aria-hidden="true"></i><span>No allocation decisions are required.</span></div>`}${allocations.filter(allocation=>allocation.lines.length).map((allocation,groupIndex)=>{
 const source=detail.guests.find(guest=>guest.guestId===allocation.sourceGuestId);
 const cabinIndex=source?detail.b.cabins.indexOf(source.cabin):-1;
 const sourceValue=roundMoney(allocation.lines.reduce((total,line)=>total+(SUPP_BY_ID[line.suppId]?.pricePP||0)*line.quantity,0));
 const unresolvedCount=allocation.lines.filter(line=>!line.destination).length;
 const removedCount=allocation.lines.filter(line=>line.destination==="remove").length;
 const changedCount=allocation.lines.filter(line=>line.destination&&line.destination!=="remove"&&line.destination!==primary?.guestId).length;
+const sourceFullyRemoved=allocation.lines.length>0&&removedCount===allocation.lines.length;
 const hasOpenDecision=allocation.lines.some(line=>cx.supplementDecisionOpen===`${allocation.sourceGuestId}::${line.suppId}`);
-const sourceExpanded=hasOpenDecision||unresolvedCount>0||removedCount>0||changedCount>0||cx.supplementGroupsOpen[allocation.sourceGuestId]!==false;
+const sourceExpanded=hasOpenDecision||cx.supplementGroupsOpen[allocation.sourceGuestId]===true;
 const sourceStatus=unresolvedCount
 ?`${unresolvedCount} decision${unresolvedCount===1?"":"s"} required`
 :removedCount
@@ -3311,7 +3318,7 @@ const sourceStatus=unresolvedCount
 ?`${changedCount} reassigned`
 :`All assigned to ${primary?.name||"the primary guest"}`;
 return `<details class="cx-allocation-source${unresolvedCount?" needs-review":removedCount||changedCount?" has-changes":""}" data-cxallocationsource="${esc(allocation.sourceGuestId)}"${sourceExpanded?" open":""}>
-<summary class="cx-allocation-source-head"><div class="cx-allocation-source-person"><span class="cx-allocation-source-avatar" aria-hidden="true">${esc(initials(source?.name||"Guest"))}</span><span class="cx-allocation-source-identity"><small>Supplements from</small><span><strong id="allocationSource${groupIndex}">${esc(source?.name||"Selected guest")}</strong><em>Cancelling</em></span></span></div><span class="cx-allocation-source-overview"><strong>${allocation.lines.length} supplement${allocation.lines.length===1?"":"s"} &middot; ${fmt(sourceValue)}</strong><small>${esc(sourceStatus)}</small></span><span class="cx-allocation-source-toggle" aria-hidden="true"><i data-lucide="chevron-down"></i></span></summary>
+<summary class="cx-allocation-source-head"><div class="cx-allocation-source-person"><span class="cx-allocation-source-avatar" aria-hidden="true">${esc(initials(source?.name||"Guest"))}</span><span class="cx-allocation-source-identity"><small>Supplements from</small><span><strong id="allocationSource${groupIndex}">${esc(source?.name||"Selected guest")}</strong><em>${sourceFullyRemoved?"Cancelled":"Cancelling"}</em></span></span></div><span class="cx-allocation-source-overview"><strong>${allocation.lines.length} supplement${allocation.lines.length===1?"":"s"} &middot; ${fmt(sourceValue)}</strong><small>${esc(sourceStatus)}</small></span><span class="cx-allocation-source-toggle" aria-hidden="true"><i data-lucide="chevron-down"></i></span></summary>
 <div class="cx-allocation-items" role="list" aria-label="Supplement assignments from ${esc(source?.name||"selected guest")}">
 <div class="cx-allocation-table-head" aria-hidden="true"><span>Supplement</span><span>Qty / value</span><span>Assigned to</span><span>Actions</span></div>
 ${allocation.lines.map((line,index)=>{
@@ -3340,7 +3347,6 @@ return `<article class="cx-allocation-line${rowClass}" role="listitem" aria-labe
 </div></article>`;
 }).join("")}</div></details>`;
 }).join("")}</div>
-${summary.totalLines?`<footer class="cx-allocation-bulk"><div class="cx-allocation-bulk-copy"><span class="cx-allocation-bulk-icon" aria-hidden="true"><i data-lucide="layers-3"></i></span><div><strong>Bulk actions</strong><span>Apply one outcome to all ${summary.totalLines} supplement${summary.totalLines===1?"":"s"}.</span></div></div><div class="cx-allocation-bulk-actions">${canResetAllToPrimary?`<button type="button" data-cxsuppprimary><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>Restore all to primary</span></button>`:""}<button type="button" class="remove" data-cxsuppremoveall aria-haspopup="dialog" aria-controls="removeAllSupplementsModal"${allSupplementsRemoved?" disabled":""}><i data-lucide="trash-2" aria-hidden="true"></i><span>${allSupplementsRemoved?"All marked for removal":"Remove all supplements"}</span></button></div></footer>`:""}
 </details>
 <details class="cx-cancellation-info${cancellationInfoReady?" is-complete":""}" data-cxcancellationinfo${cx.cancellationInfoOpen?" open":""}>
 <summary class="cx-cancellation-info-summary"><span class="cx-cancellation-info-icon" aria-hidden="true"><i data-lucide="clipboard-list"></i></span><span class="cx-cancellation-info-copy"><strong>Cancellation information</strong><small>Reason, policy exceptions, and refund destination</small></span><span class="cx-cancellation-info-status">${cancellationInfoReady?"Complete":"Details required"}</span><span class="cx-cancellation-info-toggle" aria-hidden="true"><i data-lucide="chevron-down"></i></span></summary>

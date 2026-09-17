@@ -3038,17 +3038,23 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 .cx-allocation-empty{display:flex;align-items:center;gap:9px;padding:13px 14px;border:1px solid var(--mvas-line);border-radius:8px;background:#fff;color:var(--mvas-ink-soft)}
 .cx-allocation-empty>svg{width:16px;height:16px;flex:0 0 16px;color:var(--mvas-positive);stroke-width:1.9}
 .cx-allocation-empty>span{font-size:11.5px;line-height:1.45}
-.cx-allocation-default-notice{display:grid;grid-template-columns:30px auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--mvas-accent-line);border-radius:8px;background:var(--mvas-accent-tint);color:var(--mvas-accent)}
+.cx-allocation-default-notice{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:11px;padding:11px 12px;border:1px solid var(--mvas-accent-line);border-radius:8px;background:var(--mvas-accent-tint);color:var(--mvas-accent)}
 .cx-allocation-default-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid var(--mvas-accent-line);border-radius:7px;background:#fff}
 .cx-allocation-default-icon svg{width:15px;height:15px;stroke-width:1.9}
-.cx-allocation-default-notice>div{display:flex;min-width:120px;flex-direction:column;gap:1px}
-.cx-allocation-default-notice>div>span{font-size:8px;font-weight:800;letter-spacing:.06em;line-height:1.2;text-transform:uppercase;color:var(--mvas-ink-label)}
-.cx-allocation-default-notice strong{font-size:11px;font-weight:750;line-height:1.35;color:var(--mvas-ink)}
-.cx-allocation-default-notice p{padding-left:12px;border-left:1px solid var(--mvas-accent-line);font-size:10px;line-height:1.4;color:var(--mvas-ink-soft)}
-.cx-allocation-default-notice>button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:100px;min-height:34px;padding:7px 10px;border:1px solid var(--mvas-accent);border-radius:7px;background:#fff;color:var(--mvas-accent);font-family:inherit;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}
-.cx-allocation-default-notice>button:hover{background:var(--mvas-accent);color:#fff}
-.cx-allocation-default-notice>button:focus-visible{outline:2px solid var(--mvas-accent);outline-offset:2px}
-.cx-allocation-default-notice>button svg{width:14px;height:14px;stroke-width:1.9}
+.cx-allocation-default-copy{display:flex;min-width:0;flex-direction:column;gap:2px}
+.cx-allocation-default-copy>span{font-size:8px;font-weight:800;letter-spacing:.06em;line-height:1.2;text-transform:uppercase;color:var(--mvas-ink-label)}
+.cx-allocation-default-copy>strong{font-size:11.5px;font-weight:800;line-height:1.35;color:var(--mvas-ink)}
+.cx-allocation-default-copy>small{font-size:9.5px;line-height:1.35;color:var(--mvas-ink-soft)}
+.cx-allocation-default-actions{display:flex;align-items:center;gap:7px}
+.cx-allocation-default-actions button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:7px 10px;border:1px solid var(--mvas-line);border-radius:7px;background:#fff;color:var(--mvas-accent);font-family:inherit;font-size:10px;font-weight:750;cursor:pointer;white-space:nowrap}
+.cx-allocation-default-actions button:hover{border-color:var(--mvas-accent);background:#fff}
+.cx-allocation-default-actions button:focus-visible{outline:2px solid var(--mvas-accent);outline-offset:2px}
+.cx-allocation-default-actions button svg{width:14px;height:14px;stroke-width:1.9}
+.cx-allocation-default-actions .assign{border-color:var(--mvas-accent);background:var(--mvas-accent);color:#fff}
+.cx-allocation-default-actions .assign:hover{background:#111827;color:#fff}
+.cx-allocation-default-actions .remove{color:var(--mvas-danger-strong)}
+.cx-allocation-default-actions .remove:hover{border-color:var(--mvas-danger-line);background:var(--mvas-danger-soft)}
+.cx-allocation-default-actions .remove:disabled{border-color:var(--mvas-line);background:var(--mvas-fill);color:var(--mvas-ink-faint);cursor:default}
 .cx-allocation-source{position:relative;overflow:hidden;border:1px solid var(--mvas-line);border-radius:8px;background:#fff;box-shadow:0 1px 1px rgba(15,23,42,.03)}
 .cx-allocation-source+.cx-allocation-source{margin-top:0}
 .cx-allocation-source-head{display:grid;grid-template-columns:minmax(0,1fr) auto 18px;align-items:center;gap:12px;padding:11px 12px;background:#fff;list-style:none;cursor:pointer;transition:background .16s ease}
@@ -3141,20 +3147,6 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 .cx-allocation-guest-copy em{padding:1px 4px;border:1px solid var(--mvas-accent-line);border-radius:4px;background:#fff;font-size:7px;font-style:normal;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mvas-accent)}
 .cx-allocation-guest-copy small{font-size:9px;line-height:1.3;color:var(--mvas-ink-soft)}
 .cx-allocation-guest-empty{margin:0;padding:12px;font-size:10px;line-height:1.45;color:var(--mvas-warning)}
-.cx-allocation-bulk{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border-top:1px solid var(--mvas-line);border-radius:0 0 10px 10px;background:#fff}
-.cx-allocation-bulk-copy{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:9px;min-width:0}
-.cx-allocation-bulk-copy>div{display:flex;min-width:0;flex-direction:column;gap:2px}
-.cx-allocation-bulk-icon{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid var(--mvas-line);border-radius:7px;background:var(--mvas-fill);color:var(--mvas-ink-soft)}
-.cx-allocation-bulk-icon svg{width:14px;height:14px;stroke-width:1.8}
-.cx-allocation-bulk-copy strong{font-size:10.5px;line-height:1.3;color:var(--mvas-ink)}
-.cx-allocation-bulk-copy span{font-size:9.5px;line-height:1.35;color:var(--mvas-ink-soft)}
-.cx-allocation-bulk-actions{display:flex;flex:0 0 auto;gap:7px}
-.cx-allocation-bulk button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:7px 10px;border:1px solid var(--mvas-line);border-radius:7px;background:#fff;color:var(--mvas-accent);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer}
-.cx-allocation-bulk button svg{width:14px;height:14px;stroke-width:1.8}
-.cx-allocation-bulk button:hover{border-color:var(--mvas-accent);background:var(--mvas-accent-tint)}
-.cx-allocation-bulk button.remove{color:var(--mvas-danger-strong)}
-.cx-allocation-bulk button.remove:hover{border-color:var(--mvas-danger-line);background:var(--mvas-danger-soft)}
-.cx-allocation-bulk button.remove:disabled{border-color:var(--mvas-line);background:var(--mvas-fill);color:var(--mvas-ink-faint);cursor:default}
 .mf-modal-card.cx-supplement-recipient-modal{width:min(560px,100%);height:auto;max-height:min(82vh,720px);border:1px solid var(--mvas-line);border-radius:10px;box-shadow:0 12px 32px rgba(15,23,42,.16)}
 .cx-supplement-recipient-modal .mf-modal-head{flex:0 0 auto;align-items:center;padding:16px 18px 14px}
 .cx-supplement-recipient-modal .mf-modal-h{font-size:16px;line-height:1.35}
@@ -3271,8 +3263,9 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 .cx-allocation-card-head{grid-template-columns:34px minmax(0,1fr) 18px;align-items:start}
 .cx-allocation-card-status{grid-column:2;grid-row:2;justify-self:start;margin-top:4px}
 .cx-allocation-card-toggle{grid-column:3;grid-row:1/3;align-self:center}
-.cx-allocation-default-notice{grid-template-columns:30px minmax(0,1fr) auto}
-.cx-allocation-default-notice p{grid-column:1/-1;padding:8px 0 0;border-top:1px solid var(--mvas-accent-line);border-left:0}
+.cx-allocation-default-notice{grid-template-columns:30px minmax(0,1fr)}
+.cx-allocation-default-actions{grid-column:1/-1;width:100%;padding-top:9px;border-top:1px solid var(--mvas-accent-line)}
+.cx-allocation-default-actions button{flex:1}
 .cx-allocation-source-head{grid-template-columns:minmax(0,1fr) 18px;gap:8px}
 .cx-allocation-source-overview{grid-column:1;grid-row:2;align-items:flex-start;padding-left:39px;text-align:left}
 .cx-allocation-source-toggle{grid-column:2;grid-row:1/3}
@@ -3287,9 +3280,6 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 .cx-allocation-line-assignment{grid-column:1/-1;grid-row:3;margin-top:4px;padding-top:9px;border-top:1px solid var(--mvas-line-soft)}
 .cx-allocation-line-label{display:block}
 .cx-allocation-assignment-actions{grid-column:2;grid-row:1/3;align-self:start;justify-content:flex-end}
-.cx-allocation-bulk{align-items:stretch;flex-direction:column}
-.cx-allocation-bulk-actions{width:100%}
-.cx-allocation-bulk button{flex:1}
 .view-cancellation.active .cx-allocation-actionbar{display:flex}
 .cx-allocation-actionbar>.mf-rp-cancel{width:100%;min-height:44px;padding:9px 18px}
 .cx-allocation-actionbar>.cx-foot-right{width:100%}
