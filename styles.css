@@ -438,7 +438,6 @@ tbody tr[data-id]{cursor:pointer}
 .ov-due-badge.credit{background:var(--mvas-warning-soft);color:var(--mvas-warning)}
 .ov-due-badge.cancelled{background:var(--mvas-line);color:var(--mvas-ink-label)}
 .ov-pp-block{display:flex;flex-direction:column;gap:4px}
-.ov-payment-context{font-size:9.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mvas-ink-label)}
 .ov-pp-title{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--mvas-ink-soft)}
 .ov-balance-amount{font-family:ui-monospace,"SFMono-Regular",Menlo,monospace;font-size:27px;font-weight:800;color:var(--mvas-ink);letter-spacing:-0.02em;line-height:1.1}
 .ov-due-line{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--mvas-warning)}
@@ -725,6 +724,8 @@ body{grid-template-columns:1fr;grid-template-rows:64px 1fr}
 .mf-workspace-subsection-head h2{margin:0;font-size:12.5px;font-weight:800;line-height:1.35;color:var(--mvas-ink)}
 .mf-workspace-subsection-head p{margin:4px 0 0;font-size:10.5px;line-height:1.4;color:var(--mvas-ink-soft)}
 .mf-workspace-supplement-subsection .mf-sup-wrap{gap:12px}
+.mf-supplement-step{margin:-20px -20px 0;padding:20px 20px 24px;background:#fff}
+.mf-supplement-flat-workspace{gap:16px}
 .mf-preview-foot-actions{display:flex;align-items:center;gap:8px}
 .mf-step-workspace{display:flex;min-width:0;flex-direction:column;gap:12px}
 .mf-step-surface{min-width:0;overflow:hidden;border:1px solid var(--mvas-line);border-radius:10px;background:var(--mvas-fill);box-shadow:var(--mvas-shadow)}
@@ -733,10 +734,13 @@ body{grid-template-columns:1fr;grid-template-rows:64px 1fr}
 .mf-review-workspace{display:grid;grid-template-columns:minmax(0,1fr) 340px;align-items:start;gap:16px;min-width:0}
 .mf-review-financial-rail{position:sticky;top:132px;min-width:0;align-self:start}
 .mf-review-financial-card{overflow:hidden;border:1px solid var(--mvas-line);border-radius:10px;background:#fff;box-shadow:var(--mvas-shadow)}
-.mf-review-financial-card-head{display:block;padding:12px 16px;border-bottom:1px solid var(--mvas-line-soft);background:#fff}
-.mf-review-financial-card-head>span{display:block;margin-bottom:4px;font-size:9px;font-weight:800;letter-spacing:.065em;line-height:1.25;text-transform:uppercase;color:var(--mvas-accent)}
+.mf-review-financial-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid var(--mvas-line-soft);background:#fff}
+.mf-review-financial-card-heading{display:flex;min-width:0;align-items:center;gap:8px}
+.mf-review-financial-card-icon{display:flex;width:32px;height:32px;flex:0 0 auto;align-items:center;justify-content:center;border:1px solid var(--mvas-line);border-radius:8px;background:var(--mvas-fill);color:var(--mvas-accent)}
+.mf-review-financial-card-icon svg{width:16px;height:16px}
 .mf-review-financial-card-head h3{margin:0;font-size:14px;font-weight:800;line-height:1.3;color:var(--mvas-ink)}
-.mf-review-financial-card-head p{margin:4px 0 0;font-size:10px;line-height:1.4;color:var(--mvas-ink-soft)}
+.mf-review-financial-card-head p{margin:0;font-size:10px;line-height:1.4;color:var(--mvas-ink-soft)}
+.mf-review-financial-card-head>em{display:inline-flex;min-height:20px;align-items:center;padding:4px 8px;border:1px solid var(--mvas-accent-line);border-radius:999px;background:var(--mvas-accent-tint);font-size:8px;font-style:normal;font-weight:800;letter-spacing:.04em;line-height:1;text-transform:uppercase;color:var(--mvas-accent)}
 .mf-review-rail-total{display:flex;min-width:0;flex-direction:column;padding:16px;border-bottom:1px solid var(--mvas-line);background:#fff}
 .mf-review-rail-total-label{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .mf-review-rail-total-label>span{font-size:9.5px;font-weight:800;letter-spacing:.055em;line-height:1.3;text-transform:uppercase;color:var(--mvas-ink-label)}
@@ -775,9 +779,15 @@ body{grid-template-columns:1fr;grid-template-rows:64px 1fr}
 .mf-review-save{border:1px solid var(--mvas-accent);background:var(--mvas-accent);color:var(--mvas-accent-text)}
 .mf-review-save:hover:not(:disabled){filter:brightness(1.08)}
 .mf-review-save:disabled{border-color:var(--mvas-line);background:var(--mvas-fill-strong);color:var(--mvas-ink-faint);cursor:not-allowed}
+.mf-review-edit{border:1px solid var(--mvas-line);background:#fff;color:var(--mvas-accent)}
+.mf-review-edit:hover{border-color:var(--mvas-accent);background:var(--mvas-fill)}
 .mf-review-discard{min-height:32px!important;border:0!important;background:transparent!important;color:var(--mvas-danger)}
 .mf-review-discard:hover{background:var(--mvas-danger-soft)!important}
 .mf-review-discard:focus-visible{outline-color:var(--mvas-danger)!important}
+.mf-modal-review-workspace .mf-review-rail-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.mf-modal-review-workspace .mf-review-save{grid-column:1/-1}
+.mf-modal-review-workspace .mf-review-edit,.mf-modal-review-workspace .mf-review-discard{width:100%;min-height:40px!important}
+.mf-modal-review-workspace .mf-review-discard{border:1px solid var(--mvas-danger-line)!important;background:#fff!important}
 .mf-review-changes-section{min-width:0;overflow:hidden;border:1px solid var(--mvas-line);border-radius:10px;background:#fff;box-shadow:var(--mvas-shadow)}
 .mf-review-changes-section>header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid var(--mvas-line);background:#fff}
 .mf-review-changes-section>header>div{display:flex;min-width:0;flex-direction:column;gap:4px}
@@ -1856,6 +1866,26 @@ letter-spacing:.03em;text-transform:uppercase;color:var(--mvas-ink-label);white-
 .mf-supp-catalog{min-width:0}
 .mf-supp-catalog-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:0 0 8px}
 .mf-supp-catalog-head>span{font-size:11px;font-weight:600;color:var(--mvas-ink-label);white-space:nowrap}
+.mf-supp-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-bottom:1px solid var(--mvas-line);background:#fff}
+.mf-supp-tab{position:relative;display:flex;min-width:0;min-height:44px;align-items:center;justify-content:center;gap:8px;padding:8px 16px;border:0;background:#fff;color:var(--mvas-ink-soft);font-family:inherit;font-size:12px;font-weight:700;line-height:1.3;cursor:pointer}
+.mf-supp-tab+.mf-supp-tab{border-left:1px solid var(--mvas-line-soft)}
+.mf-supp-tab::after{content:"";position:absolute;right:12px;bottom:-1px;left:12px;height:3px;border-radius:3px 3px 0 0;background:transparent}
+.mf-supp-tab:hover{background:var(--mvas-fill);color:var(--mvas-ink)}
+.mf-supp-tab:focus-visible{z-index:1;outline:2px solid var(--mvas-accent);outline-offset:-2px}
+.mf-supp-tab.is-active{background:#fff;color:var(--mvas-accent)}
+.mf-supp-tab.is-active::after{background:var(--mvas-accent)}
+.mf-supp-tab>strong{display:flex;min-width:24px;height:24px;align-items:center;justify-content:center;padding:0 4px;border:1px solid var(--mvas-line);border-radius:999px;background:var(--mvas-fill);font-size:9.5px;font-weight:800;color:var(--mvas-ink-label)}
+.mf-supp-tab.is-active>strong{border-color:var(--mvas-accent-line);background:var(--mvas-accent-tint);color:var(--mvas-accent)}
+.mf-supp-tab-panel{padding:16px;background:#fff}
+.mf-supp-tab-panel[hidden]{display:none}
+.mf-supp-tab-intro{margin-bottom:12px}
+.mf-supp-tab-intro h2{margin:0;font-size:13px;line-height:1.35;font-weight:800;color:var(--mvas-ink)}
+.mf-supp-tab-intro p{margin:4px 0 0;font-size:11px;line-height:1.4;color:var(--mvas-ink-soft)}
+.mf-supp-tab-panel .mf-supp-group.selected{margin-bottom:0}
+.mf-supplement-flat-workspace .mf-supp-catalog{border-top:1px solid var(--mvas-line)}
+.mf-supplement-flat-workspace .mf-supp-group{border-width:1px 0;border-radius:0}
+.mf-supplement-flat-workspace .mf-supp-group-head{background:#fff}
+.mf-supplement-flat-workspace .mf-supp-group.selected .mf-supp-group-head{background:var(--mvas-positive-soft)}
 
 /* ---- upgrade packages: progressive disclosure ---- */
 .mf-disclose{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;padding:0;cursor:pointer;font-family:inherit;text-align:left}
@@ -1929,6 +1959,10 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 .mf-supp-guest-list{display:flex;flex:1;flex-direction:column}
 .mf-supp-guest-row{min-height:52px;padding:8px 12px}
 .mf-supp-guest-row:last-child{border-bottom:0}
+.mf-supp-guest-row .mf-assign-who{flex:1;align-items:flex-start;flex-direction:column;gap:4px}
+.mf-supp-guest-primary{display:flex;min-width:0;align-items:center;gap:8px}
+.mf-supp-eligibility-reason{font-size:10px;line-height:1.35;color:var(--mvas-ink-soft)}
+.mf-supp-ineligible{display:inline-flex;min-height:24px;flex:0 0 auto;align-items:center;padding:4px 8px;border:1px solid var(--mvas-line);border-radius:999px;background:#fff;font-size:9.5px;font-weight:750;color:var(--mvas-ink-label);white-space:nowrap}
 .mf-supp-cabin-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding:8px 12px;background:var(--mvas-fill);border-top:1px solid var(--mvas-line-soft)}
 .mf-supp-bulk{min-height:30px;border:1px solid var(--mvas-line);border-radius:6px;padding:4px 8px;background:#fff;color:var(--mvas-ink-soft);font-family:inherit;font-size:11.5px;font-weight:600;line-height:1.2;cursor:pointer}
 .mf-supp-bulk:hover:not(:disabled){border-color:var(--mvas-accent);color:var(--mvas-accent)}
@@ -2013,7 +2047,7 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 
 /* Selected booking supplements and their subtotal live in one collapsible
    header; search and filters below are reserved for discovery. */
-.mf-supp-catalog>.mf-supp-groups{display:flex;overflow:visible;flex-direction:column;gap:12px;border:0;border-radius:0;background:transparent}
+.mf-supp-catalog>.mf-supp-tab-panel>.mf-supp-groups{display:flex;overflow:visible;flex-direction:column;gap:12px;border:0;border-radius:0;background:transparent}
 .mf-supp-group{overflow:hidden;border:1px solid var(--mvas-line);border-radius:9px;background:#fff}
 .mf-supp-group.selected{margin-bottom:16px}
 .mf-supp-group-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border-bottom:1px solid var(--mvas-line);background:var(--mvas-fill)}
@@ -2104,6 +2138,9 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 #detailPendingChangesSlot .ov-changes-summary{grid-column:1/-1;grid-row:2;padding:12px 0 0;border-top:1px solid var(--mvas-accent-line);border-right:0;border-left:0}
 }
 @media (max-width:560px){
+.mf-supp-tab{justify-content:flex-start;padding:8px 12px;font-size:11.5px}
+.mf-supp-tab::after{right:8px;left:8px}
+.mf-supp-tab-panel{padding:12px}
 .mf-current-supps-head{align-items:stretch;flex-direction:column;gap:8px;padding:12px 12px}
 .mf-current-supps-actions{justify-content:space-between;width:100%}
 .mf-current-supps-total{align-items:flex-start;text-align:left}
@@ -3612,6 +3649,79 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 .cx-confirm-actionbar>.mf-rp-cancel[data-cxreviewback]{width:100%;min-height:44px}
 .cx-confirm-actionbar .cx-foot-right{align-items:stretch;flex-direction:column;gap:8px}
 .cx-confirm-actionbar .mf-rp-confirm{width:100%;min-height:44px}
+}
+
+/* ============ shared surface hierarchy ============
+   Each workflow gets one white working surface. Sections inside it use
+   spacing, dividers, and restrained fills instead of another rounded card. */
+.mf-cabin-step,.mf-guest-step{margin:-20px -20px 0;padding:20px 20px 24px;background:#fff}
+.mf-cabin-step .mf-cabin-stack,.cx-page-workspace .mf-cabin-stack{gap:0}
+.mf-cabin-step .mf-cab-card,.cx-page-workspace .mf-cab-card{padding:0 0 24px;border:0;border-radius:0;background:#fff;box-shadow:none}
+.mf-cabin-step .mf-cab-card+.mf-cab-card,.cx-page-workspace .mf-cab-card+.mf-cab-card{padding-top:24px;border-top:1px solid var(--mvas-line)}
+.mf-cabin-step .mf-cab-card:last-child,.cx-page-workspace .mf-cab-card:last-child{padding-bottom:0}
+
+.mf-guest-flat-workspace{gap:16px}
+.mf-guest-step .mf-guest-cabin-stack{gap:0;border-top:1px solid var(--mvas-line);border-bottom:1px solid var(--mvas-line)}
+.mf-guest-step .mf-guest-cabin{border:0;border-radius:0;box-shadow:none}
+.mf-guest-step .mf-guest-cabin+.mf-guest-cabin{border-top:1px solid var(--mvas-line)}
+
+/* Review keeps one change-area boundary. Expanded evidence is a ledger,
+   not another stack of cards. */
+.mf-modal-review-workspace .mf-preview-side-mount .ov-changes-items{gap:8px}
+.mf-modal-review-workspace .mf-preview-side-mount .mf-review-change-group{border:1px solid var(--mvas-line);border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.mf-preview-side-mount .mf-review-guest-context{border-right:0;border-left:0;border-radius:0}
+.mf-preview-side-mount .mf-review-guest-ledger{border-right:0;border-left:0;border-radius:0}
+.mf-preview-side-mount .mf-review-product-detail-head{border-right:0;border-left:0;border-radius:0}
+.mf-preview-side-mount .mf-review-product-assignments{border-right:0;border-left:0;border-radius:0}
+.mf-preview-side-mount .mf-review-guest-ledger-notes{border-right:0;border-left:0;border-radius:0}
+.mf-modal-review-workspace .mf-preview-side-mount .mf-review-guest-context,
+.mf-modal-review-workspace .mf-preview-side-mount .mf-review-guest-ledger,
+.mf-modal-review-workspace .mf-preview-side-mount .mf-review-guest-ledger-notes{border:1px solid var(--mvas-line);border-radius:8px}
+.mf-modal-review-workspace .mf-preview-side-mount .mf-review-product-detail-head{border:1px solid var(--mvas-line);border-bottom:0;border-radius:8px 8px 0 0}
+.mf-modal-review-workspace .mf-preview-side-mount .mf-review-product-assignments{border:1px solid var(--mvas-line);border-radius:0 0 8px 8px}
+.mf-modal-review-workspace .mf-preview-side-mount .mf-review-supplement-toolbar{background:#fff}
+
+/* Booking detail: section labels sit outside quiet parent surfaces. White
+   inner panels separate summaries and actionable cabin rows without nesting
+   another full card around each section. */
+.ov-main-card>.ov-hr{display:block}
+.ov-sail-block,.ov-guest-block{gap:8px;overflow:visible;border:0;border-radius:0;background:transparent}
+.ov-sail-block>.ov-section-label,.ov-guest-block>.ov-section-label{padding:0;border:0;background:transparent}
+.ov-sail-overview{padding:16px;border:1px solid var(--mvas-line);border-radius:10px;background:var(--mvas-fill)}
+.ov-sail-block .ov-booking-meta{border:1px solid var(--mvas-line);border-radius:8px;background:#fff}
+.ov-guest-cabin-section{overflow:hidden;border:1px solid var(--mvas-line);border-radius:10px;background:var(--mvas-fill)}
+.ov-guest-summary{padding:16px;border-bottom:1px solid var(--mvas-line);background:var(--mvas-fill)}
+.ov-guest-overview{padding:16px;border:1px solid var(--mvas-line);border-radius:8px;background:#fff}
+.ov-cabin-inset{padding:16px;background:var(--mvas-fill)}
+.ov-cabin-inset-head{margin:0 4px 12px}
+.ov-cabin-stack{gap:12px;border:0}
+.ov-cabin-card,.ov-cabin-card+.ov-cabin-card{border:1px solid var(--mvas-line);border-radius:8px}
+
+/* Cancellation uses the page as its primary surface. Allocation, record,
+   guest, and supplement groups become divided sections within that surface. */
+.cx-page-card{background:#fff}
+.cx-page-context>div{border:0;border-radius:0;background:transparent}
+.cx-page-context>div+div{border-left:1px solid var(--mvas-line-soft)}
+.cx-cancellation-details-workspace{background:#fff}
+.cx-allocation-card,.cx-cancellation-info{border-width:1px 0;border-radius:0;box-shadow:none}
+.cx-allocation-card-head,.cx-allocation-card[open]>.cx-allocation-card-head{border-radius:0}
+.cx-allocation-list{gap:0;padding:12px 0 0}
+.cx-allocation-default-notice{margin:0 16px 12px}
+.cx-allocation-source{border-width:1px 0 0;border-radius:0;box-shadow:none}
+.cx-allocation-source.is-cancelled{border-right:0;border-left:0}
+.cx-cancellation-info-summary{border-radius:0}
+.cx-confirm-guest-groups,.cx-confirm-supplement-groups{gap:0;border-top:1px solid var(--mvas-line);border-bottom:1px solid var(--mvas-line)}
+.cx-confirm-guest-group,.cx-confirm-supplement-group{border:0;border-radius:0}
+.cx-confirm-guest-group+.cx-confirm-guest-group,.cx-confirm-supplement-group+.cx-confirm-supplement-group{border-top:1px solid var(--mvas-line)}
+.cx-confirm-guest-list li+li{margin-top:0;border-top:1px solid var(--mvas-danger-line)}
+.cx-supplement-recipient-groups{gap:0;border-top:1px solid var(--mvas-line);border-bottom:1px solid var(--mvas-line)}
+.cx-supplement-recipient-cabin{border:0;border-radius:0}
+.cx-supplement-recipient-cabin+.cx-supplement-recipient-cabin{border-top:1px solid var(--mvas-line)}
+
+@media(max-width:700px){
+.mf-cabin-step,.mf-guest-step{margin:-20px -20px 0;padding:16px 20px 20px}
+.mf-cabin-step .mf-cab-card+.mf-cab-card,.cx-page-workspace .mf-cab-card+.mf-cab-card{padding-top:20px}
+.cx-page-context>div+div{border-top:1px solid var(--mvas-line-soft);border-left:0}
 }
 
 @media (prefers-reduced-motion:reduce){

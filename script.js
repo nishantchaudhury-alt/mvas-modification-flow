@@ -670,6 +670,7 @@ return{num,idx,type:cabinType(num),counts};
 
 /* ---- pricing engine -------------------------------------------------- */
 const INSURANCE_RATE=99;              /* per guest, per booking (Figma 540:8594) */
+const CABIN_REASSIGNMENT_RATE=20;     /* per active guest when the sold cabin assignment changes */
 
 /* ---- stateroom inventory (Figma 573:8658) ---------------------------- */
 /* the sellable categories behind "Change room". price is per guest, so an
@@ -1107,15 +1108,17 @@ const fareTotal=comparable.reduce((sum,guest)=>sum+(Number(guest.baseCabinFare)|
 const adultEquivalent=weightTotal>0?fareTotal/weightTotal:Number(d.base.newGuestCabinFare)||0;
 return Math.max(0,roundMoney(adultEquivalent*(AGE_WEIGHT[g?.band]||0)));
 }
-function cabinAdjustmentForGuest(d,g,cabinIdx,perHeadFare,code=d.cabinPlan[cabinIdx].code){
+function cabinAdjustmentForGuest(d,g,cabinIdx,perHeadFare,code=d.cabinPlan[cabinIdx].code,room=d.cabinPlan[cabinIdx].room){
 const before=baseGuestFor(d,g);
 const baseFare=Math.max(0,roundMoney(before?before.baseCabinFare:newGuestCabinFare(d,g,cabinIdx)));
 const raw=catEntry(code).price-catEntry(d.base.cabinCodeBy[cabinIdx]).price;
-return roundMoney(Math.max(-baseFare,raw));
+const assignmentChanged=code!==d.base.cabinCodeBy[cabinIdx]||String(room)!==String(d.base.roomBy[cabinIdx]);
+const reassignmentAdjustment=assignmentChanged?CABIN_REASSIGNMENT_RATE:0;
+return roundMoney(Math.max(-baseFare,raw+reassignmentAdjustment));
 }
-function cabinAdjustmentForCode(d,cabinIdx,code,perHeadFare){
+function cabinAdjustmentForCode(d,cabinIdx,code,perHeadFare,room=d.cabinPlan[cabinIdx].room){
 return roundMoney(activeGuests(d).filter(g=>g.cabin===d.b.cabins[cabinIdx])
-.reduce((sum,g)=>sum+cabinAdjustmentForGuest(d,g,cabinIdx,perHeadFare,code),0));
+.reduce((sum,g)=>sum+cabinAdjustmentForGuest(d,g,cabinIdx,perHeadFare,code,room),0));
 }
 /* Added guests inherit the sold tax-and-port-fee rate for their passenger type.
    The original booking distributes these charges by age-band weight, so derive
@@ -1167,10 +1170,11 @@ const insuranceAdj=insurance-(d.base.insurance??d.base.insured*INSURANCE_RATE);
    splitting the fixed cabinFare across more heads — nothing gets redistributed */
 const perHeadFare=d.base.newGuestCabinFare??roundMoney(d.base.cabinFare/origCount);
 const newGuestFare=roundMoney(newGuests.reduce((sum,g)=>sum+newGuestCabinFare(d,g),0));
-/* a category change is charged per occupant, bounded by that guest's cabin
-   allocation so a downgrade can never create a negative cabin fare */
+/* Cabin assignment changes are charged per occupant. Category differences and
+   the room-reassignment adjustment share one calculation, bounded so a
+   downgrade can never create a negative cabin fare. */
 const cabinAdj=roundMoney(d.cabinPlan.reduce((sum,c,idx)=>
-sum+cabinAdjustmentForCode(d,idx,c.code,perHeadFare),0));
+sum+cabinAdjustmentForCode(d,idx,c.code,perHeadFare,c.room),0));
 /* Percentage promotions are cabin-fare promotions. Apply them to the current
    cabin subtotal, including added guests and category adjustments, but never to
    taxes, onboard extras, or travel protection. */
@@ -4519,7 +4523,7 @@ unified:{label:"Booking modification",steps:[0,1,2,3]}
 const IMPACT_SECTION_KEYS=["cabins","guests","supplements","extras","other"];
 function newModState(flow="unified"){
 const selected=MOD_FLOWS[flow]||MOD_FLOWS.unified;
-return{flow:MOD_FLOWS[flow]?flow:"unified",step:selected.steps[0],open:-1,guestCollapsedCabinIndexes:null,editCabin:-1,pendingCode:null,pendingRoom:null,roomDeck:null,roomCategoryOpen:false,roomNotice:"",catFilter:"All",locFilter:"All",roomFilters:{crib:false,rollaway:false,accessible:false,connecting:false},guestMenu:null,addGuestCabin:-1,addGuestStep:0,newGuestDraft:null,addGuestError:false,guestSearch:"",addGuestSuppSearch:"",addGuestSuppCat:null,removeGuestIdx:-1,suppSearch:"",suppCat:null,suppExpanded:null,selectedSuppsCollapsed:true,currentSuppExpanded:null,pkgExpanded:null,pkgSectionOpen:false,expandedFareCabin:-1,expandedFareContext:"modify",previewOpen:false,impactCollapsedSectionKeys:new Set(IMPACT_SECTION_KEYS),reviewSupplementExpandedIds:new Set()};
+return{flow:MOD_FLOWS[flow]?flow:"unified",step:selected.steps[0],open:-1,guestCollapsedCabinIndexes:null,editCabin:-1,pendingCode:null,pendingRoom:null,roomDeck:null,roomCategoryOpen:false,roomNotice:"",catFilter:"All",locFilter:"All",roomFilters:{crib:false,rollaway:false,accessible:false,connecting:false},guestMenu:null,addGuestCabin:-1,addGuestStep:0,newGuestDraft:null,addGuestError:false,guestSearch:"",addGuestSuppSearch:"",addGuestSuppCat:null,removeGuestIdx:-1,suppSearch:"",suppCat:null,suppTab:"booking",suppExpanded:null,selectedSuppsCollapsed:false,currentSuppExpanded:null,pkgExpanded:null,pkgSectionOpen:false,expandedFareCabin:-1,expandedFareContext:"modify",previewOpen:false,impactCollapsedSectionKeys:new Set(IMPACT_SECTION_KEYS),reviewSupplementExpandedIds:new Set()};
 }
 let mod=newModState();
 function modStepIds(){return(MOD_FLOWS[mod.flow]||MOD_FLOWS.unified).steps;}
@@ -4882,8 +4886,8 @@ const pendingRoom=mod.pendingRoom==null?"":String(mod.pendingRoom);
 const rooms=roomOptionsForCabin(d,idx,selectedEntry);
 const availableDecks=[...new Set([...STATEROOM_DECKS,...rooms.map(room=>room.deck)])].sort((a,b)=>a-b);
 if(!availableDecks.includes(mod.roomDeck))mod.roomDeck=roomDeckFromNumber(pendingRoom,selectedEntry.deck);
-const currentBookingDelta=cabinAdjustmentForCode(d,idx,plan.code,pricing.perHeadFare);
-const bookingDelta=cabinAdjustmentForCode(d,idx,selectedEntry.code,pricing.perHeadFare);
+const currentBookingDelta=cabinAdjustmentForCode(d,idx,plan.code,pricing.perHeadFare,plan.room);
+const bookingDelta=cabinAdjustmentForCode(d,idx,selectedEntry.code,pricing.perHeadFare,pendingRoom||plan.room);
 const actionDelta=roundMoney(bookingDelta-currentBookingDelta);
 const selection=selectedRoomValidation(d,idx,selectedEntry.code,pendingRoom);
 const partyIssue=heads===0?"Assign at least one guest to this cabin before changing its room.":bucket.over?`This cabin carries ${heads} guests. Move guests or arrange connecting cabins before selecting a room.`:"";
@@ -5362,7 +5366,7 @@ return `<section class="mf-guest-cabin${collapsed?" is-collapsed":" is-open"}" a
 </section>`;
 }).join("");
 const reviewCopy=[newCount?`${newCount} new`:"",updatedCount?`${updatedCount} updated`:""].filter(Boolean).join(" · ")||"No profile changes";
-return `<div class="mf-step-surface"><div class="mf-workspace-editor"><section class="mf-workspace-subsection mf-guest-review" aria-labelledby="mfGuestDetailsTitle">
+return `<section class="mf-workspace-subsection mf-guest-review mf-guest-flat-workspace" aria-labelledby="mfGuestDetailsTitle">
 <header class="mf-workspace-subsection-head"><span aria-hidden="true">${SVG_USERS}</span><div><h2 id="mfGuestDetailsTitle">Guest details</h2><p>Review identity and contact information by cabin.</p></div></header>
 <div class="mf-guest-review-summary" role="group" aria-label="${entries.length} guest profiles across ${groups.length} cabins; ${completeCount} complete">
 <span class="mf-guest-review-summary-icon${allComplete?" is-complete":" is-attention"}" aria-hidden="true">${allComplete?SVG_TICK:"!"}</span>
@@ -5370,7 +5374,7 @@ return `<div class="mf-step-surface"><div class="mf-workspace-editor"><section c
 <span class="mf-guest-review-summary-status${allComplete?" is-complete":" is-attention"}">${completeCount}/${entries.length} complete</span>
 </div>
 <div class="mf-guest-cabin-stack">${groupHtml}</div>
-</section></div></div>`;
+</section>`;
 }
 function mfGuestShut(g,i){
 const isNew=!isBaseGuest(detail,g);
@@ -5508,18 +5512,23 @@ const covered=Boolean(g.pkg&&PKG_BY_ID[g.pkg]?.includedSupps.includes(sup.id));
 const blocked=!suppAllowed(sup,g);
 const infantBlocked=blocked&&(g.band===3||ageAt(g.dobDate,detail.sail)<2);
 const qty=(g.supps||{})[sup.id]||0;
-return `<div class="mf-assign-row mf-supp-guest-row${covered||blocked?" muted":""}">
+const eligibilityReason=infantBlocked?"Supplements are unavailable for infants":"Does not meet the age requirement";
+return `<div class="mf-assign-row mf-supp-guest-row${covered||blocked?" muted":""}${blocked?" is-ineligible":""}">
 <span class="mf-assign-who">
+<span class="mf-supp-guest-primary">
 <span class="mf-assign-name">${esc(g.name)}</span>
 <span class="mf-assign-age">${ageLabels[g.band]}</span>
-${blocked?`<span class="mf-assign-warn">${infantBlocked?"Infants cannot receive supplements":"Age requirement not met"}</span>`:""}
 </span>
-${covered
+${blocked?`<span class="mf-supp-eligibility-reason">${eligibilityReason}</span>`:""}
+</span>
+${blocked
+?`<span class="mf-supp-ineligible" aria-label="${eligibilityReason}">Not eligible</span>`
+:covered
 ?`<span class="mf-assign-inc">Included in ${esc(PKG_BY_ID[g.pkg]?.name||"package")}</span>`
-:`<span class="mf-qty${blocked?" off":""}">
-<button class="mf-qty-btn" data-suppqty="${sup.id}" data-g="${gi}" data-dir="-1"${blocked||qty===0?" disabled":""} aria-label="Decrease ${esc(sup.name)} quantity for ${esc(g.name)}">&minus;</button>
+:`<span class="mf-qty">
+<button class="mf-qty-btn" data-suppqty="${sup.id}" data-g="${gi}" data-dir="-1"${qty===0?" disabled":""} aria-label="Decrease ${esc(sup.name)} quantity for ${esc(g.name)}">&minus;</button>
 <output class="mf-qty-val" aria-live="polite" aria-label="${esc(sup.name)} quantity ${qty} for ${esc(g.name)}">${qty}</output>
-<button class="mf-qty-btn plus" data-suppqty="${sup.id}" data-g="${gi}" data-dir="1"${blocked?" disabled":""} aria-label="Increase ${esc(sup.name)} quantity for ${esc(g.name)}">+</button>
+<button class="mf-qty-btn plus" data-suppqty="${sup.id}" data-g="${gi}" data-dir="1" aria-label="Increase ${esc(sup.name)} quantity for ${esc(g.name)}">+</button>
 </span>`}
 </div>`;
 }).join("")}
@@ -5702,25 +5711,36 @@ const assignments=current.reduce((sum,item)=>sum+item.guestCount,0);
 const amount=roundMoney(current.reduce((sum,item)=>sum+item.amount,0));
 const staged=items.some(item=>item.stageStatus);
 const description=`${assignments} guest assignment${assignments===1?"":"s"}${staged?" · Includes staged changes":""}`;
-return mfSupplementGroup("Selected supplements",description,selected,"selected",itemById,true,amount);
+return mfSupplementGroup("Current supplements",description,selected,"selected",itemById,true,amount);
 }
 
 function mfSuppBody(){
 const preferredCats=["Wellness","Food & Drink","Activities","Connectivity","Experiences","Services"];
 const cats=["All",...preferredCats.filter(cat=>SUPP_CATS.includes(cat)),...SUPP_CATS.filter(cat=>!preferredCats.includes(cat))];
+const itemById=new Map(currentSupplementMetrics().map(item=>[item.sup.id,item]));
+const selectedCount=SUPP_CATALOG.filter(sup=>itemById.has(sup.id)).length;
+const availableCount=SUPP_CATALOG.length-selectedCount;
+const activeTab=mod.suppTab==="add"?"add":"booking";
 return `<div class="mf-sup-wrap">
 <div class="mf-sec mf-supp-sections">
-<section class="mf-supp-catalog" id="mfSuppCatalog" aria-labelledby="manageSupplementsTitle">
-${mfSelectedSupplements()}
-<div class="mf-supp-catalog-head">
-<div><h2 id="manageSupplementsTitle">Find and assign supplements</h2><p>Search available products, then assign them to eligible guests.</p></div>
+<section class="mf-supp-catalog" id="mfSuppCatalog" aria-label="Supplement management">
+<div class="mf-supp-tabs" role="tablist" aria-label="Supplement views">
+<button type="button" class="mf-supp-tab${activeTab==="booking"?" is-active":""}" id="mfSuppBookingTab" data-supp-tab="booking" role="tab" aria-selected="${activeTab==="booking"}" aria-controls="mfSuppBookingPanel" tabindex="${activeTab==="booking"?"0":"-1"}"><span>On this booking</span><strong aria-label="${selectedCount} products">${selectedCount}</strong></button>
+<button type="button" class="mf-supp-tab${activeTab==="add"?" is-active":""}" id="mfSuppAddTab" data-supp-tab="add" role="tab" aria-selected="${activeTab==="add"}" aria-controls="mfSuppAddPanel" tabindex="${activeTab==="add"?"0":"-1"}"><span>Add supplements</span><strong aria-label="${availableCount} available products">${availableCount}</strong></button>
 </div>
+<div class="mf-supp-tab-panel" id="mfSuppBookingPanel" role="tabpanel" aria-labelledby="mfSuppBookingTab"${activeTab==="booking"?"":" hidden"}>
+<div class="mf-supp-tab-intro"><h2>Supplements on this booking</h2><p>Review totals and manage the guests assigned to each product.</p></div>
+${mfSelectedSupplements()}
+</div>
+<div class="mf-supp-tab-panel" id="mfSuppAddPanel" role="tabpanel" aria-labelledby="mfSuppAddTab"${activeTab==="add"?"":" hidden"}>
+<div class="mf-supp-tab-intro"><h2>Find and assign supplements</h2><p>Search available products, then assign them to eligible guests.</p></div>
 <div class="mf-supp-search">${SVG_SEARCH}<input type="search" class="mf-supp-searchin" data-suppsearch value="${esc(mod.suppSearch||"")}" placeholder="Search supplements&hellip;" autocomplete="off" aria-label="Search supplements"></div>
 <div class="mf-supp-pills" role="group" aria-label="Supplement category filters">${cats.map(c=>{
 const on=c==="All"?!mod.suppCat:mod.suppCat===c;
 return `<button class="mf-pill${on?" on":""}" data-suppcat="${c==="All"?"":esc(c)}" aria-pressed="${on}">${esc(c)}</button>`;
 }).join("")}</div>
 <div class="mf-supp-list mf-supp-groups" data-supplist>${mfSuppRows()}</div>
+</div>
 </section>
 </div>
 </div>`;
@@ -5741,33 +5761,33 @@ const reconciliation=summary.reconciliation;
 const impactCopy=reconciliation.pricingNet===0?fmt(0):fmtSigned(reconciliation.pricingNet);
 const impactClass=reconciliation.pricingNet>0?" charge":reconciliation.pricingNet<0?" credit":"";
 const existingPosition=reconciliation.existingUnpaid>.005
-?`<div class="existing-balance"><dt>Existing unpaid balance</dt><dd>${fmt(reconciliation.existingUnpaid)}</dd></div>`
+?`<div class="existing-balance"><dt>Existing balance</dt><dd>${fmt(reconciliation.existingUnpaid)}</dd></div>`
 :reconciliation.existingCredit>.005
 ?`<div class="credit"><dt>Existing account credit</dt><dd>−${fmt(reconciliation.existingCredit)}</dd></div>`
 :"";
 const paymentOutcome=reconciliation.creditDue>.005
-?{label:"Credit after saving",value:fmt(reconciliation.creditDue),className:"balance credit",note:"Credit created after these changes"}
+?{label:"Credit",value:fmt(reconciliation.creditDue),className:"balance credit",note:"Created after saving"}
 :reconciliation.balanceDue>.005
-?{label:"Total balance due after saving",value:fmt(reconciliation.balanceDue),className:"balance",note:`Final payment due ${reconciliation.paymentDueDate}`}
-:{label:"Payment status after saving",value:"Paid in full",className:"balance paid",note:"No payment will be due"};
+?{label:"Balance due",value:fmt(reconciliation.balanceDue),className:"balance",note:`Final payment due ${reconciliation.paymentDueDate}`}
+:{label:"Payment status",value:"Paid in full",className:"balance paid",note:"No payment due"};
 return `<section class="mf-review-outcome${reconciliation.balanced?"":" is-unbalanced"}" aria-labelledby="${titleId}">
-<div class="mf-review-outcome-head"><span>Projected outcome</span><h3 id="${titleId}">Financial summary after saving</h3><p>See the updated booking total and remaining payment position before you confirm.</p></div>
+<div class="mf-review-outcome-head"><span>Financial outcome</span><h3 id="${titleId}">After saving</h3></div>
 <div class="mf-review-outcome-layout">
 <div class="mf-review-total-hero">
-<div class="mf-review-total-label"><span>Updated booking total</span><em>Projected</em></div>
+<div class="mf-review-total-label"><span>Booking total</span><em>Projected</em></div>
 <strong>${fmt(reconciliation.updatedTotal)}</strong>
-<p>After all staged changes are saved</p>
+<p>Includes all staged changes</p>
 <dl class="mf-review-total-facts" aria-label="Booking total comparison">
-<div><dt>Current booking total</dt><dd>${fmt(reconciliation.startingTotal)}</dd></div>
-<div class="${impactClass.trim()}"><dt>Net price change</dt><dd>${impactCopy}</dd></div>
+<div><dt>Before changes</dt><dd>${fmt(reconciliation.startingTotal)}</dd></div>
+<div class="${impactClass.trim()}"><dt>Price change</dt><dd>${impactCopy}</dd></div>
 </dl>
 </div>
 <section class="mf-review-payment-position" aria-labelledby="${titleId}-payment-title">
-<header><span id="${titleId}-payment-title">Payment position</span><small>Existing payments included</small></header>
+<header><span id="${titleId}-payment-title">Payment position</span><small>Payments included</small></header>
 <dl class="mf-review-calculation">
 <div><dt>Paid to date</dt><dd>${fmt(reconciliation.paidToDate)}</dd></div>
 ${existingPosition}
-<div class="price-change${impactClass}"><dt>New price change</dt><dd>${impactCopy}</dd></div>
+<div class="price-change${impactClass}"><dt>Price change</dt><dd>${impactCopy}</dd></div>
 <div class="${paymentOutcome.className}"><dt><strong>${paymentOutcome.label}</strong><small>${paymentOutcome.note}</small></dt><dd>${paymentOutcome.value}</dd></div>
 </dl>
 </section>
@@ -5781,59 +5801,60 @@ const modalContext=context==="modal";
 const impactCopy=reconciliation.pricingNet===0?fmt(0):fmtSigned(reconciliation.pricingNet);
 const impactClass=reconciliation.pricingNet>0?" charge":reconciliation.pricingNet<0?" credit":"";
 const existingPosition=reconciliation.existingUnpaid>.005
-?`<div class="existing-balance"><dt>Existing unpaid balance</dt><dd>${fmt(reconciliation.existingUnpaid)}</dd></div>`
+?`<div class="existing-balance"><dt>Existing balance</dt><dd>${fmt(reconciliation.existingUnpaid)}</dd></div>`
 :reconciliation.existingCredit>.005
 ?`<div class="credit"><dt>Existing account credit</dt><dd>−${fmt(reconciliation.existingCredit)}</dd></div>`
 :"";
 const paymentOutcome=reconciliation.creditDue>.005
-?{label:"Credit after saving",value:fmt(reconciliation.creditDue),className:"balance credit",note:"Credit created after these changes"}
+?{label:"Credit",value:fmt(reconciliation.creditDue),className:"balance credit",note:"Created after saving"}
 :reconciliation.balanceDue>.005
-?{label:"Total balance due after saving",value:fmt(reconciliation.balanceDue),className:"balance",note:`Final payment due ${reconciliation.paymentDueDate}`}
-:{label:"Payment status after saving",value:"Paid in full",className:"balance paid",note:"No payment will be due"};
+?{label:"Balance due",value:fmt(reconciliation.balanceDue),className:"balance",note:`Final payment due ${reconciliation.paymentDueDate}`}
+:{label:"Payment status",value:"Paid in full",className:"balance paid",note:"No payment due"};
 return `<aside class="mf-review-financial-rail" aria-labelledby="mfReviewFinancialRailTitle">
 <section class="mf-review-financial-card${reconciliation.balanced?"":" is-unbalanced"}">
-<header class="mf-review-financial-card-head"><span>Projected outcome</span><h3 id="mfReviewFinancialRailTitle">Financial summary after saving</h3><p>Review the updated booking total and remaining payment position before you confirm.</p></header>
+<header class="mf-review-financial-card-head"><div class="mf-review-financial-card-heading"><span class="mf-review-financial-card-icon" aria-hidden="true">${SVG_RECEIPT}</span><div><h3 id="mfReviewFinancialRailTitle">Financial outcome</h3><p>After saving</p></div></div><em>Projected</em></header>
 <section class="mf-review-rail-total" aria-labelledby="mfReviewRailTotalTitle">
-<div class="mf-review-rail-total-label"><span id="mfReviewRailTotalTitle">Updated booking total</span><em>Projected</em></div>
+<div class="mf-review-rail-total-label"><span id="mfReviewRailTotalTitle">Booking total</span></div>
 <strong>${fmt(reconciliation.updatedTotal)}</strong>
-<p>After all staged changes are saved</p>
+<p>Includes all staged changes</p>
 <dl class="mf-review-rail-total-facts" aria-label="Booking total comparison">
-<div><dt>Current booking total</dt><dd>${fmt(reconciliation.startingTotal)}</dd></div>
-<div class="${impactClass.trim()}"><dt>Net price change</dt><dd>${impactCopy}</dd></div>
+<div><dt>Before changes</dt><dd>${fmt(reconciliation.startingTotal)}</dd></div>
+<div class="${impactClass.trim()}"><dt>Price change</dt><dd>${impactCopy}</dd></div>
 </dl>
 </section>
 <section class="mf-review-rail-payment" aria-labelledby="mfReviewRailPaymentTitle">
-<header><span id="mfReviewRailPaymentTitle">Payment position</span><small>Existing payments included</small></header>
+<header><span id="mfReviewRailPaymentTitle">Payment position</span><small>Payments included</small></header>
 <dl class="mf-review-rail-calculation">
 <div><dt>Paid to date</dt><dd>${fmt(reconciliation.paidToDate)}</dd></div>
 ${existingPosition}
-<div class="price-change${impactClass}"><dt>New price change</dt><dd>${impactCopy}</dd></div>
+<div class="price-change${impactClass}"><dt>Price change</dt><dd>${impactCopy}</dd></div>
 <div class="${paymentOutcome.className}"><dt><strong>${paymentOutcome.label}</strong><small>${paymentOutcome.note}</small></dt><dd>${paymentOutcome.value}</dd></div>
 </dl>
 </section>
 ${reconciliation.balanced?"":`<div class="mf-review-rail-integrity"><strong>Pricing needs attention</strong><span>The staged totals differ by ${fmt(Math.abs(reconciliation.variance))}.</span></div>`}
 <div class="mf-review-rail-actions">
 <button type="button" class="mf-review-save" ${modalContext?"data-mod-save":"data-review-save"}${reconciliation.balanced?"":" disabled"}>Save changes</button>
-<button type="button" class="mf-review-discard" ${modalContext?"data-mod-discard":"data-review-discard"}>Discard staged changes</button>
+${modalContext?`<button type="button" class="mf-review-edit" data-mod-edit>Edit booking</button>`:""}
+<button type="button" class="mf-review-discard" ${modalContext?"data-mod-discard":"data-review-discard"}>Discard changes</button>
 </div>
 </section>
 </aside>`;
 }
 function mfUnifiedBody(summary=modificationSummary()){
 if(mod.step===0){
-return `<div class="mf-step-workspace" aria-label="Cabins and fares">
+return `<div class="mf-step-workspace mf-cabin-step" aria-label="Cabins and fares">
 ${mfCabinBody()}
 </div>`;
 }
 if(mod.step===1){
-return `<div class="mf-step-workspace" aria-label="Supplements">
-<div class="mf-step-surface"><div class="mf-workspace-editor"><section class="mf-workspace-subsection mf-workspace-supplement-subsection" aria-labelledby="mfSupplementAssignmentsTitle">
+return `<div class="mf-step-workspace mf-supplement-step" aria-label="Supplements">
+<section class="mf-workspace-subsection mf-workspace-supplement-subsection mf-supplement-flat-workspace" aria-labelledby="mfSupplementAssignmentsTitle">
 <header class="mf-workspace-subsection-head"><span aria-hidden="true">${SVG_PACKAGE}</span><div><h2 id="mfSupplementAssignmentsTitle">Supplements</h2><p>Review current supplement products and manage eligible guest assignments.</p></div></header>
 ${mfSuppBody()}
-</section></div></div></div>`;
+</section></div>`;
 }
 if(mod.step===2){
-return `<div class="mf-step-workspace" aria-label="Guest details">
+return `<div class="mf-step-workspace mf-guest-step" aria-label="Guest details">
 ${mfGuestsBody()}
 </div>`;
 }
@@ -6809,6 +6830,16 @@ openAddGuestModal(cabinIdx);
 return;
 }
 /* ---- packages & supplements ---- */
+const suppTab=e.target.closest("[data-supp-tab]");
+if(suppTab){
+const nextTab=suppTab.dataset.suppTab==="add"?"add":"booking";
+if(mod.suppTab!==nextTab){
+mod.suppTab=nextTab;
+renderModify();
+}
+requestAnimationFrame(()=>mfBody.querySelector(`[data-supp-tab="${nextTab}"]`)?.focus({preventScroll:true}));
+return;
+}
 const selectedSuppToggle=e.target.closest("[data-selected-supp-toggle]");
 if(selectedSuppToggle){
 mod.selectedSuppsCollapsed=!mod.selectedSuppsCollapsed;
@@ -6868,6 +6899,18 @@ renderModify();
 requestAnimationFrame(()=>mfBody.querySelector(`[data-suppcat="${CSS.escape(category||"")}"]`)?.focus({preventScroll:true}));
 return;
 }
+});
+mfBody.addEventListener("keydown",e=>{
+const tab=e.target.closest("[data-supp-tab]");
+if(!tab||!(["ArrowLeft","ArrowRight","Home","End"].includes(e.key)))return;
+const tabs=[...mfBody.querySelectorAll("[data-supp-tab]")];
+if(!tabs.length)return;
+e.preventDefault();
+let index=tabs.indexOf(tab);
+if(e.key==="Home")index=0;
+else if(e.key==="End")index=tabs.length-1;
+else index=(index+(e.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;
+tabs[index].click();
 });
 mfBody.addEventListener("change",e=>{
 const t=e.target;
@@ -7231,7 +7274,7 @@ clearDetailDraft(detail.b.id);
 detail.guests=(detail.base.guests||[]).map(cloneGuestState);
 detail.cabinPlan.forEach((c,i)=>{c.code=detail.base.cabinCodeBy[i];c.room=detail.base.roomBy[i];});
 resetPicker();mod.editCabin=-1;mod.addGuestCabin=-1;mod.addGuestStep=0;mod.newGuestDraft=null;mod.addGuestError=false;mod.removeGuestIdx=-1;mod.guestSearch="";mod.addGuestSuppSearch="";mod.addGuestSuppCat=null;
-mod.suppSearch="";mod.suppCat=null;mod.suppExpanded=null;mod.selectedSuppsCollapsed=true;mod.currentSuppExpanded=null;mod.pkgExpanded=null;mod.pkgSectionOpen=false;
+mod.suppSearch="";mod.suppCat=null;mod.suppTab="booking";mod.suppExpanded=null;mod.selectedSuppsCollapsed=false;mod.currentSuppExpanded=null;mod.pkgExpanded=null;mod.pkgSectionOpen=false;
 mod.impactCollapsedSectionKeys=new Set(IMPACT_SECTION_KEYS);
 mod.reviewSupplementExpandedIds.clear();
 detail.promo=null;detail.selected=null;
@@ -7570,6 +7613,12 @@ panel.hidden=!opening;
 itemToggle.closest(".has-collapsible-detail")?.classList.toggle("is-collapsed",!opening);
 });
 document.getElementById("modPreviewModal").addEventListener("click",e=>{
+if(e.target.closest("[data-mod-edit]")){
+const openedFromDetail=e.currentTarget.dataset.previewOrigin==="detail";
+closeModificationPreview();
+if(openedFromDetail)openModify();
+return;
+}
 if(e.target.closest("[data-mod-discard]")){
 discardAllStagedChanges();return;
 }
