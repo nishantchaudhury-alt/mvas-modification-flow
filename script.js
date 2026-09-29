@@ -1114,7 +1114,11 @@ const baseFare=Math.max(0,roundMoney(before?before.baseCabinFare:newGuestCabinFa
 const raw=catEntry(code).price-catEntry(d.base.cabinCodeBy[cabinIdx]).price;
 const assignmentChanged=code!==d.base.cabinCodeBy[cabinIdx]||String(room)!==String(d.base.roomBy[cabinIdx]);
 const reassignmentAdjustment=assignmentChanged?CABIN_REASSIGNMENT_RATE:0;
-return roundMoney(Math.max(-baseFare,raw+reassignmentAdjustment));
+const physicalRoomChanged=String(room)!==String(d.base.roomBy[cabinIdx]);
+const cabinHeads=Math.max(1,activeGuests(d).filter(candidate=>candidate.cabin===d.b.cabins[cabinIdx]).length);
+const roomOrdinal=Math.max(1,parseInt(String(room||"").slice(-2),10)||1);
+const roomSurchargeShare=physicalRoomChanged?roomDeltaForOrdinal(roomOrdinal)/cabinHeads:0;
+return roundMoney(Math.max(-baseFare,raw+reassignmentAdjustment+roomSurchargeShare));
 }
 function cabinAdjustmentForCode(d,cabinIdx,code,perHeadFare,room=d.cabinPlan[cabinIdx].room){
 return roundMoney(activeGuests(d).filter(g=>g.cabin===d.b.cabins[cabinIdx])
@@ -4523,12 +4527,12 @@ unified:{label:"Booking modification",steps:[0,1,2,3]}
 const IMPACT_SECTION_KEYS=["cabins","guests","supplements","extras","other"];
 function newModState(flow="unified"){
 const selected=MOD_FLOWS[flow]||MOD_FLOWS.unified;
-return{flow:MOD_FLOWS[flow]?flow:"unified",step:selected.steps[0],open:-1,guestCollapsedCabinIndexes:null,editCabin:-1,pendingCode:null,pendingRoom:null,roomDeck:null,roomCategoryOpen:false,roomNotice:"",catFilter:"All",locFilter:"All",roomFilters:{crib:false,rollaway:false,accessible:false,connecting:false},guestMenu:null,addGuestCabin:-1,addGuestStep:0,newGuestDraft:null,addGuestError:false,guestSearch:"",addGuestSuppSearch:"",addGuestSuppCat:null,removeGuestIdx:-1,suppSearch:"",suppCat:null,suppTab:"booking",suppExpanded:null,selectedSuppsCollapsed:false,currentSuppExpanded:null,pkgExpanded:null,pkgSectionOpen:false,expandedFareCabin:-1,expandedFareContext:"modify",previewOpen:false,impactCollapsedSectionKeys:new Set(IMPACT_SECTION_KEYS),reviewSupplementExpandedIds:new Set()};
+return{flow:MOD_FLOWS[flow]?flow:"unified",step:selected.steps[0],open:-1,guestCollapsedCabinIndexes:null,editCabin:-1,pendingCode:null,pendingRoom:null,roomDeck:null,roomCategoryOpen:false,roomNotice:"",roomDrafts:null,roomShowGuestTypes:false,roomAssignmentMode:"manual",roomDetail:null,catFilter:"All",locFilter:"All",roomFilters:{crib:false,rollaway:false,accessible:false,connecting:false},guestMenu:null,addGuestCabin:-1,addGuestStep:0,newGuestDraft:null,addGuestError:false,guestSearch:"",addGuestSuppSearch:"",addGuestSuppCat:null,removeGuestIdx:-1,suppSearch:"",suppCat:null,suppTab:"booking",suppExpanded:null,selectedSuppsCollapsed:false,currentSuppExpanded:null,pkgExpanded:null,pkgSectionOpen:false,expandedFareCabin:-1,expandedFareContext:"modify",previewOpen:false,impactCollapsedSectionKeys:new Set(IMPACT_SECTION_KEYS),reviewSupplementExpandedIds:new Set()};
 }
 let mod=newModState();
 function modStepIds(){return(MOD_FLOWS[mod.flow]||MOD_FLOWS.unified).steps;}
 function modFlowIndex(){const index=modStepIds().indexOf(mod.step);return index<0?0:index;}
-function resetPicker(){mod.pendingCode=null;mod.pendingRoom=null;mod.roomDeck=null;mod.roomCategoryOpen=false;mod.roomNotice="";mod.catFilter="All";mod.locFilter="All";mod.roomFilters={crib:false,rollaway:false,accessible:false,connecting:false};}
+function resetPicker(){mod.pendingCode=null;mod.pendingRoom=null;mod.roomDeck=null;mod.roomCategoryOpen=false;mod.roomNotice="";mod.roomDrafts=null;mod.roomShowGuestTypes=false;mod.roomAssignmentMode="manual";mod.roomDetail=null;mod.catFilter="All";mod.locFilter="All";mod.roomFilters={crib:false,rollaway:false,accessible:false,connecting:false};}
 const SVG_CARET='<svg class="i12 mf-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 const SVG_CHEV='<svg class="mf-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 const SVG_CHEV_RIGHT='<svg class="mf-supp-action-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>';
@@ -4551,6 +4555,8 @@ const ROOM_FILTERS=[{k:"crib",label:"Crib",title:"Crib available",icon:"👶"},{
 const STATEROOM_DECKS=[3,4,5,6,7,8];
 const ROOMS_PER_DECK=28;
 const ROW_ROOM_BANDS={I6:100,I7:130,I8:160,O4:200,O5:230,I8G:300,B2:330,B3:360,S1:400,S3:430,S5:460};
+const ROOM_DELTA_AMOUNTS=[35,50,25,65];
+function roomDeltaForOrdinal(ordinal){return ROOM_DELTA_AMOUNTS[(Math.max(1,ordinal)-1)%ROOM_DELTA_AMOUNTS.length];}
 const SVG_SWAP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>';
 const SVG_PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
 const SVG_EXPAND='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg>';
@@ -4562,17 +4568,15 @@ const SVG_TRASH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 function roomTypeAbbr(type){return type.replace("Stateroom","Sto.").toUpperCase();}
 /* A dense, deterministic room pool adapted from the supplied stateroom
    component. Category-specific number bands keep physical room numbers unique
-   across fare rows; each deck deliberately exposes only a few rooms so the
-   prototype demonstrates both selectable and unavailable inventory states. */
-function roomOptionsFor(bookingId,entry){
+   across fare rows while exposing the reference panel's 28 rooms per deck. */
+function roomOptionsFor(entry){
 const band=ROW_ROOM_BANDS[entry.code]||100;
 return STATEROOM_DECKS.flatMap(deck=>Array.from({length:ROOMS_PER_DECK},(_,index)=>{
 const ordinal=index+1,num=String(deck)+String(band+ordinal).padStart(3,"0");
-const availabilityOffset=seedOf(bookingId+"|"+entry.code+"|"+deck)%6;
 return{num,deck,loc:index<10?"Forward":index<19?"Mid Ship":"Aft Ship",
 crib:ordinal%4===0||ordinal%9===0,rollaway:ordinal%3===0,
 accessible:ordinal%11===0,connecting:ordinal%7===0,
-available:(ordinal+availabilityOffset)%6===0};
+available:true,roomDelta:roomDeltaForOrdinal(ordinal),premium:roomDeltaForOrdinal(ordinal)>=65};
 }));
 }
 function roomDeckFromNumber(room,fallback=STATEROOM_DECKS[0]){
@@ -4587,7 +4591,7 @@ return Number.isInteger(deck)&&deck>0?deck:fallback;
 function roomOptionsForCabin(d,idx,entry){
 const plan=d.cabinPlan[idx],ownRoom=String(plan.room),originalRoom=String(d.base.roomBy[idx]);
 const retainedRoom=entry.code===plan.code?ownRoom:entry.code===d.base.cabinCodeBy[idx]?originalRoom:"";
-let rooms=roomOptionsFor(d.b.id,entry);
+let rooms=roomOptionsFor(entry);
 if(entry.code!==plan.code){
 const collision=rooms.findIndex(r=>r.num===ownRoom);
 if(collision>=0){
@@ -4610,7 +4614,7 @@ return rooms.sort((a,b)=>a.deck-b.deck||a.num.localeCompare(b.num,undefined,{num
 function categoryPartyAvailability(d,idx,entry,bucketKey){
 let available=Number((d.inventory.find(row=>row.code===entry.code)||entry).occ?.[bucketKey]||0);
 d.cabinPlan.forEach((plan,otherIdx)=>{
-const other=cabinGroups(d)[otherIdx],currentBucket=occBucketFor(other?.guests||[]).key;
+const currentBucket=occBucketFor(roomDraftGuestRefs(d,otherIdx)).key;
 const cabinId=d.b.cabins[otherIdx];
 const originalGuests=(d.base.guests||[]).filter(g=>g.cabin===cabinId).map(g=>({g}));
 const originalBucket=occBucketFor(originalGuests).key;
@@ -4830,13 +4834,46 @@ ${cabinFareMatrix(d,pricing,c,fareRows,false,{context,allowGuestAdd,allowGuestRe
 </section>`;}).join("")}</div>`;
 }
 
-/* ---- Change room -------------------------------------------------------
-   This is the single-cabin adapter for the supplied Assign Stateroom panel.
-   The booking already owns its cabin slot and guest roster, so the modal keeps
-   the component's category switcher, filters, deck tabs and room states while
-   omitting its multi-cabin quantity and guest-distribution controls. */
+/* ---- Assign staterooms -------------------------------------------------
+   Modification mode preserves the booking's cabin and guest roster while the
+   assignment panel exposes that full distribution around the active cabin's
+   category and room selection. */
+function roomDraftGuestRefs(d,idx){
+const counts=mod.roomDrafts?.[idx]?.counts||cabinGroups(d)[idx]?.counts||[0,0,0,0];
+return counts.flatMap((count,band)=>Array.from({length:count},()=>({g:{band}})));
+}
+function initializeRoomDrafts(d){
+const groups=cabinGroups(d);
+mod.roomDrafts=d.cabinPlan.map((plan,idx)=>({code:plan.code,room:String(plan.room),counts:(groups[idx]?.counts||[0,0,0,0]).slice()}));
+}
+function saveActiveRoomDraft(){
+const draft=mod.roomDrafts?.[mod.editCabin];
+if(!draft)return;
+draft.code=mod.pendingCode||draft.code;
+draft.room=mod.pendingRoom==null?"":String(mod.pendingRoom);
+}
+function activateRoomCabin(d,nextIdx){
+const draft=mod.roomDrafts?.[nextIdx];
+if(!draft)return false;
+saveActiveRoomDraft();
+mod.editCabin=nextIdx;mod.pendingCode=draft.code;mod.pendingRoom=draft.room||null;
+mod.roomDeck=roomDeckFromNumber(draft.room,catEntry(draft.code).deck);
+mod.roomCategoryOpen=false;mod.roomNotice="";mod.locFilter="All";mod.roomAssignmentMode="manual";
+mod.roomFilters={crib:false,rollaway:false,accessible:false,connecting:false};
+return true;
+}
+function roomDraftTotals(d){
+const roster=[0,0,0,0],assigned=[0,0,0,0];
+cabinGroups(d).forEach(group=>group.counts.forEach((count,band)=>{roster[band]+=count;}));
+(mod.roomDrafts||[]).forEach(draft=>(draft.counts||[]).forEach((count,band)=>{assigned[band]+=count;}));
+return{roster,assigned,total:roster.reduce((sum,count)=>sum+count,0),placed:assigned.reduce((sum,count)=>sum+count,0)};
+}
+function roomDistributionComplete(d){
+const totals=roomDraftTotals(d);
+return totals.total>0&&totals.roster.every((count,band)=>count===totals.assigned[band]);
+}
 function roomOwnerIndex(d,idx,roomNum){
-return d.cabinPlan.findIndex((plan,otherIdx)=>otherIdx!==idx&&String(plan.room)===String(roomNum));
+return (mod.roomDrafts||d.cabinPlan).findIndex((plan,otherIdx)=>otherIdx!==idx&&String(plan.room)===String(roomNum));
 }
 function roomMatchesCurrentFilters(room){
 const active=ROOM_FILTERS.filter(f=>mod.roomFilters[f.k]);
@@ -4844,8 +4881,8 @@ return(mod.locFilter==="All"||room.loc===mod.locFilter)&&active.every(f=>room[f.
 }
 function roomCanBeSelected(d,idx,entry,room,bucketKey){
 if(!room||roomOwnerIndex(d,idx,room.num)>=0)return false;
-const partySize=cabinGroups(d)[idx]?.guests.length||0;
-if(partySize<1||partySize>PROTOTYPE_MAX_CABIN_GUESTS)return false;
+const partySize=roomDraftGuestRefs(d,idx).length;
+if(partySize<1)return false;
 const plan=d.cabinPlan[idx];
 const isCurrent=entry.code===plan.code&&String(room.num)===String(plan.room);
 const isOriginal=entry.code===d.base.cabinCodeBy[idx]&&String(room.num)===String(d.base.roomBy[idx]);
@@ -4854,9 +4891,8 @@ const isOriginal=entry.code===d.base.cabinCodeBy[idx]&&String(room.num)===String
 return isCurrent||isOriginal||(room.available!==false&&(entry.code===plan.code||categoryPartyAvailability(d,idx,entry,bucketKey)>0));
 }
 function selectedRoomValidation(d,idx,code,roomNum){
-const group=cabinGroups(d)[idx],bucket=occBucketFor(group.guests);
-if(!group.guests.length)return{valid:false,message:"Assign at least one guest to this cabin before changing its room."};
-if(bucket.over)return{valid:false,message:"This cabin has more than four guests. Move guests or arrange connecting cabins before changing its room."};
+const guests=roomDraftGuestRefs(d,idx),bucket=occBucketFor(guests);
+if(!guests.length)return{valid:false,message:"Assign at least one guest to this cabin before changing its room."};
 if(!code||!roomNum)return{valid:false,message:"Select an available room to continue."};
 const entry=catEntry(code);
 const room=roomOptionsForCabin(d,idx,entry).find(candidate=>candidate.num===String(roomNum));
@@ -4866,12 +4902,88 @@ if(owner>=0)return{valid:false,message:`Room ${room.num} is already assigned to 
 if(!roomCanBeSelected(d,idx,entry,room,bucket.key))return{valid:false,message:"That room is no longer available for this cabin."};
 return{valid:true,room};
 }
+function portableStateroomState(d,activeCabinIndex){
+const groups=cabinGroups(d),initialRowId=d.cabinPlan[activeCabinIndex]?.code||d.cabinPlan[0]?.code||"I6";
+const guests=groups.reduce((totals,group)=>{
+totals.adults+=group.counts[0]||0;
+totals.youngAdults+=group.counts[1]||0;
+totals.children+=group.counts[2]||0;
+totals.infants+=group.counts[3]||0;
+return totals;
+},{adults:0,youngAdults:0,children:0,infants:0});
+const cabins=d.cabinPlan.map((plan,idx)=>({
+id:`${initialRowId}-${idx}`,
+rowId:initialRowId,
+categoryRowId:plan.code,
+cat:plan.code,
+label:catEntry(plan.code).name,
+num:String(plan.room),
+guests:{
+adults:groups[idx]?.counts[0]||0,
+youngAdults:groups[idx]?.counts[1]||0,
+children:groups[idx]?.counts[2]||0,
+infants:groups[idx]?.counts[3]||0
+}
+}));
+return{
+initialRowId,
+bookingState:{guests,cabins,suppAssignments:{},selectedSupps:{},cabinId:catEntry(initialRowId).type,selectedCabinNum:String(d.cabinPlan[activeCabinIndex]?.room||""),selectedRoomCount:cabins.length}
+};
+}
+function applyPortableStateroomState(d,portableState){
+const cabins=(portableState?.cabins||[]).slice().sort((a,b)=>{
+const aSlot=Number(String(a.id||"").slice(String(a.rowId||"").length+1));
+const bSlot=Number(String(b.id||"").slice(String(b.rowId||"").length+1));
+return aSlot-bSlot;
+});
+if(!cabins.length)return false;
+const previousCabinIds=d.b.cabins.slice();
+const nextCabinIds=cabins.map((cabin,idx)=>previousCabinIds[idx]||`NEW-${String(cabin.num||idx+1)}`);
+d.b.cabins.splice(0,d.b.cabins.length,...nextCabinIds);
+d.cabinPlan=cabins.map((cabin,idx)=>({
+num:nextCabinIds[idx],
+room:String(cabin.num),
+code:catEntry(cabin.categoryRowId||cabin.rowId).code
+}));
+const assignedGuestIds=new Set();
+for(let band=0;band<4;band++){
+const bandGuests=activeGuests(d).filter(guest=>guest.band===band);let cursor=0;
+cabins.forEach((cabin,cabinIdx)=>{
+const counts=cabin.guests||{},count=[counts.adults,counts.youngAdults,counts.children,counts.infants][band]||0;
+for(let n=0;n<count&&bandGuests[cursor];n++){
+bandGuests[cursor].cabin=nextCabinIds[cabinIdx];assignedGuestIds.add(bandGuests[cursor].guestId);cursor++;
+}
+});
+}
+const validCabins=new Set(nextCabinIds);
+activeGuests(d).forEach(guest=>{
+if(assignedGuestIds.has(guest.guestId))return;
+if(!validCabins.has(guest.cabin))guest.cabin=nextCabinIds[0];
+});
+return true;
+}
 function openRoomModal(idx){
 const plan=detail?.cabinPlan[idx];
 if(!plan)return;
+if(typeof window.openPortableAssignStateroom==="function"){
+const portable=portableStateroomState(detail,idx);
+window.openPortableAssignStateroom({
+initialRowId:portable.initialRowId,
+activeCabinIndex:idx,
+bookingState:portable.bookingState,
+onClose:()=>document.querySelector(`[data-change-room="${idx}"]`)?.focus({preventScroll:true}),
+onConfirm:nextState=>{
+if(applyPortableStateroomState(detail,nextState)){
+mod.editCabin=-1;resetPicker();refresh();
+document.querySelector(`[data-change-room="${Math.min(idx,detail.cabinPlan.length-1)}"]`)?.focus({preventScroll:true});
+}
+}
+});
+return;
+}
 const host=document.getElementById("roomModal");
 host.dataset.returnFocus=`[data-change-room="${idx}"]`;
-resetPicker();mod.editCabin=idx;mod.pendingCode=plan.code;mod.pendingRoom=String(plan.room);
+resetPicker();initializeRoomDrafts(detail);mod.editCabin=idx;mod.pendingCode=plan.code;mod.pendingRoom=String(plan.room);
 mod.roomDeck=roomDeckFromNumber(plan.room,catEntry(plan.code).deck);
 mod.addGuestCabin=-1;mod.addGuestStep=0;mod.newGuestDraft=null;mod.addGuestError=false;mod.guestSearch="";mod.addGuestSuppSearch="";mod.addGuestSuppCat=null;renderModify();
 }
@@ -4880,35 +4992,27 @@ const host=document.getElementById("roomModal");
 if(!detail||mod.editCabin<0||mod.step!==0){hideAccessibleModal(host);return;}
 const d=detail,idx=mod.editCabin,group=cabinGroups(d)[idx],plan=d.cabinPlan[idx],pricing=priceDetail(d);
 if(!group||!plan){closeRoomModal();return;}
-const heads=group.guests.length,bucket=occBucketFor(group.guests),currentEntry=catEntry(plan.code);
+if(!Array.isArray(mod.roomDrafts)||mod.roomDrafts.length!==d.cabinPlan.length)initializeRoomDrafts(d);
+const draftGuests=roomDraftGuestRefs(d,idx),heads=draftGuests.length,bucket=occBucketFor(draftGuests),currentEntry=catEntry(plan.code);
 const selectedEntry=catEntry(mod.pendingCode||plan.code),currentRoom=String(plan.room);
 const pendingRoom=mod.pendingRoom==null?"":String(mod.pendingRoom);
 const rooms=roomOptionsForCabin(d,idx,selectedEntry);
 const availableDecks=[...new Set([...STATEROOM_DECKS,...rooms.map(room=>room.deck)])].sort((a,b)=>a-b);
 if(!availableDecks.includes(mod.roomDeck))mod.roomDeck=roomDeckFromNumber(pendingRoom,selectedEntry.deck);
 const currentBookingDelta=cabinAdjustmentForCode(d,idx,plan.code,pricing.perHeadFare,plan.room);
-const bookingDelta=cabinAdjustmentForCode(d,idx,selectedEntry.code,pricing.perHeadFare,pendingRoom||plan.room);
-const actionDelta=roundMoney(bookingDelta-currentBookingDelta);
-const selection=selectedRoomValidation(d,idx,selectedEntry.code,pendingRoom);
-const partyIssue=heads===0?"Assign at least one guest to this cabin before changing its room.":bucket.over?`This cabin carries ${heads} guests. Move guests or arrange connecting cabins before selecting a room.`:"";
-const hasChange=selectedEntry.code!==plan.code||pendingRoom!==currentRoom;
-const ready=hasChange&&selection.valid;
+const partyIssue=heads===0?"Assign at least one guest to this cabin before changing its room.":"";
+const allocationComplete=roomDistributionComplete(d);
+const allRoomsValid=mod.roomDrafts.every((draft,cabinIdx)=>selectedRoomValidation(d,cabinIdx,draft.code,draft.room).valid);
+const ready=allocationComplete&&allRoomsValid;
 const categoryOpen=mod.roomCategoryOpen;
-const takenRooms=new Map(d.cabinPlan.map((other,otherIdx)=>[String(other.room),otherIdx]).filter(([,otherIdx])=>otherIdx!==idx));
+const takenRooms=new Map(mod.roomDrafts.map((other,otherIdx)=>[String(other.room),otherIdx]).filter(([room,otherIdx])=>room&&otherIdx!==idx));
 const activeFilters=ROOM_FILTERS.filter(f=>mod.roomFilters[f.k]);
 const filtersActive=mod.locFilter!=="All"||activeFilters.length>0;
 const selectedDeck=pendingRoom?roomDeckFromNumber(pendingRoom,selectedEntry.deck):null;
 const activeDeck=mod.roomDeck;
 const activeDeckRooms=rooms.filter(room=>room.deck===activeDeck);
 const visibleRooms=activeDeckRooms.filter(room=>roomMatchesCurrentFilters(room)||room.num===pendingRoom||(selectedEntry.code===plan.code&&room.num===currentRoom)||takenRooms.has(room.num));
-const selectableRooms=rooms.filter(room=>roomCanBeSelected(d,idx,selectedEntry,room,bucket.key));
-const selectableMatches=rooms.filter(room=>roomMatchesCurrentFilters(room)&&roomCanBeSelected(d,idx,selectedEntry,room,bucket.key));
 const activeSelectable=activeDeckRooms.filter(room=>roomMatchesCurrentFilters(room)&&roomCanBeSelected(d,idx,selectedEntry,room,bucket.key));
-const roomStatus=partyIssue?{title:"Room change unavailable",copy:partyIssue,tone:"pending"}
-:!pendingRoom?{title:"Select a room",copy:"Choose from any available deck.",tone:"pending"}
-:ready?{title:`Room ${pendingRoom} selected`,copy:"Ready to apply this change.",tone:"ready"}
-:!hasChange?{title:`Room ${pendingRoom} current`,copy:"This is the existing assignment.",tone:"current"}
-:{title:`Room ${pendingRoom} selected`,copy:selection.message,tone:"pending"};
 const categoryOptions=d.inventory.map(entry=>{
 const available=categoryPartyAvailability(d,idx,entry,bucket.key);
 const isCurrent=entry.code===plan.code,isOriginal=entry.code===d.base.cabinCodeBy[idx],isSelected=entry.code===selectedEntry.code;
@@ -4922,14 +5026,46 @@ return `<button type="button" role="menuitemradio" aria-checked="${isSelected}" 
 ${isCurrent?'<span class="mf-room-category-badge">Current</span>':isOriginal?'<span class="mf-room-category-badge">Original</span>':isSelected?`<span class="mf-room-category-check" aria-label="Selected">${SVG_TICK}</span>`:""}
 </button>`;
 }).join("");
+const distributionGroups=cabinGroups(d);
+const distributionTotalsState=roomDraftTotals(d),rosterCounts=distributionTotalsState.roster,assignedCounts=distributionTotalsState.assigned;
+const totalGuests=distributionTotalsState.total,assignedGuests=distributionTotalsState.placed;
+const overAssigned=assignedCounts.some((count,band)=>count>rosterCounts[band]);
+const distributionLabels=[
+{icon:"\ud83e\uddd1",title:"Adults",age:"Age 21+"},
+{icon:"\ud83e\uddd1",title:"Young Adults",age:"Age 13\u201321"},
+{icon:"\ud83e\uddd2",title:"Children",age:"Age 3\u201312"},
+{icon:"\ud83d\udc76",title:"Infants",age:"Age 0\u20133"}
+];
+const cabinHeaders=distributionGroups.map((cabin,cabinIdx)=>{
+const isActive=cabinIdx===idx;
+const cabinDraft=mod.roomDrafts[cabinIdx],cabinEntry=isActive?selectedEntry:catEntry(cabinDraft.code);
+const cabinRoom=isActive?pendingRoom:String(cabinDraft.room||"");
+const categoryLabel=cabinEntry.name.replace(" Stateroom","");
+return `<div class="mf-as-cabin-head${isActive?" active":""}">
+<button type="button" class="mf-as-cabin-switch" data-room-cabin="${cabinIdx}" aria-pressed="${isActive}"><strong>Cabin ${cabinIdx+1}</strong>${cabinRoom?`<span class="mf-as-room-badge"><i aria-hidden="true">${SVG_TICK}</i>#${esc(cabinRoom)}</span>`:`<span>${isActive?"Selecting room":"Room pending"}</span>`}</button>
+<div class="mf-room-category-wrap">
+<button type="button" class="mf-as-category-trigger" ${isActive?`data-room-category-toggle aria-haspopup="menu" aria-controls="roomCategoryMenu" aria-expanded="${categoryOpen}"`:`data-room-cabin="${cabinIdx}"`}>
+<span>${esc(categoryLabel)}</span><strong>${fmt(cabinEntry.price).replace(".00","")}</strong><i aria-hidden="true">${SVG_CARET}</i>
+</button>
+${isActive&&categoryOpen?`<div class="mf-room-category-menu" id="roomCategoryMenu" role="menu" aria-label="Switch stateroom category"><span class="mf-room-category-menu-label">Switch to another category</span>${categoryOptions}</div>`:""}
+</div>
+</div>`;
+}).join("");
+const distributionRows=distributionLabels.map((label,band)=>`<div class="mf-as-guest-type"><span aria-hidden="true">${label.icon}</span><div><strong>${label.title}</strong><small>${label.age}</small></div></div>${distributionGroups.map((cabin,cabinIdx)=>{
+const count=mod.roomDrafts[cabinIdx].counts[band]||0,canAdd=assignedCounts[band]<rosterCounts[band];
+return `<div class="mf-as-count-cell${cabinIdx===idx?" active":""}"><div class="mf-as-stepper" aria-label="${count} ${esc(label.title)} in Cabin ${cabinIdx+1}"><button type="button" data-room-guest-step data-cabin="${cabinIdx}" data-band="${band}" data-dir="-1"${count>0?"":" disabled"} aria-label="Remove one ${esc(label.title)} guest from Cabin ${cabinIdx+1}">&minus;</button><output>${count}</output><button type="button" class="plus" data-room-guest-step data-cabin="${cabinIdx}" data-band="${band}" data-dir="1"${canAdd?"":" disabled"} title="${canAdd?"":`All ${esc(label.title.toLowerCase())} in this party are already assigned`}" aria-label="Add one ${esc(label.title)} guest to Cabin ${cabinIdx+1}">+</button></div></div>`;
+}).join("")}`).join("");
+const distributionTotals=distributionGroups.map((cabin,cabinIdx)=>`<div class="mf-as-cabin-total${cabinIdx===idx?" active":""}">${mod.roomDrafts[cabinIdx].counts.reduce((sum,count)=>sum+count,0)}</div>`).join("");
+const guestMix=rosterCounts.map((count,band)=>count||assignedCounts[band]?`<span><strong>${assignedCounts[band]}/${count}</strong> ${esc(distributionLabels[band].title)}</span>`:"").join("");
 const tabs=availableDecks.map(deck=>{
 const deckRooms=rooms.filter(room=>room.deck===deck);
-const available=deckRooms.filter(room=>roomCanBeSelected(d,idx,selectedEntry,room,bucket.key)).length;
-const matches=deckRooms.filter(room=>roomMatchesCurrentFilters(room)&&roomCanBeSelected(d,idx,selectedEntry,room,bucket.key)).length;
+const available=deckRooms.length;
+const matches=deckRooms.filter(room=>roomMatchesCurrentFilters(room)).length;
 const selected=deck===activeDeck,containsSelection=deck===selectedDeck;
+const tabStatusClass=containsSelection?"current":filtersActive?"filtered":"available";
 return `<button type="button" class="mf-room-tab${selected?" active":""}" id="room-tab-${idx}-${deck}" role="tab" aria-selected="${selected}"${selected?` aria-controls="room-panel-${idx}-${deck}"`:""} tabindex="${selected?0:-1}" data-roomdeck="${deck}">
 <span><strong>Deck ${deck}</strong><em>${filtersActive?`${matches}/${available}`:available}</em></span>
-<small>${containsSelection?`${pendingRoom===currentRoom&&selectedEntry.code===plan.code?"Current":"Selected"} room`:filtersActive?`${matches} matching`:`${available} available`}</small>
+<small class="${tabStatusClass}">${containsSelection?`✓ ${pendingRoom===currentRoom&&selectedEntry.code===plan.code?"Current":"1 assigned"}`:filtersActive?`${matches} matching`:"Available rooms"}</small>
 </button>`;
 }).join("");
 const selectedVisible=visibleRooms.find(room=>room.num===pendingRoom&&roomCanBeSelected(d,idx,selectedEntry,room,bucket.key));
@@ -4940,49 +5076,52 @@ const current=selectedEntry.code===plan.code&&room.num===currentRoom;
 const owner=takenRooms.get(room.num);
 const selectable=roomCanBeSelected(d,idx,selectedEntry,room,bucket.key);
 const state=selected?"selected":current?"current":owner!==undefined?"taken":selectable?"available":"unavailable";
-const status=selected?(current?"Current":"Selected"):current?"Current":owner!==undefined?`Cabin ${owner+1}`:selectable?"Available":"Unavailable";
+const status=selected?`✓ Cabin ${idx+1}`:current?"Current":owner!==undefined?`Cabin ${owner+1}`:selectable?"Available":"Unavailable";
 const features=ROOM_FILTERS.filter(feature=>room[feature.k]);
 const featureText=features.map(feature=>feature.title).join(", ");
 const outsideFilters=!roomMatchesCurrentFilters(room)&&(selected||current||owner!==undefined);
-return `<button type="button" class="mf-room-card ${state}${current?" is-current":""}${outsideFilters?" outside-filter":""}" role="radio" aria-checked="${selected}" tabindex="${selectable&&room.num===roomTabStop?0:-1}"${selectable?` data-selectroom="${esc(room.num)}"`:" disabled"} aria-label="Room ${esc(room.num)}, Deck ${room.deck}, ${esc(room.loc)}, ${esc(status)}${featureText?", "+esc(featureText):""}">
+return `<div class="mf-room-card-shell ${state}${outsideFilters?" outside-filter":""}"><button type="button" class="mf-room-card ${state}${current?" is-current":""}" role="radio" aria-checked="${selected}" tabindex="${selectable&&room.num===roomTabStop?0:-1}"${selectable?` data-selectroom="${esc(room.num)}"`:" disabled"} aria-label="Room ${esc(room.num)}, Deck ${room.deck}, adds ${fmt(room.roomDelta)} to the booking, ${esc(room.loc)}, ${esc(status)}${featureText?", "+esc(featureText):""}">
 <span class="mf-room-card-top"><span class="mf-room-num">${esc(room.num)}</span><span class="mf-room-status ${state}"><i aria-hidden="true"></i>${esc(status)}</span></span>
-<span class="mf-room-location-text">${esc(room.loc)}${outsideFilters?" · Outside filters":""}</span>
+<span class="mf-room-card-meta"><span class="mf-room-location-text">${esc(room.loc)}${outsideFilters?" · Outside filters":""}</span><strong title="Adds ${fmt(room.roomDelta)} to the booking">+${fmt(room.roomDelta).replace(".00","")}</strong></span>
 <span class="mf-room-features">${features.length?features.map(feature=>`<span title="${esc(feature.title)}"><i aria-hidden="true">${feature.icon}</i>${esc(feature.label)}</span>`).join(""):`<span class="standard">${room.legacy?"Previously assigned":"Standard room"}</span>`}</span>
-</button>`;
+</button><button type="button" class="mf-room-details-button" data-roomdetails="${esc(room.num)}" aria-label="View details for room ${esc(room.num)}">${SVG_INFO}<span>Room details</span></button></div>`;
 }).join("");
 const locCounts=LOC_FILTERS.slice(1).map(loc=>`${activeDeckRooms.filter(room=>room.loc===loc).length} ${loc}`).join(" &middot; ");
-const changeTitle=hasChange&&pendingRoom?`${esc(currentEntry.code)} Room ${esc(currentRoom)} <span aria-hidden="true">&rarr;</span> ${esc(selectedEntry.code)} Room ${esc(pendingRoom)}`:"Select a different room or category to continue";
-const changeFare=hasChange&&pendingRoom?(Math.abs(actionDelta)<=.005?"No fare change":`${fmtSigned(actionDelta)} for this change`):`Current booking adjustment ${Math.abs(bookingDelta)<=.005?fmt(0):fmtSigned(bookingDelta)}`;
+const detailRoom=mod.roomDetail?rooms.find(room=>room.num===mod.roomDetail):null;
+const roomDetailMarkup=detailRoom?`<div class="mf-as-detail-backdrop" data-room-details-close><section class="mf-as-detail-dialog" role="dialog" aria-modal="true" aria-labelledby="roomDetailTitle" aria-describedby="roomDetailDescription" data-room-details-dialog>
+<header><div><h3 id="roomDetailTitle">Cabin ${esc(detailRoom.num)}</h3><p id="roomDetailDescription">${esc(selectedEntry.type)} &middot; ${esc(selectedEntry.code)}</p></div><button type="button" data-room-details-close aria-label="Close room details">&times;</button></header>
+<div class="mf-as-detail-body"><section><h4>Cabin at a glance</h4><dl><div><dt>Deck</dt><dd>Deck ${detailRoom.deck}</dd></div><div><dt>Location</dt><dd>${esc(detailRoom.loc)}</dd></div><div><dt>Room selection</dt><dd>+${fmt(detailRoom.roomDelta).replace(".00","")}</dd></div></dl></section>
+<section><h4>Cabin features</h4><div class="mf-as-detail-features">${ROOM_FILTERS.map(feature=>`<span class="${detailRoom[feature.k]?"available":""}"><i aria-hidden="true">${feature.icon}</i><strong>${esc(feature.label)}</strong><small>${detailRoom[feature.k]?"Available":"Not available"}</small></span>`).join("")}</div></section></div>
+<footer><button type="button" data-room-details-close>Close details</button></footer>
+</section></div>`:"";
 host.innerHTML=`<div class="mf-modal-backdrop" data-rpcancel></div>
 <div class="mf-modal-card mf-modal-room" role="dialog" aria-modal="true" aria-labelledby="roomModalTitle" aria-describedby="roomModalDescription">
-<header class="mf-room-modal-head">
-<div class="mf-room-title-row"><div class="mf-modal-title"><h2 class="mf-modal-h" id="roomModalTitle">Change room</h2><span class="mf-modal-sub" id="roomModalDescription">Cabin ${idx+1} &middot; ${heads} guest${heads===1?"":"s"} &middot; current room ${esc(currentRoom)}</span></div>
-<button type="button" class="mf-modal-x" data-rpcancel aria-label="Close Change room">${SVG_X}</button></div>
-<div class="mf-room-summary" role="group" aria-label="Room change settings">
-<div class="mf-room-category-wrap">
-<button type="button" class="mf-room-category-trigger" data-room-category-toggle aria-haspopup="menu" aria-controls="roomCategoryMenu" aria-expanded="${categoryOpen}">
-<span class="mf-room-category-dot" style="background:${CABIN_TYPE_COLOR[selectedEntry.type]}" aria-hidden="true"></span>
-<span class="mf-room-category-trigger-copy"><small>Stateroom category</small><strong>${esc(selectedEntry.name)}</strong><span>${esc(selectedEntry.type)} &middot; ${esc(selectedEntry.loc)}</span></span>
-<span class="mf-room-category-chevron" aria-hidden="true">${SVG_CARET}</span>
-</button>
-${categoryOpen?`<div class="mf-room-category-menu" id="roomCategoryMenu" role="menu" aria-label="Switch stateroom category"><span class="mf-room-category-menu-label">Switch to another category</span>${categoryOptions}</div>`:""}
-</div>
-<div class="mf-room-summary-stat"><small>Fare per guest</small><strong>${fmt(selectedEntry.price)}</strong><span>${heads===0?"No guests assigned":bucket.over?`${heads} guests &middot; over capacity`:`${esc(bucket.label)} occupancy`}</span></div>
-<div class="mf-room-summary-stat"><small>Booking fare change</small><strong class="${bookingDelta<0?"credit":bookingDelta>0?"charge":""}">${Math.abs(bookingDelta)<=.005?"No change":fmtSigned(bookingDelta)}</strong><span>Compared with original booking</span></div>
-<div class="mf-room-selection-status ${roomStatus.tone}" role="status" aria-live="polite"><span aria-hidden="true">${roomStatus.tone==="ready"?SVG_TICK:roomStatus.tone==="current"?"•":"!"}</span><div><strong>${esc(roomStatus.title)}</strong><small>${esc(roomStatus.copy)}</small></div></div>
-</div>
+<header class="mf-as-modal-head"><div class="mf-modal-title"><h2 class="mf-modal-h" id="roomModalTitle">Assign staterooms</h2><span class="mf-modal-sub" id="roomModalDescription">Choose a category for each cabin, place guests, then confirm a room.</span></div>
+<button type="button" class="mf-as-close" data-rpcancel aria-label="Close Assign staterooms"><span aria-hidden="true">&times;</span></button>
 </header>
 <div class="mf-modal-body mf-room-modal-body">
 ${partyIssue?`<div class="mf-rp-hint mf-rp-hint-blocking" role="alert">${esc(partyIssue)}</div>`:""}
-<section class="mf-room-inventory" aria-labelledby="roomInventoryTitle">
-<div class="mf-room-inventory-head"><div><h3 id="roomInventoryTitle">Available rooms</h3><p>${filtersActive?`${selectableMatches.length} matching rooms across ${availableDecks.length} decks`:`${selectableRooms.length} selectable rooms across ${availableDecks.length} decks`} &middot; ${esc(selectedEntry.name)}</p></div><span><strong>${selection.valid&&pendingRoom?"1":"0"} / 1</strong><small>Room selected</small></span></div>
-<div class="mf-room-toolbar">
-<button type="button" class="mf-room-auto" data-autoassign${activeSelectable.some(room=>room.num!==currentRoom||selectedEntry.code!==plan.code)?"":" disabled"}>${SVG_SPARKLES}<span>Auto-select room</span></button>
+<section class="mf-as-distribution" aria-labelledby="guestDistributionTitle">
+<div class="mf-as-distribution-head"><div><h3 id="guestDistributionTitle">Guest distribution</h3><p>${allocationComplete&&!mod.roomShowGuestTypes?`${totalGuests} guest${totalGuests===1?"":"s"} allocated across ${distributionGroups.length} cabin${distributionGroups.length===1?"":"s"}. Review cabins and assign rooms below.`:"Each cabin starts with the category you selected. Change a cabin independently, then assign its guests and room."}</p></div><div class="mf-as-distribution-actions"><div class="mf-as-cabin-quantity"><span>CABINS</span><div><button type="button" disabled title="Cabin count is fixed for this booking modification" aria-label="Remove cabin">&minus;</button><output>${distributionGroups.length}</output><button type="button" disabled title="Cabin count is fixed for this booking modification" aria-label="Add cabin">+</button></div></div>${allocationComplete?`<button type="button" class="mf-as-allocation-toggle" data-room-allocation-toggle aria-expanded="${mod.roomShowGuestTypes}">${mod.roomShowGuestTypes?"Hide guest types":"Edit guest allocation"}</button>`:""}</div></div>
+${allocationComplete?"":`<div class="mf-as-assignment-status${overAssigned?" error":""}" role="status"><div><strong>${assignedGuests} of ${totalGuests} guests assigned</strong><span>${overAssigned?"&middot; Too many guests assigned":`&middot; ${Math.max(0,totalGuests-assignedGuests)} remaining`}</span></div><div>${guestMix}</div></div>`}
+<div class="mf-as-roster-scroll"><div class="mf-as-roster" style="--cabin-count:${distributionGroups.length}">
+<div class="mf-as-roster-label">GUEST TYPE</div>${cabinHeaders}
+${mod.roomShowGuestTypes||!allocationComplete?`${distributionRows}<div class="mf-as-roster-label mf-as-roster-total">IN CABIN</div>${distributionTotals}`:""}
+</div></div>
+</section>
+<section class="mf-room-inventory mf-as-inventory" aria-labelledby="roomInventoryTitle">
+<h3 class="sr-only" id="roomInventoryTitle">Available rooms for Cabin ${idx+1}</h3>
+<div class="mf-as-controls">
+<label class="mf-as-select-control"><span>Assignment</span><select data-roomassignment aria-label="Room assignment method"><option value="manual"${mod.roomAssignmentMode==="manual"?" selected":""}>Manual</option><option value="auto"${mod.roomAssignmentMode==="auto"?" selected":""}>Auto Assign</option><option value="exclude-premium"${mod.roomAssignmentMode==="exclude-premium"?" selected":""}>Exclude Premium</option></select></label>
 <span class="mf-room-control-divider" aria-hidden="true"></span>
-<div class="mf-room-filter-group"><span class="mf-room-control-label">Ship position</span><div class="mf-room-segments">${LOC_FILTERS.map(loc=>`<button type="button" class="${mod.locFilter===loc?"active":""}" data-roomloc="${esc(loc)}" aria-pressed="${mod.locFilter===loc}">${esc(loc)}</button>`).join("")}</div></div>
+${mod.roomAssignmentMode==="manual"?`
+<label class="mf-as-select-control"><span>Ship position</span><select data-roomlocation aria-label="Ship position">${LOC_FILTERS.map(loc=>`<option value="${esc(loc)}"${mod.locFilter===loc?" selected":""}>${loc==="All"?"All positions":esc(loc)}</option>`).join("")}</select></label>
 <span class="mf-room-control-divider" aria-hidden="true"></span>
-<div class="mf-room-filter-group"><span class="mf-room-control-label">Features</span><div class="mf-room-filters"><button type="button" class="mf-room-filter-all${activeFilters.length?"":" active"}" data-roomfilterall aria-pressed="${!activeFilters.length}">All</button>${ROOM_FILTERS.map(feature=>`<button type="button" class="mf-room-filter${mod.roomFilters[feature.k]?" active":""}" data-roomfilter="${feature.k}" title="${esc(feature.title)}" aria-pressed="${mod.roomFilters[feature.k]}"><span aria-hidden="true">${feature.icon}</span>${esc(feature.label)}</button>`).join("")}</div></div>
-${filtersActive?'<button type="button" class="mf-room-clear" data-roomclear>Clear filters</button>':""}
+<div class="mf-as-inline-filters"><span class="mf-room-control-label">Filters</span><div class="mf-room-filters"><button type="button" class="mf-room-filter-all${activeFilters.length?"":" active"}" data-roomfilterall aria-pressed="${!activeFilters.length}">All</button>${ROOM_FILTERS.map(feature=>`<button type="button" class="mf-room-filter${mod.roomFilters[feature.k]?" active":""}" data-roomfilter="${feature.k}" title="${esc(feature.title)}" aria-pressed="${mod.roomFilters[feature.k]}"><span aria-hidden="true">${feature.icon}</span>${esc(feature.label)}</button>`).join("")}</div></div>
+${filtersActive?'<button type="button" class="mf-room-clear" data-roomclear>Clear filters</button>':""}`:`
+<div class="mf-as-auto-settings"><span class="mf-room-control-label">Accessibility</span><button type="button" class="mf-room-filter${mod.roomFilters.accessible?" active":""}" data-roomfilter="accessible" aria-pressed="${mod.roomFilters.accessible}"><span aria-hidden="true">♿</span>Accessible rooms</button><button type="button" class="mf-as-auto-assign" data-room-auto-assign>Assign rooms</button></div>
+<p class="mf-as-auto-help">Choose whether accessible rooms are required, then assign. You can override any result by selecting another room below.</p>`}
+${mod.roomNotice?`<div class="mf-as-room-notice" role="status" aria-live="polite"><span aria-hidden="true">${SVG_TICK}</span>${esc(mod.roomNotice)}</div>`:""}
 </div>
 <div class="mf-room-tabs" role="tablist" aria-label="Available decks">${tabs}</div>
 <section class="mf-room-deck-panel" id="room-panel-${idx}-${activeDeck}" role="tabpanel" aria-labelledby="room-tab-${idx}-${activeDeck}">
@@ -4992,11 +5131,11 @@ ${visibleRooms.length?`<div class="mf-room-grid" role="radiogroup" aria-label="R
 </section>
 </div>
 <footer class="mf-modal-foot mf-room-modal-foot">
-<div class="mf-room-change-summary"><strong>${changeTitle}</strong><span>${changeFare}</span>${mod.roomNotice?`<em role="alert">${esc(mod.roomNotice)}</em>`:""}</div>
-<div class="mf-rp-actions"><button type="button" class="mf-rp-cancel" data-rpcancel>Cancel</button><button type="button" class="mf-rp-confirm" data-rpconfirm="${idx}"${ready?"":" disabled"}>Apply room change</button></div>
+<div class="mf-rp-actions"><button type="button" class="mf-rp-cancel" data-rpcancel>Cancel</button><button type="button" class="mf-rp-confirm" data-rpconfirm="${idx}"${ready?"":" disabled"}>Confirm Selection</button></div>
 </footer>
+${roomDetailMarkup}
 </div>`;
-showAccessibleModal(host,".mf-room-category-trigger");
+showAccessibleModal(host,".mf-as-category-trigger");
 }
 function closeRoomModal(){mod.editCabin=-1;resetPicker();renderModify();}
 /* ---- remove guest confirmation modal ---- */
@@ -7009,7 +7148,28 @@ const scrollState={body:body?.scrollTop||0,tabs:tabs?.scrollLeft||0};
 renderRoomModal();focusRoomControl(selector,scrollState,reveal);
 }
 roomModal.addEventListener("click",e=>{
+if(e.target.closest("[data-room-details-close]")){const closingRoom=mod.roomDetail;mod.roomDetail=null;rerenderRoomModalWithFocus(`[data-roomdetails="${CSS.escape(String(closingRoom||mod.pendingRoom||""))}"]`);return;}
 if(e.target.closest("[data-rpcancel]")){closeRoomModal();return;}
+const roomDetails=e.target.closest("[data-roomdetails]");
+if(roomDetails){mod.roomDetail=String(roomDetails.dataset.roomdetails);renderRoomModal();focusRoomControl("[data-room-details-close]");return;}
+if(e.target.closest("[data-room-allocation-toggle]")){mod.roomShowGuestTypes=!mod.roomShowGuestTypes;rerenderRoomModalWithFocus("[data-room-allocation-toggle]");return;}
+const guestStep=e.target.closest("[data-room-guest-step]");
+if(guestStep){
+if(guestStep.disabled)return;
+const cabinIdx=+guestStep.dataset.cabin,band=+guestStep.dataset.band,dir=+guestStep.dataset.dir,draft=mod.roomDrafts?.[cabinIdx];
+if(!draft)return;
+const totals=roomDraftTotals(detail),next=Math.max(0,(draft.counts[band]||0)+dir);
+if(dir>0&&totals.assigned[band]>=totals.roster[band])return;
+draft.counts[band]=next;mod.roomShowGuestTypes=!roomDistributionComplete(detail);mod.roomNotice="";
+const selector=mod.roomShowGuestTypes?`[data-room-guest-step][data-cabin="${cabinIdx}"][data-band="${band}"][data-dir="${dir}"]`:"[data-room-allocation-toggle]";
+rerenderRoomModalWithFocus(selector);return;
+}
+const cabinSwitch=e.target.closest("[data-room-cabin]");
+if(cabinSwitch){
+const nextIdx=+cabinSwitch.dataset.roomCabin;
+if(nextIdx===mod.editCabin)return;
+if(activateRoomCabin(detail,nextIdx)){renderRoomModal();focusRoomControl("[data-room-category-toggle]");}return;
+}
 if(mod.roomCategoryOpen&&!e.target.closest(".mf-room-category-wrap")){
 mod.roomCategoryOpen=false;mod.roomNotice="";rerenderRoomModalWithFocus("[data-room-category-toggle]");return;
 }
@@ -7027,6 +7187,7 @@ const original=code===detail.base.cabinCodeBy[idx];
 mod.pendingCode=code;mod.pendingRoom=code===plan.code?String(plan.room):original?String(detail.base.roomBy[idx]):null;
 mod.roomDeck=code===plan.code?roomDeckFromNumber(plan.room,entry.deck):original?roomDeckFromNumber(detail.base.roomBy[idx],entry.deck):STATEROOM_DECKS[0];
 mod.locFilter="All";mod.roomFilters={crib:false,rollaway:false,accessible:false,connecting:false};
+if(mod.roomDrafts?.[idx]){mod.roomDrafts[idx].code=code;mod.roomDrafts[idx].room=mod.pendingRoom?String(mod.pendingRoom):"";}
 }
 mod.roomCategoryOpen=false;mod.roomNotice="";rerenderRoomModalWithFocus("[data-room-category-toggle]");return;
 }
@@ -7047,16 +7208,42 @@ if(e.target.closest("[data-roomclear]")){mod.locFilter="All";mod.roomFilters={cr
 const deckButton=e.target.closest("[data-roomdeck]");
 if(deckButton){mod.roomDeck=+deckButton.dataset.roomdeck;mod.roomNotice="";rerenderRoomModalWithFocus(`[data-roomdeck="${mod.roomDeck}"]`,true);return;}
 const sr=e.target.closest("[data-selectroom]");
-if(sr){mod.pendingRoom=String(sr.dataset.selectroom);mod.roomNotice=`Room ${mod.pendingRoom} selected.`;rerenderRoomModalWithFocus(`[data-selectroom="${CSS.escape(mod.pendingRoom)}"]`,true);return;}
+if(sr){mod.pendingRoom=String(sr.dataset.selectroom);if(mod.roomDrafts?.[mod.editCabin])mod.roomDrafts[mod.editCabin].room=mod.pendingRoom;mod.roomNotice=`Room ${mod.pendingRoom} assigned to Cabin ${mod.editCabin+1}.`;rerenderRoomModalWithFocus(`[data-selectroom="${CSS.escape(mod.pendingRoom)}"]`,true);return;}
+if(e.target.closest("[data-room-auto-assign]")){
+saveActiveRoomDraft();
+const used=new Set(),accessibleOnly=Boolean(mod.roomFilters.accessible),excludePremium=mod.roomAssignmentMode==="exclude-premium";
+mod.roomDrafts.forEach((draft,cabinIdx)=>{
+const entry=catEntry(draft.code),bucket=occBucketFor(roomDraftGuestRefs(detail,cabinIdx));
+const options=roomOptionsForCabin(detail,cabinIdx,entry).filter(room=>!used.has(room.num)&&(!accessibleOnly||room.accessible)&&(!excludePremium||!room.premium)&&roomCanBeSelected(detail,cabinIdx,entry,room,bucket.key));
+const choice=options[0];
+if(choice){draft.room=choice.num;used.add(choice.num);}else draft.room="";
+});
+const activeDraft=mod.roomDrafts[mod.editCabin];mod.pendingCode=activeDraft.code;mod.pendingRoom=activeDraft.room||null;
+if(activeDraft.room)mod.roomDeck=roomDeckFromNumber(activeDraft.room,catEntry(activeDraft.code).deck);
+mod.roomNotice=`${accessibleOnly?"Accessible rooms":"Rooms"} auto-assigned. Review the selections below or choose another room to override.`;
+rerenderRoomModalWithFocus("[data-room-auto-assign]",true);return;
+}
 const rf=e.target.closest("[data-rpconfirm]");
 if(rf){
-const idx=+rf.dataset.rpconfirm,plan=detail.cabinPlan[idx];
-const entry=detail.inventory.find(row=>row.code===mod.pendingCode);
-const validation=entry?selectedRoomValidation(detail,idx,entry.code,mod.pendingRoom):{valid:false,message:"The selected category is no longer available."};
-const hasChange=entry&&(entry.code!==plan.code||String(mod.pendingRoom)!==String(plan.room));
-if(!hasChange||!validation.valid){mod.roomNotice=validation.message||"Select a different room or category to continue.";renderRoomModal();return;}
-plan.code=entry.code;plan.room=String(validation.room.num);
+saveActiveRoomDraft();
+const invalid=mod.roomDrafts.map((draft,cabinIdx)=>selectedRoomValidation(detail,cabinIdx,draft.code,draft.room)).find(result=>!result.valid);
+if(!roomDistributionComplete(detail)||invalid){mod.roomNotice=invalid?.message||"Assign every guest before confirming the selection.";renderRoomModal();return;}
+mod.roomDrafts.forEach((draft,cabinIdx)=>{detail.cabinPlan[cabinIdx].code=draft.code;detail.cabinPlan[cabinIdx].room=String(draft.room);});
+for(let band=0;band<4;band++){
+const bandGuests=detail.guests.filter(guest=>isGuestActive(guest)&&guest.band===band);let cursor=0;
+mod.roomDrafts.forEach((draft,cabinIdx)=>{for(let n=0;n<draft.counts[band];n++){if(bandGuests[cursor])bandGuests[cursor].cabin=detail.b.cabins[cabinIdx];cursor++;}});
+}
 mod.editCabin=-1;resetPicker();refresh();
+}
+});
+roomModal.addEventListener("change",e=>{
+const locationSelect=e.target.closest("[data-roomlocation]");
+if(locationSelect){mod.locFilter=locationSelect.value;mod.roomNotice="";rerenderRoomModalWithFocus("[data-roomlocation]");return;}
+const assignmentSelect=e.target.closest("[data-roomassignment]");
+if(assignmentSelect){
+mod.roomAssignmentMode=assignmentSelect.value;mod.locFilter="All";mod.roomNotice="";
+mod.roomFilters={crib:false,rollaway:false,accessible:false,connecting:false};
+rerenderRoomModalWithFocus("[data-roomassignment]",true);
 }
 });
 roomModal.addEventListener("keydown",e=>{
@@ -7076,7 +7263,7 @@ const columns=Math.max(1,getComputedStyle(grid).gridTemplateColumns.split(" ").f
 let nextIndex=e.key==="Home"?0:e.key==="End"?roomButtons.length-1:e.key==="ArrowLeft"?index-1:e.key==="ArrowRight"?index+1:e.key==="ArrowUp"?index-columns:index+columns;
 nextIndex=Math.max(0,Math.min(roomButtons.length-1,nextIndex));
 const nextRoom=roomButtons[nextIndex]?.dataset.selectroom;
-if(nextRoom){mod.pendingRoom=String(nextRoom);mod.roomNotice=`Room ${mod.pendingRoom} selected.`;rerenderRoomModalWithFocus(`[data-selectroom="${CSS.escape(mod.pendingRoom)}"]`,true);}return;
+if(nextRoom){mod.pendingRoom=String(nextRoom);if(mod.roomDrafts?.[mod.editCabin])mod.roomDrafts[mod.editCabin].room=mod.pendingRoom;mod.roomNotice=`Room ${mod.pendingRoom} assigned to Cabin ${mod.editCabin+1}.`;rerenderRoomModalWithFocus(`[data-selectroom="${CSS.escape(mod.pendingRoom)}"]`,true);}return;
 }
 if(mod.roomCategoryOpen&&e.target.closest(".mf-room-category-menu")&&(e.key==="ArrowDown"||e.key==="ArrowUp"||e.key==="Home"||e.key==="End")){
 e.preventDefault();

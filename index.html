@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bookings</title>
 <link rel="stylesheet" href="design-system/tokens.css?v=1">
-<link rel="stylesheet" href="styles.css?v=380">
+<link rel="stylesheet" href="styles.css?v=384">
 </head>
 <body>
 <div class="topbar">
@@ -337,6 +337,7 @@
 <div class="mf-modal" id="itineraryModal" hidden></div>
 <div class="mf-modal" id="modPreviewModal" hidden></div>
 <div class="mf-modal" id="supplementAssignModal" hidden></div>
+<div id="assignStateroomReactMount" hidden></div>
 <section class="af-inline" id="advancedFilterPanel" role="region" aria-labelledby="advancedFilterTitle" hidden>
 <form class="af-form" id="advancedFilterForm" novalidate>
 <header class="af-header">
@@ -395,6 +396,10 @@
 </form>
 </section>
 <script src="https://unpkg.com/lucide@1.42.0/dist/umd/lucide.min.js"></script>
-<script src="script.js?v=364"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="AssignStateroom.portable.js?v=1"></script>
+<script src="assign-stateroom-integration.js?v=1"></script>
+<script src="script.js?v=368"></script>
 </body>
 </html>
