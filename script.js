@@ -3359,7 +3359,7 @@ ${releasedCabins.length?`<div class="cx-impact-release-summary"><small>Cabins re
 </section>
 <section class="cx-impact-financial" aria-label="Refund impact">
 <div class="refund">
-<div class="cx-impact-refund-head"><span>${cx.scope==="guest"?"Refund payable":"Estimated refund"}</span><em class="${supplementSummary.unresolvedLines?"warning":""}">${estimateStatus}</em></div>
+<div class="cx-impact-refund-head"><span>${cx.scope==="guest"?"Refund payable":"Estimated refund"}</span><em class="${supplementSummary.unresolvedLines||estimateStatus==="Provisional"?"warning":""}">${estimateStatus}</em></div>
 <strong data-cximpactrefund>${fmt(quote.refund)}</strong>
 <p>${estimateNote}</p>
 </div>
