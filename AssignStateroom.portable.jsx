@@ -20,7 +20,7 @@ const WF = Object.freeze({
   ink: '#0F172A',
   inkSoft: '#475569',
   inkLabel: '#64748B',
-  inkFaint: '#94A3B8',
+  inkFaint: '#5F6F85',
   panel: '#FFFFFF',
   fill: '#F8FAFC',
   fillStrong: '#E2E8F0',
@@ -602,7 +602,7 @@ function CabinOverviewFact({ icon, label, value }) {
         <CabinDetailIcon name={icon} size={18} />
       </span>
       <div style={{ minWidth: 0 }}>
-        <dt style={{ fontSize: 11, lineHeight: '16px', color: WF.inkSoft }}>{label}</dt>
+        <dt style={{ fontSize: 12, lineHeight: '16px', color: WF.inkSoft }}>{label}</dt>
         <dd style={{ margin: 0, fontSize: 13, lineHeight: '18px', fontWeight: 700, color: WF.ink }}>{value || 'Not provided'}</dd>
       </div>
     </div>
@@ -622,12 +622,12 @@ function CabinAmenity({ icon, label, status, available = true }) {
           position: 'absolute', right: -3, bottom: -3, width: 15, height: 15, display: 'grid', placeItems: 'center',
           borderRadius: 999, border: `2px solid ${WF.panel}`,
           background: available ? WF.accent : WF.fillStrong, color: available ? WF.accentText : WF.inkSoft,
-          fontSize: 10, lineHeight: 1, fontWeight: 700
+          fontSize: 12, lineHeight: 1, fontWeight: 700
         }}>{available ? '✓' : '–'}</span>
       </span>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 13, lineHeight: '18px', fontWeight: 600, color: WF.ink }}>{label}</div>
-        <div style={{ marginTop: 1, fontSize: 11, lineHeight: '16px', color: available ? WF.inkSoft : WF.inkFaint }}>{status}</div>
+        <div style={{ marginTop: 1, fontSize: 12, lineHeight: '16px', color: available ? WF.inkSoft : WF.inkFaint }}>{status}</div>
       </div>
     </div>
   );
@@ -737,7 +737,7 @@ function CabinDetailsDialog({ room, row, onClose }) {
                   <CabinDetailIcon name="bed" size={30} />
                 </span>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 11, lineHeight: '16px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: WF.inkLabel }}>Flexible bed setup</div>
+                  <div style={{ fontSize: 12, lineHeight: '16px', fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: WF.inkLabel }}>Flexible bed setup</div>
                   <div style={{ marginTop: 2, fontSize: 15, lineHeight: '20px', fontWeight: 700, color: WF.ink }}>
                     {hasConvertibleBeds ? 'Twin or queen configuration' : bedConfiguration}
                   </div>

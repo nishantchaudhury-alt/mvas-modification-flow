@@ -20,7 +20,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     ink: '#0F172A',
     inkSoft: '#475569',
     inkLabel: '#64748B',
-    inkFaint: '#94A3B8',
+    inkFaint: '#5F6F85',
     panel: '#FFFFFF',
     fill: '#F8FAFC',
     fillStrong: '#E2E8F0',
@@ -1243,7 +1243,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
     }, React.createElement("dt", {
       style: {
-        fontSize: 11,
+        fontSize: 12,
         lineHeight: '16px',
         color: WF.inkSoft
       }
@@ -1301,7 +1301,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
         border: "2px solid ".concat(WF.panel),
         background: available ? WF.accent : WF.fillStrong,
         color: available ? WF.accentText : WF.inkSoft,
-        fontSize: 10,
+        fontSize: 12,
         lineHeight: 1,
         fontWeight: 700
       }
@@ -1319,7 +1319,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
     }, label), React.createElement("div", {
       style: {
         marginTop: 1,
-        fontSize: 11,
+        fontSize: 12,
         lineHeight: '16px',
         color: available ? WF.inkSoft : WF.inkFaint
       }
@@ -1534,7 +1534,7 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
       }
     }, React.createElement("div", {
       style: {
-        fontSize: 11,
+        fontSize: 12,
         lineHeight: '16px',
         fontWeight: 700,
         letterSpacing: '0.04em',
