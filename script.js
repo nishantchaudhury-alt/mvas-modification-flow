@@ -2481,30 +2481,66 @@ const fallback=[
 ];
 return ITINERARY_STOPS[d.b.itin]||fallback;
 }
-function itineraryTimelineHtml(d){
-return itineraryStopsFor(d).map((stop,index)=>{
+function itineraryScheduleMeta(stop){
+if(stop.kind==="Embarkation")return{label:"Departure",value:stop.time.replace(/^Departs\s+/,"")};
+if(stop.kind==="Disembarkation")return{label:"Arrival",value:stop.time.replace(/^Arrives\s+/,"")};
+if(stop.kind==="Port day")return{label:"Port hours",value:stop.time};
+return{label:"Schedule",value:stop.time};
+}
+function itineraryTimelineHtml(d,stops=itineraryStopsFor(d)){
+return stops.map((stop,index)=>{
 const date=fmtDateShort(addDays(d.sail,index));
-const sea=stop.kind==="Sea day";
-return `<li class="ov-itin-stop${sea?" sea":""}">
-<span class="ov-itin-rail" aria-hidden="true"><i></i></span>
-<div class="ov-itin-day"><strong>Day ${index+1}</strong><span>${esc(date)}</span></div>
-<div class="ov-itin-place"><span>${esc(stop.place)}</span><small>${esc(stop.kind)}</small></div>
-<div class="ov-itin-time">${esc(stop.time)}</div>
+const schedule=itineraryScheduleMeta(stop);
+const type=stop.kind==="Sea day"?"sea":stop.kind==="Port day"?"port":"terminal";
+return `<li class="ov-itin-stop is-${type}">
+<article class="ov-itin-card" aria-labelledby="itineraryStopTitle${index}">
+<div class="ov-itin-day">
+<span>Day</span><strong>${index+1}</strong><time>${esc(date)}</time>
+</div>
+<div class="ov-itin-card-main">
+<div class="ov-itin-place">
+<span class="ov-itin-kind">${esc(stop.kind)}</span>
+<h4 id="itineraryStopTitle${index}">${esc(stop.place)}</h4>
+</div>
+<div class="ov-itin-time"><span>${esc(schedule.label)}</span><strong>${esc(schedule.value)}</strong></div>
+</div>
+</article>
 </li>`;
 }).join("");
 }
 function openItineraryModal(){
 if(!detail)return;
 const host=document.getElementById("itineraryModal");
+const stops=itineraryStopsFor(detail);
+const portDays=stops.filter(stop=>stop.kind==="Port day").length;
+const seaDays=stops.filter(stop=>stop.kind==="Sea day").length;
+const returnDate=addDays(detail.sail,detail.info.nights);
 host.innerHTML=`<div class="mf-modal-backdrop" data-itinerary-close></div>
 <div class="mf-modal-card ov-itinerary-modal" role="dialog" aria-modal="true" aria-labelledby="itineraryTitle" aria-describedby="itinerarySub">
 <div class="mf-modal-head">
-<div class="mf-modal-title"><h2 class="mf-modal-h" id="itineraryTitle">Full itinerary</h2><span class="mf-modal-sub" id="itinerarySub">${esc(detail.info.ship)} · ${esc(detail.info.shipSub)} · ${detail.info.nights} nights</span></div>
+<div class="mf-modal-title"><h2 class="mf-modal-h" id="itineraryTitle">Full itinerary</h2><span class="mf-modal-sub" id="itinerarySub">${esc(detail.info.ship)} · ${detail.info.nights}-night sailing</span></div>
 <button class="mf-modal-x" type="button" data-itinerary-close aria-label="Close itinerary">${SVG_X}</button>
 </div>
 <div class="mf-modal-body ov-itinerary-body">
-<div class="ov-itinerary-summary"><span>Voyage</span><strong>${esc(detail.b.itin)}</strong><small>${fmtDateShort(detail.sail)} – ${fmtDateShort(addDays(detail.sail,detail.info.nights))}</small></div>
-<ol class="ov-itinerary-timeline" aria-label="Day-by-day itinerary">${itineraryTimelineHtml(detail)}</ol>
+<section class="ov-itinerary-summary" aria-labelledby="itineraryOverviewTitle">
+<h3 class="sr-only" id="itineraryOverviewTitle">Voyage overview</h3>
+<div class="ov-itinerary-summary-head">
+<div class="ov-itinerary-summary-title"><span>Voyage</span><strong>${esc(detail.b.itin)}</strong></div>
+<div class="ov-itinerary-duration"><strong>${detail.info.nights}</strong><span>nights</span></div>
+</div>
+<div class="ov-itinerary-route">
+<div class="ov-itinerary-route-stop"><span>Departure</span><strong>${fmtDateShort(detail.sail)}</strong><small>${esc(detail.info.from)}, Florida</small></div>
+<span class="ov-itinerary-route-divider" aria-hidden="true"></span>
+<div class="ov-itinerary-route-stop"><span>Return</span><strong>${fmtDateShort(returnDate)}</strong><small>${esc(detail.info.to)}, Florida</small></div>
+</div>
+</section>
+<section class="ov-itinerary-schedule" aria-labelledby="itineraryScheduleTitle">
+<div class="ov-itinerary-schedule-head">
+<div><h3 id="itineraryScheduleTitle">Day-by-day schedule</h3><p>${portDays} port days · ${seaDays} sea days · All times local</p></div>
+<span>${stops.length} days</span>
+</div>
+<ol class="ov-itinerary-timeline">${itineraryTimelineHtml(detail,stops)}</ol>
+</section>
 </div>
 </div>`;
 showAccessibleModal(host,".mf-modal-x");
