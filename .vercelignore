@@ -1,0 +1,8 @@
+.agents/
+.claude/
+.git/
+.env*
+scripts/
+*.docx
+*.jsx
+*.md
