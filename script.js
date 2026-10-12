@@ -3110,6 +3110,28 @@ return cancelStep1Ready()
 &&partialSupplementAllocationReady(detail,allocations)
 &&cancelDestReady(q);
 }
+/* Cancellation details are two side-by-side sub-steps: supplement reallocation,
+   then cancellation information. Without affected supplements, start on info. */
+function partialDetailsActiveTab(summary=partialAllocationSummary(cx?.supplementAllocations||[])){
+if(cx.cancellationInfoOpen)return "info";
+if(!summary.totalLines&&!cx.detailsTabChosen)return "info";
+return "supplements";
+}
+function partialDetailsContinueReady(q=cancelQuote(),allocations=cx?.supplementAllocations){
+if(partialDetailsActiveTab(partialAllocationSummary(allocations||[]))==="supplements")return partialSupplementAllocationReady(detail,allocations);
+return partialCancellationDecisionReady(q,allocations);
+}
+function partialDetailsGuidance(q=cancelQuote(),allocations=cx?.supplementAllocations){
+const summary=partialAllocationSummary(allocations||[]);
+if(partialDetailsActiveTab(summary)==="supplements")return summary.unresolvedLines?`Resolve ${summary.unresolvedLines} supplement assignment${summary.unresolvedLines===1?"":"s"}.`:"";
+return partialCancellationDecisionGuidance(q,allocations);
+}
+function setPartialDetailsTab(tab,focusSelector){
+cx.detailsTabChosen=true;
+cx.cancellationInfoOpen=tab==="info";
+cx.supplementSectionOpen=tab!=="info";
+renderCancellationWithFocus(focusSelector||`[data-cxdetailstab="${tab}"][role="tab"]`);
+}
 function partialCancellationDecisionGuidance(q=cancelQuote(),allocations=cx?.supplementAllocations){
 if(!cx.reason)return "Select a cancellation reason.";
 if(cx.reason==="Other"&&!cx.note.trim())return "Add an internal note for the selected reason.";
@@ -3860,6 +3882,14 @@ const pageDescription=summary.totalLines
 ?"Review affected supplements, complete the cancellation record, and choose where to send the refund."
 :"Complete the cancellation record and choose where to send the refund.";
 const cancellationInfoReady=cancelStep1Ready()&&cancelDestReady(q);
+const activeTab=partialDetailsActiveTab(summary);
+/* Matches the underline tabs used for supplements in the modification flow.
+   The badge carries the count, or a check once the section is complete. */
+const detailsTab=(id,title,badge,badgeLabel,state)=>{
+const selected=activeTab===id;
+return `<button type="button" role="tab" class="mf-supp-tab cx-details-tab${selected?" is-active":""}${state?` is-${state}`:""}" id="cxDetailsTab-${id}" data-cxdetailstab="${id}" aria-selected="${selected}" aria-controls="cxDetailsPanel-${id}" tabindex="${selected?0:-1}"><span>${title}</span><strong aria-label="${badgeLabel}">${badge}</strong></button>`;
+};
+const checkBadge='<i data-lucide="check" aria-hidden="true"></i>';
 return `<div class="cx-partial-page-layout">
 ${cancellationStepsHtml()}
 <div class="cx-page-card cx-partial cx-allocation-page">
@@ -3868,8 +3898,16 @@ ${cancellationDraftNoticeHtml()}
 ${cancellationVersionAlertHtml()}
 <section class="cx-page-workspace cx-cancellation-details-workspace" aria-labelledby="cancellationStepTitle">
 <h2 class="sr-only" id="cancellationStepTitle" tabindex="-1">Complete cancellation details</h2>
-<details class="cx-allocation-card" data-cxsupplementsection aria-labelledby="partialSupplementAllocationTitle"${cx.supplementSectionOpen!==false&&!cx.cancellationInfoOpen?" open":""}>
-<summary class="cx-allocation-card-head"><span class="cx-allocation-card-icon" aria-hidden="true"><i data-lucide="package"></i></span><span class="cx-allocation-card-heading"><strong id="partialSupplementAllocationTitle">Supplement reallocation</strong><small>${introCopy}</small></span>${summary.totalLines?`<span class="cx-allocation-card-status" aria-label="${summary.totalLines} affected supplements, total value ${fmt(summary.totalValue)}">Total value &middot; ${fmt(summary.totalValue)}</span>`:""}<span class="cx-allocation-card-toggle" aria-hidden="true"><i data-lucide="chevron-down"></i></span></summary>
+<div class="mf-supp-tabs cx-details-tabs" role="tablist" aria-label="Cancellation details sections">
+${summary.unresolvedLines
+?detailsTab("supplements","Supplement reallocation",summary.unresolvedLines,`${summary.unresolvedLines} supplement${summary.unresolvedLines===1?"":"s"} need a decision`,"attention")
+:detailsTab("supplements","Supplement reallocation",summary.totalLines,`${summary.totalLines} affected supplement${summary.totalLines===1?"":"s"}, complete`,"complete")}
+${cancellationInfoReady
+?detailsTab("info","Cancellation information",checkBadge,"Complete","complete")
+:detailsTab("info","Cancellation information","!","Details required","attention")}
+</div>
+<section class="cx-details-panel cx-allocation-card" role="tabpanel" id="cxDetailsPanel-supplements" aria-labelledby="cxDetailsTab-supplements" tabindex="-1"${activeTab==="supplements"?"":" hidden"}>
+<div class="cx-details-panel-intro"><strong id="partialSupplementAllocationTitle">Supplement reallocation</strong><small>${introCopy}</small></div>
 <div class="cx-allocation-list">${summary.totalLines?`<div class="cx-allocation-default-notice" role="group" aria-label="Actions for all affected supplements"><span class="cx-allocation-default-icon"><i data-lucide="layers-3" aria-hidden="true"></i></span><div class="cx-allocation-default-copy"><span>All affected supplements</span><strong>${esc(bulkOutcomeTitle)}</strong><small>${esc(bulkOutcomeCopy)}</small></div><div class="cx-allocation-default-actions"><button type="button" class="assign" data-cxsuppbulkassign aria-haspopup="dialog" aria-controls="partialSupplementAssignModal"><i data-lucide="users" aria-hidden="true"></i><span>${allSupplementsRemoved?"Reassign all":sharedRecipient?"Change assignment":"Assign all"}</span></button>${canResetAllToPrimary?`<button type="button" class="restore" data-cxsuppprimary><i data-lucide="rotate-ccw" aria-hidden="true"></i><span>${allSupplementsRemoved?"Undo removal":"Restore default"}</span></button>`:""}${allSupplementsRemoved?"":`<button type="button" class="remove" data-cxsuppremoveall aria-haspopup="dialog" aria-controls="removeAllSupplementsModal"><i data-lucide="trash-2" aria-hidden="true"></i><span>Remove all from booking</span></button>`}</div></div>`:`<div class="cx-allocation-empty" role="note"><i data-lucide="check-circle-2" aria-hidden="true"></i><span>No allocation decisions are required.</span></div>`}${allocations.filter(allocation=>allocation.lines.length).map((allocation,groupIndex)=>{
 const source=detail.guests.find(guest=>guest.guestId===allocation.sourceGuestId);
 const cabinIndex=source?detail.b.cabins.indexOf(source.cabin):-1;
@@ -3917,9 +3955,8 @@ return `<article class="cx-allocation-line${rowClass}" role="listitem" aria-labe
 </div></article>`;
 }).join("")}</div></details>`;
 }).join("")}</div>
-</details>
-<details class="cx-cancellation-info${cancellationInfoReady?" is-complete":""}" data-cxcancellationinfo${cx.cancellationInfoOpen?" open":""}>
-<summary class="cx-cancellation-info-summary"><span class="cx-cancellation-info-icon" aria-hidden="true"><i data-lucide="clipboard-list"></i></span><span class="cx-cancellation-info-copy"><strong>Cancellation information</strong><small>Reason, policy exceptions, and refund destination</small></span><span class="cx-cancellation-info-status">${cancellationInfoReady?"Complete":"Details required"}</span><span class="cx-cancellation-info-toggle" aria-hidden="true"><i data-lucide="chevron-down"></i></span></summary>
+</section>
+<section class="cx-details-panel cx-cancellation-info${cancellationInfoReady?" is-complete":""}" role="tabpanel" id="cxDetailsPanel-info" aria-labelledby="cxDetailsTab-info" tabindex="-1"${activeTab==="info"?"":" hidden"}>
 <div class="cx-cancellation-info-body">
 <div class="cx-stage2-section cx-details-editor" data-cxstage2controls>
 ${cancelStep1Html(q,{includeStepHeading:false,integrated:true})}
@@ -3928,16 +3965,18 @@ ${cancelStep1Html(q,{includeStepHeading:false,integrated:true})}
 ${cancelStep2Html(q,{includeStepHeading:false,integrated:true})}
 </div>
 </div>
-</details>
+</section>
 </section>
 </div>
 ${partialCancellationImpactHtml()}
 </div>
 <div class="cx-page-actionbar cx-allocation-actionbar" role="region" aria-label="Cancellation details actions">
-<button type="button" class="mf-rp-cancel" data-cxsuppback>&larr; Back to guest selection</button>
+${activeTab==="info"&&summary.totalLines
+?`<button type="button" class="mf-rp-cancel" data-cxdetailstab="supplements">&larr; Back to supplement reallocation</button>`
+:`<button type="button" class="mf-rp-cancel" data-cxsuppback>&larr; Back to guest selection</button>`}
 <div class="cx-foot-right">
-<span class="cx-action-guidance" id="partialCancellationDecisionStatus" role="status" aria-live="polite">${partialCancellationDecisionGuidance(q,allocations)}</span>
-<button type="button" class="mf-rp-confirm" data-cxsuppcontinue aria-describedby="partialCancellationDecisionStatus"${partialCancellationDecisionReady(q,allocations)?"":" disabled"}>Review cancellation</button>
+<span class="cx-action-guidance" id="partialCancellationDecisionStatus" role="status" aria-live="polite">${partialDetailsGuidance(q,allocations)}</span>
+<button type="button" class="mf-rp-confirm" data-cxsuppcontinue aria-describedby="partialCancellationDecisionStatus"${partialDetailsContinueReady(q,allocations)?"":" disabled"}>${activeTab==="info"?"Review cancellation":"Continue to cancellation information"}</button>
 </div>
 </div>`;
 }
@@ -4320,9 +4359,9 @@ const row=impactAdjustment.closest("div");
 if(row){row.classList.toggle("deduction",adjustment<0);row.classList.toggle("addition",adjustment>0);}
 }
 const partialDecisionButton=root.querySelector("[data-cxsuppcontinue]");
-if(partialDecisionButton)partialDecisionButton.disabled=!partialCancellationDecisionReady(q,cx.supplementAllocations);
+if(partialDecisionButton)partialDecisionButton.disabled=!partialDetailsContinueReady(q,cx.supplementAllocations);
 const partialDecisionStatus=root.querySelector("#partialCancellationDecisionStatus");
-if(partialDecisionStatus)partialDecisionStatus.textContent=partialCancellationDecisionGuidance(q,cx.supplementAllocations);
+if(partialDecisionStatus)partialDecisionStatus.textContent=partialDetailsGuidance(q,cx.supplementAllocations);
 }
 function commitGuestCancellation(q,b,dest,ref,stamp){
 if(cx.entry==="partial")applyPartialSupplementAllocations(detail,cx.supplementAllocations);
@@ -7581,8 +7620,20 @@ renderCancellationWithFocus("#partialSupplementAllocationTitle");return;
 if(e.target.closest("[data-cxsuppremoveall]")){
 openRemoveAllSupplementsModal();return;
 }
+const detailsTab=e.target.closest("[data-cxdetailstab]");
+if(detailsTab){
+setPartialDetailsTab(detailsTab.dataset.cxdetailstab,detailsTab.getAttribute("role")==="tab"?null:`[data-cxdetailstab="${detailsTab.dataset.cxdetailstab}"][role="tab"]`);
+return;
+}
 if(e.target.closest("[data-cxsuppcontinue]")){
-if(!partialCancellationDecisionReady(cancelQuote(),ensurePartialSupplementAllocations()))return;
+const allocations=ensurePartialSupplementAllocations();
+if(partialDetailsActiveTab(partialAllocationSummary(allocations))==="supplements"){
+if(!partialSupplementAllocationReady(detail,allocations))return;
+setPartialDetailsTab("info","#cxDetailsPanel-info");
+document.querySelector(".main").scrollTop=0;
+return;
+}
+if(!partialCancellationDecisionReady(cancelQuote(),allocations))return;
 beginPartialGuestCancellation();return;
 }
 if(e.target.closest("[data-cxreviewback]")){returnToPartialSupplementAllocation();return;}
@@ -7646,6 +7697,13 @@ if(!cx)return;
 if(e.target.closest("[data-cxreason]")){cx.reason=e.target.value;renderCancellationWithFocus("#cancellationReason");}
 }
 function handleCancellationKeydown(e){
+const tab=e.target.closest('[data-cxdetailstab][role="tab"]');
+if(tab&&(e.key==="ArrowRight"||e.key==="ArrowLeft"||e.key==="Home"||e.key==="End")){
+e.preventDefault();
+const next=e.key==="Home"?"supplements":e.key==="End"?"info":tab.dataset.cxdetailstab==="info"?"supplements":"info";
+setPartialDetailsTab(next);
+return;
+}
 const source=e.target.closest("[data-cxsrc]");
 if(!source||!(e.key==="ArrowRight"||e.key==="ArrowDown"||e.key==="ArrowLeft"||e.key==="ArrowUp"||e.key==="Home"||e.key==="End"))return;
 e.preventDefault();

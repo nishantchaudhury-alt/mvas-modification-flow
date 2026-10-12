@@ -103,7 +103,7 @@ body.portable-stateroom-open{overflow:hidden}
 
 @media (min-width:701px) and (hover:hover) and (pointer:fine){
 :root{--mvas-sidebar-layout-width:72px}
-.sidebar{position:relative;z-index:var(--ds-layer-sticky);overflow-x:hidden;overflow-y:auto;box-shadow:none;scrollbar-width:none;transition:width var(--ds-motion-slow) var(--ds-motion-ease-standard),box-shadow var(--ds-motion-slow) var(--ds-motion-ease-standard)}
+.sidebar{position:relative;z-index:var(--ds-layer-nav);overflow-x:hidden;overflow-y:auto;box-shadow:none;scrollbar-width:none;transition:width var(--ds-motion-slow) var(--ds-motion-ease-standard),box-shadow var(--ds-motion-slow) var(--ds-motion-ease-standard)}
 .sidebar::-webkit-scrollbar{display:none}
 body:not(.modal-open) .sidebar:is(:hover,:focus-within){width:var(--mvas-sidebar-expanded-width);box-shadow:8px 0 24px rgba(15,23,42,.18)}
 .nav-logo{position:relative;height:52px;padding:0}
@@ -3934,3 +3934,20 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 @media (prefers-reduced-motion:reduce){
 *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important}
 }
+
+/* Cancellation details sub-steps: supplement reallocation and cancellation
+   information sit side by side as tabs, one panel visible at a time. */
+.cx-cancellation-details-workspace{gap:0}
+.cx-details-tabs{margin:0 0 16px}
+.cx-details-tab>strong svg{width:14px;height:14px;stroke-width:2.6}
+.cx-details-tab.is-attention>strong{border-color:var(--mvas-danger-line);background:var(--mvas-danger-soft);color:var(--mvas-danger-strong)}
+.cx-details-tab.is-complete:not(.is-active)>strong:has(svg){border-color:var(--mvas-positive-line);background:var(--mvas-positive-soft);color:var(--mvas-positive)}
+.cx-details-panel.cx-allocation-card,.cx-details-panel.cx-cancellation-info{overflow:visible;border:1px solid var(--mvas-line);border-radius:10px;box-shadow:none}
+.cx-details-panel[hidden]{display:none}
+.cx-details-panel:focus{outline:none}
+.cx-details-panel:focus-visible{outline:2px solid var(--mvas-accent);outline-offset:2px}
+.cx-details-panel-intro{display:flex;flex-direction:column;gap:4px;padding:16px 16px 0}
+.cx-details-panel-intro strong{font-size:var(--ds-type-body-size);font-weight:700;line-height:1.3;color:var(--mvas-ink)}
+.cx-details-panel-intro small{font-size:var(--ds-type-caption-size);line-height:1.4;color:var(--mvas-ink-soft)}
+.cx-details-panel .cx-allocation-source:last-child{border-radius:0 0 10px 10px}
+.cx-details-panel.cx-cancellation-info .cx-cancellation-info-body{overflow:hidden;border-radius:10px}

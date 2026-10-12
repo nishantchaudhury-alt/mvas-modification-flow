@@ -120,6 +120,7 @@
   --ds-primitive-ease-exit: ease-in;
   --ds-primitive-layer-base: 0;
   --ds-primitive-layer-sticky: 10;
+  --ds-primitive-layer-nav: 20;
   --ds-primitive-layer-popover: 40;
   --ds-primitive-layer-popover-content: 41;
   --ds-primitive-layer-tooltip: 60;
@@ -225,6 +226,7 @@
   --ds-motion-slow: var(--ds-primitive-duration-slow);
   --ds-motion-ease-standard: var(--ds-primitive-ease-standard);
   --ds-layer-sticky: var(--ds-primitive-layer-sticky);
+  --ds-layer-nav: var(--ds-primitive-layer-nav);
   --ds-layer-popover: var(--ds-primitive-layer-popover);
   --ds-layer-popover-content: var(--ds-primitive-layer-popover-content);
   --ds-layer-tooltip: var(--ds-primitive-layer-tooltip);
