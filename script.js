@@ -3121,11 +3121,6 @@ function partialDetailsContinueReady(q=cancelQuote(),allocations=cx?.supplementA
 if(partialDetailsActiveTab(partialAllocationSummary(allocations||[]))==="supplements")return partialSupplementAllocationReady(detail,allocations);
 return partialCancellationDecisionReady(q,allocations);
 }
-function partialDetailsGuidance(q=cancelQuote(),allocations=cx?.supplementAllocations){
-const summary=partialAllocationSummary(allocations||[]);
-if(partialDetailsActiveTab(summary)==="supplements")return summary.unresolvedLines?`Resolve ${summary.unresolvedLines} supplement assignment${summary.unresolvedLines===1?"":"s"}.`:"";
-return partialCancellationDecisionGuidance(q,allocations);
-}
 function setPartialDetailsTab(tab,focusSelector){
 cx.detailsTabChosen=true;
 cx.cancellationInfoOpen=tab==="info";
@@ -3975,8 +3970,7 @@ ${activeTab==="info"&&summary.totalLines
 ?`<button type="button" class="mf-rp-cancel" data-cxdetailstab="supplements">&larr; Back to supplement reallocation</button>`
 :`<button type="button" class="mf-rp-cancel" data-cxsuppback>&larr; Back to guest selection</button>`}
 <div class="cx-foot-right">
-<span class="cx-action-guidance" id="partialCancellationDecisionStatus" role="status" aria-live="polite">${partialDetailsGuidance(q,allocations)}</span>
-<button type="button" class="mf-rp-confirm" data-cxsuppcontinue aria-describedby="partialCancellationDecisionStatus"${partialDetailsContinueReady(q,allocations)?"":" disabled"}>${activeTab==="info"?"Review cancellation":"Continue to cancellation information"}</button>
+<button type="button" class="mf-rp-confirm" data-cxsuppcontinue${partialDetailsContinueReady(q,allocations)?"":" disabled"}>${activeTab==="info"?"Review cancellation":"Continue to cancellation information"}</button>
 </div>
 </div>`;
 }
@@ -4360,8 +4354,6 @@ if(row){row.classList.toggle("deduction",adjustment<0);row.classList.toggle("add
 }
 const partialDecisionButton=root.querySelector("[data-cxsuppcontinue]");
 if(partialDecisionButton)partialDecisionButton.disabled=!partialDetailsContinueReady(q,cx.supplementAllocations);
-const partialDecisionStatus=root.querySelector("#partialCancellationDecisionStatus");
-if(partialDecisionStatus)partialDecisionStatus.textContent=partialDetailsGuidance(q,cx.supplementAllocations);
 }
 function commitGuestCancellation(q,b,dest,ref,stamp){
 if(cx.entry==="partial")applyPartialSupplementAllocations(detail,cx.supplementAllocations);
