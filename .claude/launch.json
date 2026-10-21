@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mvas-prototype",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", "/Users/nishant.chaudhury/Documents/MVAS | Booking Modification", "-a", "127.0.0.1", "-c-1"],
+      "port": 4173,
+      "autoPort": true
+    }
+  ]
+}
