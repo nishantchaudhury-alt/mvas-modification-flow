@@ -325,6 +325,11 @@ document.getElementById("prevBtn").addEventListener("click",()=>{if(currentPage>
 document.getElementById("nextBtn").addEventListener("click",()=>{const filtered=getFiltered();const totalPages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE));if(currentPage<totalPages){currentPage++;render();}});
 document.querySelector(".table-scroll").addEventListener("scroll",updateScrollHint);
 window.addEventListener("resize",updateScrollHint);
+/* On wide screens the booking card scrolls under its fixed header; show a
+   divider on the header once content is beneath it. */
+document.querySelector("#detailLayout>.ov-main-card").addEventListener("scroll",e=>{
+e.currentTarget.querySelector(".ov-main-top")?.classList.toggle("is-stuck",e.currentTarget.scrollTop>0);
+},{passive:true});
 const ITIN_INFO={
 "5N Cozumel & Progreso":{ship:"MVAS Islander",shipSub:"5-Night Cozumel & Progreso",from:"Tampa Bay",to:"Tampa Bay",ports:"Cozumel & Progreso",nights:5},
 "5N Progreso & Cozumel":{ship:"MVAS Islander",shipSub:"5-Night Progreso & Cozumel",from:"Tampa Bay",to:"Tampa Bay",ports:"Progreso & Cozumel",nights:5},

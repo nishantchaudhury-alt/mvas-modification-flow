@@ -3951,3 +3951,19 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 .cx-details-panel-intro small{font-size:var(--ds-type-caption-size);line-height:1.4;color:var(--mvas-ink-soft)}
 .cx-details-panel .cx-allocation-source:last-child{border-radius:0 0 10px 10px}
 .cx-details-panel.cx-cancellation-info .cx-cancellation-info-body{overflow:hidden;border-radius:10px}
+
+/* Booking detail on wide screens: the page itself does not scroll. The
+   booking header stays fixed at the top of the main card, the card body
+   scrolls on its own, and the right rail keeps its default position. */
+@media (min-width:1241px){
+.view-detail.active{display:flex;height:100%;min-height:0;flex-direction:column}
+.view-detail.active>.detail-head{flex:none}
+.view-detail #detailLayout{flex:1;min-height:0;grid-template-rows:minmax(0,1fr);padding-bottom:0}
+.view-detail #detailLayout>.ov-main-card{max-height:100%;overflow-y:auto;overscroll-behavior:contain}
+.view-detail #detailLayout>.ov-main-card,.view-detail #detailLayout>.ov-side{scrollbar-width:none}
+.view-detail #detailLayout>.ov-main-card::-webkit-scrollbar,.view-detail #detailLayout>.ov-side::-webkit-scrollbar{display:none}
+.view-detail #detailLayout>.ov-main-card>*{flex-shrink:0}
+.view-detail .ov-main-top{position:sticky;top:-20px;z-index:var(--ds-layer-sticky);margin:-20px -20px -16px;padding:20px 20px 16px;background:#fff;transition:box-shadow var(--ds-motion-base) var(--ds-motion-ease-standard)}
+.view-detail .ov-main-top.is-stuck{box-shadow:0 1px 0 var(--mvas-line-soft),0 6px 12px -8px rgba(15,23,42,.18)}
+.view-detail #detailLayout>.ov-side{position:static;max-height:100%;overflow-y:auto;overscroll-behavior:contain}
+}
