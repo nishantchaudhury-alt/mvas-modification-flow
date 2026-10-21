@@ -499,7 +499,7 @@ tbody tr[data-id]{cursor:pointer}
 .ov-ledger-row.credit .ov-ledger-title,.ov-ledger-row.credit .ov-ledger-amt{color:var(--mvas-positive)}
 .ov-ledger-row.total{border-bottom:none;padding-bottom:0}
 .ov-ledger-row.total .ov-ledger-title{font-weight:700}
-.ov-total-payable{padding-top:12px;border-top:1px solid var(--mvas-line);margin-top:-2px}
+.ov-total-payable{padding-top:12px}
 .ov-total-payable .ov-ledger-title,.ov-total-payable .ov-ledger-amt{font-size:var(--ds-type-body-size);font-weight:700;color:var(--mvas-accent)}
 
 /* ---- taxes row: expands to show the government / cruise fee split ---- */
