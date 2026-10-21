@@ -1485,12 +1485,7 @@ return `<div class="ov-cabin-card mvas-interactive-surface${isExpanded?"":" coll
 <div class="ov-cc-sub">${c.type} (Deck ${c.deck})</div>
 </div>
 </div>
-<div class="ov-cc-counts">
-<span class="ov-cc-count"><span class="ov-cc-count-label">Adults</span><span class="ov-cc-count-val">${c.counts[0]}</span></span>
-<span class="ov-cc-count"><span class="ov-cc-count-label">Young adults</span><span class="ov-cc-count-val">${c.counts[1]}</span></span>
-<span class="ov-cc-count"><span class="ov-cc-count-label">Children</span><span class="ov-cc-count-val">${c.counts[2]}</span></span>
-<span class="ov-cc-count"><span class="ov-cc-count-label">Infants</span><span class="ov-cc-count-val">${c.counts[3]}</span></span>
-</div>
+<div class="ov-cc-counts" aria-label="Guests in this cabin">${c.counts.map((count,i)=>count>0?`<span class="ov-cc-count">${count} ${AGE_CATEGORIES[i][count===1?"singular":"plural"].replace(/\s*\(.*\)$/,"").toLowerCase()}</span>`:"").filter(Boolean).join('<span class="ov-cc-count-sep" aria-hidden="true">&middot;</span>')||'<span class="ov-cc-count">No guests</span>'}</div>
 </div>
 	<svg class="ov-cc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
 	</button>
@@ -2486,30 +2481,29 @@ const fallback=[
 ];
 return ITINERARY_STOPS[d.b.itin]||fallback;
 }
-function itineraryScheduleMeta(stop){
-if(stop.kind==="Embarkation")return{label:"Departure",value:stop.time.replace(/^Departs\s+/,"")};
-if(stop.kind==="Disembarkation")return{label:"Arrival",value:stop.time.replace(/^Arrives\s+/,"")};
-if(stop.kind==="Port day")return{label:"Port hours",value:stop.time};
-return{label:"Schedule",value:stop.time};
+/* Compact itinerary, modelled on travel-app trip timelines: one row per day
+   on a single connected rail, with only the time that matters for that day. */
+const ITINERARY_ICONS={
+terminal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>',
+port:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22V8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/><circle cx="12" cy="5" r="3"/></svg>',
+sea:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>'
+};
+function fmtItineraryDay(dt){return dt.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});}
+function itineraryStopTime(stop){
+if(stop.kind==="Embarkation")return stop.time.replace(/^Departs\s+/,"Departs ");
+if(stop.kind==="Disembarkation")return stop.time.replace(/^Arrives\s+/,"Arrives ");
+if(stop.kind==="Port day")return stop.time.replace(/\s*[–-]\s*/," – ");
+return "";
 }
 function itineraryTimelineHtml(d,stops=itineraryStopsFor(d)){
 return stops.map((stop,index)=>{
-const date=fmtDateShort(addDays(d.sail,index));
-const schedule=itineraryScheduleMeta(stop);
 const type=stop.kind==="Sea day"?"sea":stop.kind==="Port day"?"port":"terminal";
-return `<li class="ov-itin-stop is-${type}">
-<article class="ov-itin-card" aria-labelledby="itineraryStopTitle${index}">
-<div class="ov-itin-day">
-<span>Day</span><strong>${index+1}</strong><time>${esc(date)}</time>
-</div>
-<div class="ov-itin-card-main">
-<div class="ov-itin-place">
-<span class="ov-itin-kind">${esc(stop.kind)}</span>
-<h4 id="itineraryStopTitle${index}">${esc(stop.place)}</h4>
-</div>
-<div class="ov-itin-time"><span>${esc(schedule.label)}</span><strong>${esc(schedule.value)}</strong></div>
-</div>
-</article>
+const time=itineraryStopTime(stop);
+return `<li class="ov-itn-stop is-${type}">
+<span class="ov-itn-marker">${ITINERARY_ICONS[type]}</span>
+<div class="ov-itn-day"><strong>Day ${index+1}</strong><time>${esc(fmtItineraryDay(addDays(d.sail,index)))}</time></div>
+<div class="ov-itn-place"><strong>${esc(stop.kind==="Sea day"?"At sea":stop.place)}</strong><small>${esc(stop.kind)}</small></div>
+${time?`<span class="ov-itn-time">${esc(time)}</span>`:""}
 </li>`;
 }).join("");
 }
@@ -2520,31 +2514,23 @@ const stops=itineraryStopsFor(detail);
 const portDays=stops.filter(stop=>stop.kind==="Port day").length;
 const seaDays=stops.filter(stop=>stop.kind==="Sea day").length;
 const returnDate=addDays(detail.sail,detail.info.nights);
+const departTime=(stops.find(stop=>stop.kind==="Embarkation")?.time||"").replace(/^Departs\s+/,"");
+const returnTime=(stops.find(stop=>stop.kind==="Disembarkation")?.time||"").replace(/^Arrives\s+/,"");
 host.innerHTML=`<div class="mf-modal-backdrop" data-itinerary-close></div>
 <div class="mf-modal-card ov-itinerary-modal" role="dialog" aria-modal="true" aria-labelledby="itineraryTitle" aria-describedby="itinerarySub">
 <div class="mf-modal-head">
-<div class="mf-modal-title"><h2 class="mf-modal-h" id="itineraryTitle">Full itinerary</h2><span class="mf-modal-sub" id="itinerarySub">${esc(detail.info.ship)} · ${detail.info.nights}-night sailing</span></div>
+<div class="mf-modal-title"><h2 class="mf-modal-h" id="itineraryTitle">${esc(detail.b.itin)}</h2><span class="mf-modal-sub" id="itinerarySub">${esc(detail.info.ship)} · ${detail.info.nights} nights · ${portDays} port day${portDays===1?"":"s"}, ${seaDays} at sea</span></div>
 <button class="mf-modal-x" type="button" data-itinerary-close aria-label="Close itinerary">${SVG_X}</button>
 </div>
 <div class="mf-modal-body ov-itinerary-body">
-<section class="ov-itinerary-summary" aria-labelledby="itineraryOverviewTitle">
-<h3 class="sr-only" id="itineraryOverviewTitle">Voyage overview</h3>
-<div class="ov-itinerary-summary-head">
-<div class="ov-itinerary-summary-title"><span>Voyage</span><strong>${esc(detail.b.itin)}</strong></div>
-<div class="ov-itinerary-duration"><strong>${detail.info.nights}</strong><span>nights</span></div>
-</div>
-<div class="ov-itinerary-route">
-<div class="ov-itinerary-route-stop"><span>Departure</span><strong>${fmtDateShort(detail.sail)}</strong><small>${esc(detail.info.from)}, Florida</small></div>
-<span class="ov-itinerary-route-divider" aria-hidden="true"></span>
-<div class="ov-itinerary-route-stop"><span>Return</span><strong>${fmtDateShort(returnDate)}</strong><small>${esc(detail.info.to)}, Florida</small></div>
-</div>
-</section>
-<section class="ov-itinerary-schedule" aria-labelledby="itineraryScheduleTitle">
-<div class="ov-itinerary-schedule-head">
-<div><h3 id="itineraryScheduleTitle">Day-by-day schedule</h3><p>${portDays} port days · ${seaDays} sea days · All times local</p></div>
-<span>${stops.length} days</span>
-</div>
-<ol class="ov-itinerary-timeline">${itineraryTimelineHtml(detail,stops)}</ol>
+<dl class="ov-itn-route" aria-label="Voyage dates">
+<div><dt>Departs</dt><dd><strong>${esc(fmtItineraryDay(detail.sail))}</strong><span>${esc(detail.info.from)}, FL${departTime?` · ${esc(departTime)}`:""}</span></dd></div>
+<span class="ov-itn-route-arrow" aria-hidden="true"></span>
+<div><dt>Returns</dt><dd><strong>${esc(fmtItineraryDay(returnDate))}</strong><span>${esc(detail.info.to)}, FL${returnTime?` · ${esc(returnTime)}`:""}</span></dd></div>
+</dl>
+<section class="ov-itn-schedule" aria-labelledby="itineraryScheduleTitle">
+<div class="ov-itn-schedule-head"><h3 id="itineraryScheduleTitle">Day by day</h3><span>All times local</span></div>
+<ol class="ov-itn-timeline">${itineraryTimelineHtml(detail,stops)}</ol>
 </section>
 </div>
 </div>`;

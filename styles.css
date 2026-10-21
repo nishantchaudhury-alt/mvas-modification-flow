@@ -1385,67 +1385,54 @@ letter-spacing:.03em;text-transform:uppercase;color:var(--mvas-ink-label);white-
 .mf-rp-confirm:disabled{background:var(--mvas-line);color:var(--mvas-ink-faint);cursor:default}
 
 /* ============ full itinerary timeline ============ */
-.ov-itinerary-modal{width:min(720px,100%);max-height:min(90vh,820px)}
-.ov-itinerary-modal .mf-modal-head{padding:20px 24px}
-.ov-itinerary-modal .mf-modal-x{width:36px;height:36px}
+.ov-itinerary-modal{width:min(560px,100%);max-height:min(88vh,760px)}
+.ov-itinerary-modal .mf-modal-head{align-items:flex-start;padding:20px 24px 16px;border-bottom:0}
+.ov-itinerary-modal .mf-modal-h{font-size:var(--ds-type-section-title-size);line-height:var(--ds-type-section-title-line-height);font-weight:700;color:var(--mvas-ink)}
+.ov-itinerary-modal .mf-modal-sub{margin-top:4px;font-size:var(--ds-type-body-sm-size);color:var(--mvas-ink-soft)}
+.ov-itinerary-modal .mf-modal-x{width:32px;height:32px}
 .ov-itinerary-modal .mf-modal-x svg circle{display:none}
-.ov-itinerary-body{padding:20px 24px 24px;background:var(--mvas-fill)}
-.ov-itinerary-summary{margin-bottom:20px;overflow:hidden;border:1px solid var(--mvas-line);border-radius:10px;background:#fff;box-shadow:var(--mvas-shadow)}
-.ov-itinerary-summary-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--mvas-line-soft)}
-.ov-itinerary-summary-title{display:flex;min-width:0;flex-direction:column;gap:4px}
-.ov-itinerary-summary-title>span,.ov-itinerary-route-stop>span,.ov-itin-time>span{font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:700;letter-spacing:var(--ds-type-tracking-label);text-transform:uppercase;color:var(--mvas-ink-label)}
-.ov-itinerary-summary-title>strong{font-size:var(--ds-type-title-md-size);line-height:var(--ds-type-title-md-line-height);font-weight:700;letter-spacing:var(--ds-type-tracking-tight);color:var(--mvas-ink)}
-.ov-itinerary-duration{display:flex;min-width:72px;align-items:baseline;justify-content:center;gap:4px;padding:8px 12px;border:1px solid var(--mvas-accent-line);border-radius:999px;background:var(--mvas-accent-tint);color:var(--mvas-accent)}
-.ov-itinerary-duration>strong{font-family:var(--ds-type-family-data);font-size:var(--ds-type-body-lg-size);line-height:var(--ds-type-body-lg-line-height);font-weight:700}
-.ov-itinerary-duration>span{font-size:var(--ds-type-caption-size);font-weight:700}
-.ov-itinerary-route{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);align-items:center;padding:16px 20px}
-.ov-itinerary-route-stop{display:flex;min-width:0;flex-direction:column;gap:4px}
-.ov-itinerary-route-stop:last-child{text-align:right}
-.ov-itinerary-route-stop>strong{font-size:var(--ds-type-body-size);line-height:var(--ds-type-body-line-height);font-weight:700;color:var(--mvas-ink)}
-.ov-itinerary-route-stop>small{font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:500;color:var(--mvas-ink-soft)}
-.ov-itinerary-route-divider{position:relative;display:block;height:16px;margin:0 12px}
-.ov-itinerary-route-divider::before{content:"";position:absolute;top:8px;right:0;left:0;height:1px;background:var(--mvas-line)}
-.ov-itinerary-route-divider::after{content:"";position:absolute;top:5px;right:0;width:6px;height:6px;border-top:1px solid var(--mvas-ink-label);border-right:1px solid var(--mvas-ink-label);transform:rotate(45deg)}
-.ov-itinerary-schedule-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:12px;padding:0 4px}
-.ov-itinerary-schedule-head>div{display:flex;min-width:0;flex-direction:column;gap:4px}
-.ov-itinerary-schedule-head h3{margin:0;font-size:var(--ds-type-section-title-size);line-height:var(--ds-type-section-title-line-height);font-weight:700;color:var(--mvas-ink)}
-.ov-itinerary-schedule-head p{margin:0;font-size:var(--ds-type-body-sm-size);line-height:var(--ds-type-body-sm-line-height);color:var(--mvas-ink-soft)}
-.ov-itinerary-schedule-head>span{flex:0 0 auto;padding:4px 8px;border:1px solid var(--mvas-line);border-radius:999px;background:#fff;font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:700;color:var(--mvas-ink-soft)}
-.ov-itinerary-timeline{list-style:none;display:flex;flex-direction:column;gap:8px;margin:0;padding:0}
-.ov-itin-stop{min-width:0}
-.ov-itin-card{display:grid;grid-template-columns:96px minmax(0,1fr);min-height:84px;overflow:hidden;border:1px solid var(--mvas-line);border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.04)}
-.ov-itin-day{display:grid;grid-template-columns:auto 1fr;align-content:center;gap:0 4px;padding:12px 16px;border-right:1px solid var(--mvas-line-soft);background:var(--mvas-fill)}
-.ov-itin-day>span{align-self:end;font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:700;letter-spacing:var(--ds-type-tracking-label);text-transform:uppercase;color:var(--mvas-ink-label)}
-.ov-itin-day>strong{align-self:end;font-family:var(--ds-type-family-data);font-size:var(--ds-type-body-lg-size);line-height:var(--ds-type-body-lg-line-height);font-weight:700;color:var(--mvas-ink)}
-.ov-itin-day>time{grid-column:1/-1;font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:500;color:var(--mvas-ink-soft);white-space:nowrap}
-.ov-itin-stop.is-terminal .ov-itin-day{background:var(--mvas-accent-tint)}
-.ov-itin-card-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(132px,auto);align-items:center;gap:20px;padding:12px 16px}
-.ov-itin-place{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:4px}
-.ov-itin-place h4{margin:0;font-size:var(--ds-type-body-size);line-height:var(--ds-type-body-line-height);font-weight:700;color:var(--mvas-ink);overflow-wrap:anywhere}
-.ov-itin-kind{display:inline-flex;align-items:center;min-height:20px;padding:4px 8px;border:1px solid var(--mvas-line);border-radius:999px;background:var(--mvas-fill);font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:700;color:var(--mvas-ink-soft)}
-.ov-itin-stop.is-terminal .ov-itin-kind{border-color:var(--mvas-accent-line);background:var(--mvas-accent-tint);color:var(--mvas-accent)}
-.ov-itin-stop.is-sea .ov-itin-kind{background:#fff}
-.ov-itin-time{display:flex;min-width:132px;flex-direction:column;align-items:flex-end;gap:4px;padding-left:20px;border-left:1px solid var(--mvas-line-soft);text-align:right}
-.ov-itin-time>strong{font-family:var(--ds-type-family-data);font-size:var(--ds-type-body-sm-size);line-height:var(--ds-type-body-sm-line-height);font-weight:700;color:var(--mvas-ink);white-space:nowrap}
+.ov-itinerary-body{padding:0 24px 24px;background:#fff}
+.ov-itn-route{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);align-items:center;gap:12px;margin:0 0 20px;padding:12px 16px;border:1px solid var(--mvas-line);border-radius:10px}
+.ov-itn-route>div{min-width:0}
+.ov-itn-route>div:last-child{text-align:right}
+.ov-itn-route dt{font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:600;color:var(--mvas-ink-soft)}
+.ov-itn-route dd{display:flex;flex-direction:column;gap:0;margin:4px 0 0}
+.ov-itn-route dd strong{font-size:var(--ds-type-body-size);line-height:var(--ds-type-body-line-height);font-weight:700;color:var(--mvas-ink)}
+.ov-itn-route dd span{font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);color:var(--mvas-ink-soft)}
+.ov-itn-route-arrow{position:relative;height:1px;background:var(--mvas-line)}
+.ov-itn-route-arrow::after{content:"";position:absolute;top:-3px;right:0;width:6px;height:6px;border-top:1px solid var(--mvas-ink-label);border-right:1px solid var(--mvas-ink-label);transform:rotate(45deg)}
+.ov-itn-schedule-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
+.ov-itn-schedule-head h3{margin:0;font-size:var(--ds-type-body-size);line-height:var(--ds-type-body-line-height);font-weight:700;color:var(--mvas-ink)}
+.ov-itn-schedule-head span{font-size:var(--ds-type-caption-size);color:var(--mvas-ink-soft)}
+.ov-itn-timeline{list-style:none;margin:0;padding:0}
+.ov-itn-stop{position:relative;display:grid;grid-template-columns:28px 88px minmax(0,1fr) auto;align-items:center;column-gap:12px;padding:12px 0}
+.ov-itn-stop+.ov-itn-stop{border-top:1px solid var(--mvas-line-soft)}
+.ov-itn-stop::before{content:"";position:absolute;top:0;bottom:0;left:13px;width:2px;background:var(--mvas-line)}
+.ov-itn-stop:first-child::before{top:50%}
+.ov-itn-stop:last-child::before{bottom:50%}
+.ov-itn-marker{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid var(--mvas-line);border-radius:50%;background:#fff;color:var(--mvas-ink-soft)}
+.ov-itn-marker svg{width:14px;height:14px}
+.ov-itn-stop.is-terminal .ov-itn-marker{border-color:var(--mvas-accent);background:var(--mvas-accent);color:#fff}
+.ov-itn-stop.is-port .ov-itn-marker{border-color:var(--mvas-accent-line);background:var(--mvas-accent-tint);color:var(--mvas-accent)}
+.ov-itn-day{display:flex;min-width:0;flex-direction:column}
+.ov-itn-day strong{font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:700;color:var(--mvas-ink)}
+.ov-itn-day time{font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);color:var(--mvas-ink-soft);white-space:nowrap}
+.ov-itn-place{display:flex;min-width:0;flex-direction:column}
+.ov-itn-place strong{font-size:var(--ds-type-body-size);line-height:var(--ds-type-body-line-height);font-weight:600;color:var(--mvas-ink);overflow-wrap:anywhere}
+.ov-itn-place small{font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);color:var(--mvas-ink-soft)}
+.ov-itn-stop.is-sea .ov-itn-place strong{font-weight:500;color:var(--mvas-ink-soft)}
+.ov-itn-time{font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height);font-weight:600;color:var(--mvas-ink);white-space:nowrap;text-align:right}
 
 @media (max-width:600px){
 #itineraryModal{padding:12px}
-.ov-itinerary-modal{max-height:calc(100dvh - 24px);border-radius:10px}
-.ov-itinerary-modal .mf-modal-head{align-items:center;padding:16px}
+.ov-itinerary-modal{max-height:calc(100dvh - 24px)}
+.ov-itinerary-modal .mf-modal-head{padding:16px}
 .ov-itinerary-modal .mf-modal-x{width:44px;height:44px}
-.ov-itinerary-body{padding:16px}
-.ov-itinerary-summary-head{align-items:flex-start;padding:16px}
-.ov-itinerary-route{grid-template-columns:1fr;gap:12px;padding:16px}
-.ov-itinerary-route-stop:last-child{text-align:left}
-.ov-itinerary-route-divider{width:16px;height:20px;margin:0 0 0 4px}
-.ov-itinerary-route-divider::before{top:0;bottom:0;left:8px;width:1px;height:auto}
-.ov-itinerary-route-divider::after{top:auto;right:auto;bottom:0;left:5px;transform:rotate(135deg)}
-.ov-itinerary-schedule-head{align-items:flex-start}
-.ov-itin-card{grid-template-columns:104px minmax(0,1fr)}
-.ov-itin-day{padding:12px}
-.ov-itin-card-main{grid-template-columns:1fr;gap:8px;padding:12px}
-.ov-itin-time{min-width:0;align-items:flex-start;padding:8px 0 0;border-top:1px solid var(--mvas-line-soft);border-left:0;text-align:left}
-.ov-itin-time>strong{white-space:normal}
+.ov-itinerary-body{padding:0 16px 16px}
+.ov-itn-stop{grid-template-columns:28px minmax(0,1fr) auto;row-gap:4px}
+.ov-itn-day{grid-column:2;flex-direction:row;gap:4px}
+.ov-itn-place{grid-column:2}
+.ov-itn-time{grid-column:3;grid-row:1/3}
 }
 
 /* ---- room picker (appears once a category is staged) ---- */
@@ -3963,7 +3950,315 @@ label.mf-assign-row:hover{background:var(--mvas-fill)}
 .view-detail #detailLayout>.ov-main-card,.view-detail #detailLayout>.ov-side{scrollbar-width:none}
 .view-detail #detailLayout>.ov-main-card::-webkit-scrollbar,.view-detail #detailLayout>.ov-side::-webkit-scrollbar{display:none}
 .view-detail #detailLayout>.ov-main-card>*{flex-shrink:0}
-.view-detail .ov-main-top{position:sticky;top:-20px;z-index:var(--ds-layer-sticky);margin:-20px -20px -16px;padding:20px 20px 16px;background:#fff;transition:box-shadow var(--ds-motion-base) var(--ds-motion-ease-standard)}
+.view-detail .ov-main-top{position:sticky;top:-16px;z-index:var(--ds-layer-sticky);margin:-16px -16px -16px;padding:16px 16px 12px;background:#fff;transition:box-shadow var(--ds-motion-base) var(--ds-motion-ease-standard)}
 .view-detail .ov-main-top.is-stuck{box-shadow:0 1px 0 var(--mvas-line-soft),0 6px 12px -8px rgba(15,23,42,.18)}
 .view-detail #detailLayout>.ov-side{position:static;max-height:100%;overflow-y:auto;overscroll-behavior:contain}
 }
+
+/* Guest summary: a single compact strip instead of a card nested inside
+   the section card. Party size and age tags share one line. */
+.ov-guest-cabin-section .ov-guest-summary{padding:0;background:#fff}
+.ov-guest-cabin-section .ov-guest-overview{grid-template-columns:auto minmax(0,1fr);gap:24px;padding:12px 16px;border:0;border-radius:0;background:transparent}
+.ov-guest-cabin-section .ov-guest-summary-name{font-size:var(--ds-type-body-size);line-height:1.4}
+.ov-guest-cabin-section .ov-guest-mix{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:12px;row-gap:4px;padding-left:24px}
+.ov-guest-cabin-section .ov-guest-mix-label{grid-column:1/-1}
+.ov-guest-cabin-section .ov-guest-mix-total{white-space:nowrap}
+
+@media (max-width:700px){
+.ov-guest-cabin-section .ov-guest-overview{grid-template-columns:1fr;gap:12px}
+.ov-guest-cabin-section .ov-guest-mix{grid-template-columns:1fr;padding:12px 0 0}
+}
+
+/* Cabin-wise details: compact list rows. Cabin and room on the left, the
+   guest mix on one line at the right, then the expand chevron. */
+.ov-guest-cabin-section .ov-cabin-inset{padding:12px}
+.ov-guest-cabin-section .ov-cabin-inset-head{margin:0 4px 8px}
+.ov-guest-cabin-section .ov-cabin-stack{gap:8px}
+.ov-guest-cabin-section .ov-cc-accordion-btn{flex-wrap:nowrap;gap:12px;padding:8px 12px}
+.ov-guest-cabin-section .ov-cc-head-left{flex:1;flex-direction:row;align-items:center;justify-content:space-between;gap:16px}
+.ov-guest-cabin-section .ov-cc-identity{gap:8px}
+.ov-guest-cabin-section .ov-cc-accent{width:3px;height:28px}
+.ov-guest-cabin-section .ov-cc-names{gap:0}
+.ov-guest-cabin-section .ov-cc-title-row{gap:8px}
+.ov-guest-cabin-section .ov-cc-title{font-size:var(--ds-type-body-size);line-height:var(--ds-type-body-line-height)}
+.ov-guest-cabin-section .ov-cc-room{font-size:var(--ds-type-body-sm-size);font-weight:500;color:var(--mvas-ink-soft)}
+.ov-guest-cabin-section .ov-cc-sub{line-height:var(--ds-type-caption-line-height)}
+.ov-guest-cabin-section .ov-cc-counts{flex-wrap:wrap;justify-content:flex-end;gap:4px;font-size:var(--ds-type-body-sm-size);color:var(--mvas-ink-soft)}
+.ov-guest-cabin-section .ov-cc-count-sep{color:var(--mvas-ink-faint)}
+@media (max-width:700px){
+.ov-guest-cabin-section .ov-cc-head-left{flex-direction:column;align-items:flex-start;gap:4px}
+.ov-guest-cabin-section .ov-cc-counts{justify-content:flex-start;padding-left:12px}
+}
+
+/* Sailing dates: one segmented box. Each side is two lines, a caption with
+   the port, then the date and time. */
+.ov-sail-block .ov-sail-overview{padding:12px}
+.ov-date-boxes{align-self:start;gap:0;overflow:hidden;border:1px solid var(--mvas-line);border-radius:8px;background:#fff}
+.ov-date-box{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"label port" "time time";align-content:center;column-gap:4px;row-gap:4px;min-width:0;padding:8px 12px;border:0;border-radius:0}
+.ov-date-box+.ov-date-box{border-left:1px solid var(--mvas-line-soft)}
+.ov-date-box>div:not(.ov-date-top){display:contents}
+.ov-date-top{grid-area:label}
+.ov-date-top svg{display:none}
+.ov-date-label{font-size:var(--ds-type-caption-size);font-weight:600;letter-spacing:0;text-transform:none;color:var(--mvas-ink-soft)}
+.ov-date-label::after{content:" \00B7";color:var(--mvas-ink-faint)}
+.ov-date-port{grid-area:port;margin:0;overflow:hidden;font-size:var(--ds-type-caption-size);color:var(--mvas-ink-soft);text-overflow:ellipsis;white-space:nowrap}
+.ov-date-time{grid-area:time;white-space:nowrap}
+
+/* Payment rail: the due badge shares the title row, and the ledger, promo
+   field and actions use compact summary-panel sizing. */
+#detailLayout>.ov-side .ov-side-card{position:relative;gap:12px}
+#detailLayout>.ov-side .ov-due-badge{position:absolute;top:12px;right:16px;padding:4px 8px;font-size:var(--ds-type-caption-size);line-height:var(--ds-type-caption-line-height)}
+#detailLayout>.ov-side .ov-pp-block{gap:4px}
+#detailLayout>.ov-side .ov-pp-title{padding-right:112px;line-height:var(--ds-type-caption-line-height)}
+#detailLayout>.ov-side .ov-balance-amount{font-size:var(--ds-type-page-title-size);line-height:var(--ds-type-page-title-line-height)}
+#detailLayout>.ov-side .ov-paid-block{gap:4px}
+#detailLayout>.ov-side .ov-paid-row{font-size:var(--ds-type-body-sm-size)}
+#detailLayout>.ov-side .ov-progress-bar{height:4px}
+#detailLayout>.ov-side .ov-promo-block{gap:4px}
+#detailLayout>.ov-side .ov-promo-row input,#detailLayout>.ov-side .ov-promo-row button{height:32px;padding-top:0;padding-bottom:0;font-size:var(--ds-type-body-sm-size)}
+#detailLayout>.ov-side .ov-promo-row button{padding-right:12px;padding-left:12px}
+#detailLayout>.ov-side .ov-ledger-head{padding-bottom:4px}
+#detailLayout>.ov-side .ov-ledger-row,#detailLayout>.ov-side .ov-ledger-taxrow{padding:8px 0}
+#detailLayout>.ov-side .ov-ledger-desc{gap:0}
+#detailLayout>.ov-side .ov-ledger-title,#detailLayout>.ov-side .ov-ledger-amt{font-size:var(--ds-type-body-sm-size);line-height:var(--ds-type-body-sm-line-height)}
+#detailLayout>.ov-side .ov-ledger-sub{line-height:var(--ds-type-caption-line-height)}
+#detailLayout>.ov-side .ov-ledger-bd{padding-bottom:8px;gap:4px}
+#detailLayout>.ov-side .ov-total-payable{padding-top:8px;padding-bottom:0}
+#detailLayout>.ov-side .ov-total-payable .ov-ledger-title,#detailLayout>.ov-side .ov-total-payable .ov-ledger-amt{font-size:var(--ds-type-body-size)}
+#detailLayout>.ov-side .ov-btn-pay,#detailLayout>.ov-side .ov-btn-cancel{height:36px}
+
+/* Compact key-value strips and page titles, shared by the modify,
+   cancellation and booking detail pages. Labels become sentence-case
+   captions sitting directly above their values. */
+.mf-intro h1,.cx-page-head h1{font-size:var(--ds-type-title-md-size);line-height:var(--ds-type-title-md-line-height)}
+.mf-intro p,.cx-page-head p{margin-top:0;font-size:var(--ds-type-body-sm-size);line-height:var(--ds-type-body-sm-line-height)}
+.mf-page-context,.cx-page-context-compact{margin-top:12px}
+.mf-page-context>div,.cx-page-context-compact>div,.cx-page-context>div,.ov-booking-meta-item{gap:0;padding:8px 12px}
+.mf-page-context dt,.cx-page-context-compact dt,.cx-page-context dt,.ov-booking-meta-label{margin:0;font-size:var(--ds-type-caption-size);font-weight:500;letter-spacing:0;line-height:var(--ds-type-caption-line-height);text-transform:none;color:var(--mvas-ink-soft)}
+.mf-page-context dd,.cx-page-context-compact dd,.cx-page-context dd{font-size:var(--ds-type-body-sm-size);font-weight:600;line-height:var(--ds-type-body-sm-line-height)}
+.ov-booking-meta-item dd{font-size:var(--ds-type-body-sm-size);line-height:var(--ds-type-body-sm-line-height)}
+.cx-page-context-compact .cx-context-countdown dd{min-height:0;padding:0 8px;font-size:var(--ds-type-caption-size);line-height:var(--ds-type-body-sm-line-height)}
+
+/* Modify: guest details. Single-line cabin headers and 44px guest rows. */
+.mf-guest-review-summary{grid-template-columns:28px minmax(0,1fr) auto;padding:8px 12px}
+.mf-guest-review-summary-icon{width:28px;height:28px}
+.mf-guest-review-summary-copy,.mf-guest-row-copy{gap:0}
+.mf-guest-review-summary-status{min-height:0;padding:0 8px;line-height:var(--ds-type-body-sm-line-height)}
+.mf-guest-cabin-head{grid-template-columns:28px minmax(0,1fr) auto 20px;padding:8px 12px}
+.mf-guest-cabin-icon{width:28px;height:28px}
+.mf-guest-cabin-icon svg{width:14px;height:14px}
+.mf-guest-cabin-meta{flex-direction:row;align-items:center;gap:8px}
+.mf-guest-cabin-meta>em{font-weight:500;letter-spacing:0;text-transform:none}
+.mf-guest-cabin-meta>em::after{content:" \00B7";color:var(--mvas-ink-faint)}
+.mf-guest-cabin-list .mf-head{padding:4px 12px;min-height:44px}
+.mf-guest-row-copy>small{line-height:var(--ds-type-caption-line-height)}
+@media (max-width:700px){
+.mf-guest-cabin-head{grid-template-columns:28px minmax(0,1fr) 20px}
+.mf-guest-cabin-meta{flex-wrap:wrap}
+}
+
+/* Supplement rows (modify, add guest, cancellation reallocation): two lines,
+   the name, then "Category · N guests" as a caption. */
+.mf-supp-main,.mf-supp-catalog>.mf-supp-list>.mf-supp-row .mf-supp-main,.mf-supp-group-rows>.mf-supp-row .mf-supp-main{grid-template-columns:32px minmax(0,1fr) auto;gap:12px;min-height:56px;padding:8px 12px}
+.mf-supp-emoji-box{width:32px;height:32px;border-radius:6px}
+.mf-supp-det{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"title title" "cat meta";align-items:center;column-gap:4px;row-gap:0}
+.mf-supp-title{grid-area:title}
+.mf-supp-category{grid-area:cat;font-weight:500;letter-spacing:0;line-height:var(--ds-type-caption-line-height);text-transform:none;color:var(--mvas-ink-soft)}
+.mf-supp-category:has(~ .mf-supp-meta)::after{content:" \00B7";color:var(--mvas-ink-faint)}
+.mf-supp-meta{grid-area:meta;min-height:0;line-height:var(--ds-type-caption-line-height)}
+.mf-supp-assigned{padding:0 8px;line-height:var(--ds-type-body-sm-line-height)}
+#mfSuppBookingPanel .mf-supp-assigned{display:none}
+.mf-supp-price{gap:0}
+.mf-supp-price-label{font-weight:500;letter-spacing:0;line-height:var(--ds-type-caption-line-height);text-transform:none;color:var(--mvas-ink-soft)}
+.mf-supp-group-toggle-copy{gap:0}
+.mf-supp-tab{min-height:40px}
+.mf-supp-tab-panel{margin:12px 0;padding:12px}
+@media (max-width:700px){
+.mf-supp-main,.mf-supp-catalog>.mf-supp-list>.mf-supp-row .mf-supp-main,.mf-supp-group-rows>.mf-supp-row .mf-supp-main{grid-template-columns:32px minmax(0,1fr)}
+}
+
+/* Modify: review financial rail, matching the booking detail payment rail. */
+.mf-review-financial-card-head{padding:8px 12px}
+.mf-review-financial-card-icon{width:28px;height:28px}
+.mf-review-financial-card-icon svg{width:14px;height:14px}
+.mf-review-financial-card-head>em,.mf-review-rail-total-label>em{min-height:0;padding:0 8px;line-height:var(--ds-type-body-sm-line-height)}
+.mf-review-rail-total{padding:12px}
+.mf-review-rail-total>strong{margin-top:4px;font-size:var(--ds-type-page-title-size);line-height:var(--ds-type-page-title-line-height)}
+.mf-review-rail-total>p{margin-top:0}
+.mf-review-rail-total-facts{margin-top:8px;padding-top:8px}
+.mf-review-rail-total-facts>div{gap:0}
+.mf-review-rail-total-facts>div+div{padding-left:12px}
+.mf-review-rail-payment>header{padding:8px 12px 4px}
+.mf-review-rail-calculation{padding:0 12px 8px}
+.mf-review-rail-calculation>div{padding:4px 0;min-height:32px}
+.mf-review-rail-calculation dt{gap:0}
+.mf-review-rail-calculation .balance{margin-top:4px;padding:4px 8px}
+.mf-review-rail-integrity{padding:8px 12px}
+.mf-review-rail-actions{padding:12px}
+.mf-review-rail-actions button{min-height:36px;height:36px}
+
+/* Cancellation review rail, matching the booking detail payment rail. */
+.cx-cancellation-impact-head{padding:12px}
+.cx-cancellation-impact-head p{margin-top:0}
+.cx-impact-baseline small,.cx-impact-comparison small,.cx-impact-selection small{font-weight:600;letter-spacing:0;text-transform:none;color:var(--mvas-ink-soft)}
+.cx-impact-comparison{padding:8px 12px}
+.cx-impact-comparison-state{gap:4px}
+.cx-impact-baseline-metrics>div{padding:4px 12px;align-items:baseline}
+.cx-impact-baseline-metrics strong{font-size:var(--ds-type-body-lg-size);line-height:var(--ds-type-body-lg-line-height)}
+.cx-impact-baseline-metrics span{font-weight:500}
+.cx-impact-comparison-transition{height:16px}
+.cx-impact-comparison-transition>span{width:16px;height:16px}
+.cx-impact-primary-summary{gap:4px;margin-top:8px;padding-top:8px}
+.cx-impact-guest-disclosure>summary{min-height:40px;padding:8px 12px}
+.cx-impact-guest-list{padding:0 12px 4px}
+.cx-impact-guest-list>li{padding:4px 0}
+.cx-impact-financial{padding:8px 12px}
+.cx-impact-financial>.refund{gap:0;padding:8px 12px}
+.cx-impact-refund-head>span{font-weight:600;letter-spacing:0;text-transform:none}
+.cx-impact-refund-head>em{min-height:0;padding:0 8px;line-height:var(--ds-type-body-sm-line-height)}
+.cx-impact-financial>.refund>strong{font-size:var(--ds-type-title-md-size);line-height:var(--ds-type-title-md-line-height)}
+.cx-impact-financial>.refund>p{margin-top:0}
+.cx-impact-financial-calculation{margin-top:8px}
+.cx-impact-financial-breakdown>div{padding:4px 0}
+.cx-impact-financial-breakdown dt{gap:0}
+
+/* Forms and option lists (cancellation record, refund destination, guest
+   forms): sentence-case field labels, 48px option rows, compact tiles. */
+.mf-flabel{font-weight:600;letter-spacing:0;text-transform:none;color:var(--mvas-ink-soft)}
+.cx-section-head{padding:8px 12px}
+.cx-section-head p{margin-top:0}
+.cx-section-body{padding:12px}
+.cx-subsection-head{margin:12px 0 8px}
+.cx-opt-row{gap:12px;padding:8px 12px}
+.cx-opt-det,.cx-src-det,.cx-refund-instrument-copy{gap:0}
+.cx-src{grid-template-columns:28px minmax(0,1fr) 16px;min-height:52px;padding:8px}
+.cx-src-icon{width:28px;height:28px}
+.cx-refund-instrument-head{grid-template-columns:28px minmax(0,1fr) auto;padding:8px 12px}
+.cx-refund-instrument-icon{width:28px;height:28px}
+.cx-refund-instrument-facts>div{padding:4px 12px}
+.cx-refund-instrument-copy small,.cx-refund-instrument-tag,.cx-refund-instrument-facts dt,.cx-impact-guest-label{letter-spacing:0;text-transform:none}
+.cx-refund-instrument-copy small,.cx-refund-instrument-facts dt{font-weight:500;color:var(--mvas-ink-soft)}
+.cx-impact-guest-label{font-weight:600}
+@media (max-width:700px){
+.cx-refund-instrument-head{grid-template-columns:28px minmax(0,1fr)}
+}
+
+/* Cancellation review & confirm: compact card headers, sentence-case stat
+   labels, 4px ledger rows and a smaller refund figure. */
+.cx-confirm-summary-card-head{align-items:center;padding:8px 12px}
+.cx-confirm-summary-card-head .mf-btn-ghost,.cx-confirm-summary-section .mf-btn-ghost{min-height:28px;padding:4px 8px}
+.cx-confirm-summary-section{padding:12px}
+.cx-confirm-summary-section header>span,.cx-confirm-guest-list li>em,.cx-confirm-refund-head>em,.cx-confirm-refund-badges>em{min-height:0;padding:0 8px;line-height:var(--ds-type-body-sm-line-height)}
+.cx-confirm-booking-changes>div,.cx-confirm-booking-value-comparison>div{gap:0;padding:8px 12px}
+.cx-confirm-booking-changes strong{font-size:var(--ds-type-body-lg-size);line-height:var(--ds-type-body-lg-line-height)}
+.cx-confirm-booking-changes dt,.cx-confirm-refund-delivery dt,.cx-confirm-refund-context dt,.cx-confirm-booking-value-comparison dt,.cx-confirm-supplement-recipient small{font-weight:500;letter-spacing:0;text-transform:none;color:var(--mvas-ink-soft)}
+.cx-confirm-record>div{padding:4px 0}
+.cx-confirm-guest-list li{grid-template-columns:28px minmax(0,1fr);padding:8px 12px}
+.cx-confirm-supplement-list li{grid-template-columns:28px minmax(0,1fr) auto}
+.cx-confirm-supplement-recipient{gap:0}
+.cx-confirm-refund-hero{padding:12px}
+.cx-confirm-refund-hero h4{font-weight:600;letter-spacing:0;text-transform:none;color:var(--mvas-ink-soft)}
+.cx-confirm-refund-hero>strong{margin-top:4px;font-size:var(--ds-type-page-title-size);line-height:var(--ds-type-page-title-line-height)}
+.cx-confirm-refund-delivery>div{gap:0}
+.cx-confirm-refund-context>div{gap:0;padding:8px 12px}
+.cx-confirm-booking-value{padding:12px}
+.cx-confirm-payment-position>div{padding:4px}
+.cx-confirm-refund-calculation>summary{padding:8px 12px}
+.cx-confirm-refund-calculation-body{padding:0 12px 12px}
+.cx-confirm-refund-calculation-row{padding:4px 0}
+.cx-confirm-refund-total>div{padding:8px 12px}
+.cx-confirm-refund-destination{padding:8px 12px 12px}
+.cx-confirm-override-review{padding:8px 12px}
+
+/* ============ Badges ============
+   Every non-interactive pill (status, count, tag, state) uses one size:
+   20px tall, 8px side padding, 12px semibold, sentence case. Clickable
+   filter chips are 28px. */
+.status,.ov-due-badge,.ov-tag-primary,.mf-tag-primary,.mf-tag-prot,.mf-tag-new,.ov-farecode-tag,.ov-guest-breakdown span,.ov-payment-draft-head>span:last-child,.ov-changes-count,
+.mf-workspace-section-meta>em,.mf-review-financial-card-head>em,.mf-review-rail-total-label>em,.mf-review-changes-section>header>em,.mf-guest-review-summary-status,.mf-guest-row-status,
+.mf-fare-guest-type,.mf-guest-badge,.mf-ag-optional,.mf-rp-tagcur,.mf-room-category-badge,.mf-room-features>span,.mf-impact-live-head>em,.mf-supp-impact-changes>header>strong,
+.mf-supp-impact .mf-review-change-group-count,.mf-supp-impact .mf-review-change-kind,.mf-current-supps-staged,.mf-current-supp-status,.mf-assign-age,.mf-supp-ineligible,.mf-supp-age,
+.mf-supp-covered,.mf-supp-stage,.mf-supp-assigned,.mf-review-title-line>span,.mf-review-total-label>em,.mf-preview-side-mount .mf-review-change-kind,
+.cx-page-scope,.cx-subsection-head>span,.cx-calc-status,.cx-confirm-summary-section header>span,.cx-confirm-guest-group>header>span,.cx-confirm-guest-list li>em,
+.cx-confirm-booking-changes .primary span,.cx-confirm-booking-changes .booking-status span,.cx-confirm-supplement-list em,.cx-confirm-refund-head>em,.cx-confirm-refund-badges>em,
+.cx-confirm-override-review>header>em,.cx-confirm-refund-calculation>summary>span,.cx-confirm-refund-destination>header>em,.cx-done-page-state,.cx-done-refund-status,
+.cx-refund-instrument-tag,.cx-cancellation-impact-state,.cx-impact-refund-head>em,.cx-impact-guest-count,.cx-impact-primary-identity em,.cx-cancellation-info-status,
+.cx-allocation-card-status,.cx-allocation-source-identity em,.cx-allocation-guest-copy em,.cx-supplement-recipient-copy em,.cx-supplement-recipient-current,
+.cx-page-context-compact .cx-context-countdown dd,.cx-impact-refund-head>em.warning,.ov-cabin-inset-count{display:inline-flex;box-sizing:border-box;align-items:center;justify-content:center;gap:4px;height:20px;min-height:0;margin-top:0;margin-bottom:0;padding:0 8px;font-size:var(--ds-type-caption-size);font-weight:600;letter-spacing:0;line-height:1;text-transform:none;white-space:nowrap;vertical-align:middle}
+.ov-idrow .status,.mf-fare-guest-tags em{display:inline-flex;box-sizing:border-box;align-items:center;justify-content:center;height:20px;padding:0 8px;font-size:var(--ds-type-caption-size);font-weight:600;letter-spacing:0;line-height:1;text-transform:none}
+.mf-supp-tab>strong,.mf-supp-group-toggle-meta>strong{box-sizing:border-box;min-width:20px;height:20px;min-height:0;padding:0 4px;line-height:1}
+.status .dot{width:6px;height:6px}
+.mf-pill{height:28px;padding:0 12px;border-width:1px}
+.active-filter-chip{height:24px;padding:0 4px 0 8px}
+
+/* ============ Density ============
+   One spacing scale for desktop surfaces, following common product UI
+   practice (Polaris, Atlassian, Linear):
+   - page inset 24px horizontal
+   - top-level cards and panels 16px
+   - page headers and work areas 16px vertical, 20px horizontal
+   - nested blocks 12px
+   - steppers, toolbars and action bars 12px vertical
+   - empty and success states 20-24px
+   Phone layouts keep their own rules below 700px. */
+@media (min-width:701px){
+:root{--ds-space-page-x:var(--ds-primitive-space-6)}
+
+/* Bookings list: two-line rows (value + meta) at a standard 52-56px */
+#tableBody td{padding-top:8px;padding-bottom:8px}
+.filter-bar{padding:12px 20px}
+.active-filters{padding:8px 20px}
+.booking-empty{padding:24px}
+
+/* Booking detail */
+.ov-main-card{padding:16px;gap:12px}
+.ov-side-card{gap:12px}
+.view-detail #detailLayout{gap:12px}
+
+/* Booking history */
+.hist-card{padding:20px 24px}
+.hist-head{margin-bottom:16px}
+.hist-timeline .ov-tl-item{padding-bottom:12px}
+.hist-timeline .ov-tl-body{gap:0}
+
+/* Modification flow */
+.mf-rail{padding:12px 20px}
+.mf-panel{padding:16px}
+.mf-booking-overview{padding:16px 20px}
+.mf-cabin-step,.mf-guest-step,.mf-supplement-step{margin:-16px -16px 0;padding:16px 16px 20px}
+.mf-cab-card{padding:16px}
+.mf-cabin-step .mf-cab-card,.cx-page-workspace .mf-cab-card{padding:0 0 16px}
+.mf-cabin-step .mf-cab-card+.mf-cab-card,.cx-page-workspace .mf-cab-card+.mf-cab-card{padding-top:16px}
+.mf-supp-sections{gap:16px}
+.view-modify.active .mf-foot{padding:8px 24px}
+.mf-room-section{padding:16px 20px}
+.mf-room-head{margin-bottom:16px}
+.mf-room-decks{gap:16px}
+.mf-as-detail-body{padding:16px}
+.mf-as-detail-body>section+section{margin-top:16px}
+
+/* Cancellation */
+.cx-partial-steps-sticky>.cx-steps{padding:12px 20px}
+.cx-page-head{gap:16px;padding:16px 20px 12px}
+.cx-page-head.cx-page-head-compact{gap:0 16px;padding:16px 20px}
+.cx-page-context{padding:12px 20px}
+.cx-draft-notice,.cx-version-alert{margin:12px 20px 0}
+.cx-page-workspace{padding:16px 20px 20px}
+.cx-page-refund{padding:0 20px 20px}
+.cx-page-form .cx-body{padding:16px}
+.cx-impact-copy,.cx-impact-main{padding:12px 16px}
+.view-cancellation.active .cx-page-actionbar{min-height:60px;padding:8px 24px calc(8px + env(safe-area-inset-bottom))}
+.cx-refund-banner.cx-destination-summary{gap:16px}
+.cx-page-done .cx-done{padding:24px 24px 20px}
+.cx-done-page-hero,.cx-done-page-grid{padding:20px}
+.cx-page-done{margin:16px auto}
+.cx-page-done.cx-page-done-wide{margin:16px 20px 20px}
+
+/* Modals */
+.ov-itinerary-modal .mf-modal-head{padding:16px 20px 12px}
+.ov-itinerary-body{padding:0 20px 20px}
+.ov-itn-route{margin-bottom:16px}
+.mf-preview-body{padding:16px 20px}
+.mf-supp-modal-head{padding:12px 20px}
+}
+
